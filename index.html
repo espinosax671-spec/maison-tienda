@@ -219,7 +219,10 @@
         <input type="email" id="loginEmail" required autocomplete="email">
       </label>
       <label>Contraseña
-        <input type="password" id="loginPassword" required autocomplete="current-password" minlength="6">
+        <div class="password-wrap">
+          <input type="password" id="loginPassword" required autocomplete="current-password" minlength="6">
+          <button type="button" class="toggle-password" data-target="loginPassword" aria-label="Mostrar contraseña">👁️</button>
+        </div>
       </label>
       <p class="account-error" id="loginError"></p>
       <button type="submit" class="btn btn-primary btn-full" id="loginSubmitBtn">Ingresar</button>
@@ -238,7 +241,7 @@
       <label>Correo electrónico
         <input type="email" id="registerEmail" required autocomplete="email">
       </label>
-    <label>Contraseña
+      <label>Contraseña
         <div class="password-wrap">
           <input type="password" id="registerPassword" required autocomplete="new-password" minlength="6">
           <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Mostrar contraseña">👁️</button>
@@ -299,6 +302,19 @@
   </div>
 </div>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".toggle-password").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      btn.textContent = isHidden ? "🙈" : "👁️";
+    });
+  });
+});
+</script>
 <script src="js/products.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
