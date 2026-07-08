@@ -1428,7 +1428,9 @@ img { max-width: 100%; display: block; }
   transform: none;
   box-shadow: none;
 }
-
+/* ============================================
+   BOTON MOSTRAR/OCULTAR CONTRASEÑA
+   ============================================ */
 .password-wrap {
   position: relative;
   display: flex;
@@ -1449,6 +1451,9 @@ img { max-width: 100%; display: block; }
   line-height: 1;
   padding: 0;
   opacity: 0.6;
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
 }
 .toggle-password:hover {
   opacity: 1;
