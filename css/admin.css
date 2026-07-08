@@ -1161,6 +1161,9 @@ body {
   cursor: pointer;
   transition: var(--transition);
   border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-confirm {
@@ -1247,6 +1250,9 @@ body {
     width: 100%;
   }
 }
+/* ============================================
+   BOTON MOSTRAR/OCULTAR CONTRASEÑA
+   ============================================ */
 .password-wrap {
   position: relative;
   display: flex;
@@ -1267,6 +1273,9 @@ body {
   line-height: 1;
   padding: 0;
   opacity: 0.6;
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
 }
 .toggle-password:hover {
   opacity: 1;
