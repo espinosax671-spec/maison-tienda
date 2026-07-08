@@ -238,8 +238,11 @@
       <label>Correo electrónico
         <input type="email" id="registerEmail" required autocomplete="email">
       </label>
-      <label>Contraseña
-        <input type="password" id="registerPassword" required autocomplete="new-password" minlength="6">
+     <label>Contraseña
+        <div class="password-wrap">
+          <input type="password" id="loginPassword" required autocomplete="current-password" minlength="6">
+          <button type="button" class="toggle-password" data-target="loginPassword" aria-label="Mostrar contraseña">👁️</button>
+        </div>
       </label>
       <p class="account-hint">Mínimo 6 caracteres.</p>
 
