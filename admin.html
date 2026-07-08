@@ -243,7 +243,19 @@
     <button type="button" class="btn btn-primary" id="saveStockBtn">Guardar stock</button>
   </div>
 </div>
-
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".toggle-password").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      btn.textContent = isHidden ? "🙈" : "👁️";
+    });
+  });
+});
+</script>
 <script src="js/supabase-client.js"></script>
 <script src="js/admin.js"></script>
 </body>
