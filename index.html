@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAISON — Ropa y Calzado para Dama y Caballero</title>
+<meta name="description" content="Boutique de ropa y calzado para dama y caballero. Piezas curadas, calidad premium.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/styles.css">
+
+<!-- SDK de Supabase (Auth + Base de datos) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<!-- ============ LOADER ============ -->
+<div class="loader" id="loader">
+  <div class="loader-mark">M</div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+
+    <a href="#hero" class="logo">MAISON</a>
+
+    <nav class="main-nav" id="mainNav">
+      <a href="#dama" class="nav-link">Dama</a>
+      <a href="#caballero" class="nav-link">Caballero</a>
+      <a href="#calzado" class="nav-link">Calzado</a>
+      <a href="#nosotros" class="nav-link">La Maison</a>
+      <a href="#contacto" class="nav-link">Contacto</a>
+    </nav>
+
+    <button class="cart-toggle" id="cartToggle" aria-label="Abrir carrito">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+
+    <button class="account-toggle" id="accountToggle" aria-label="Cuenta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+      <span class="account-label" id="accountLabel">Ingresar</span>
+    </button>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero-thread" aria-hidden="true">
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+      <path id="threadPath" d="M -50,400 C 200,250 350,600 600,400 C 850,200 1000,550 1250,350" />
+    </svg>
+  </div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Colección permanente — Dama &amp; Caballero</p>
+    <h1 class="hero-title">El detalle<br><em>hace la prenda.</em></h1>
+    <p class="hero-sub">Piezas seleccionadas a mano. Calzado y ropa para quienes visten con intención, no con prisa.</p>
+    <div class="hero-actions">
+      <a href="#dama" class="btn btn-primary">Ver colección</a>
+      <a href="#nosotros" class="btn btn-ghost">Nuestra historia</a>
+    </div>
+  </div>
+  <div class="hero-scroll" aria-hidden="true">
+    <span></span>
+    <p>Desliza</p>
+  </div>
+</section>
+
+<!-- ============ DAMA ============ -->
+<section class="catalog" id="dama">
+  <div class="catalog-head">
+    <span class="section-eyebrow">01 — Dama</span>
+    <h2 class="section-title">Para ella</h2>
+  </div>
+  <div class="lookbook-grid" id="damaGrid"></div>
+</section>
+
+<!-- ============ CABALLERO ============ -->
+<section class="catalog catalog-dark" id="caballero">
+  <div class="catalog-head">
+    <span class="section-eyebrow">02 — Caballero</span>
+    <h2 class="section-title">Para él</h2>
+  </div>
+  <div class="lookbook-grid" id="caballeroGrid"></div>
+</section>
+
+<!-- ============ CALZADO ============ -->
+<section class="catalog" id="calzado">
+  <div class="catalog-head">
+    <span class="section-eyebrow">03 — Calzado</span>
+    <h2 class="section-title">Pisada con carácter</h2>
+  </div>
+  <div class="lookbook-grid" id="calzadoGrid"></div>
+</section>
+
+<!-- ============ NOSOTROS ============ -->
+<section class="about" id="nosotros">
+  <div class="about-inner">
+    <span class="section-eyebrow">La Maison</span>
+    <h2 class="about-title">Vestimos lo esencial, <em>no lo excesivo.</em></h2>
+    <p class="about-text">Cada pieza en nuestro catálogo pasa por un proceso de selección: materiales que envejecen bien, cortes que no caducan, y una atención a la terminación que se siente al tacto. No perseguimos tendencias — construimos guardarropa.</p>
+    <div class="about-stitch" aria-hidden="true"></div>
+  </div>
+</section>
+
+<!-- ============ CONTACTO ============ -->
+<section class="contact" id="contacto">
+  <div class="contact-inner">
+    <span class="section-eyebrow">Contacto</span>
+    <h2 class="section-title-light">¿Tienes una pregunta sobre una prenda?</h2>
+    <p class="contact-text">Escríbenos directo por WhatsApp. Respondemos personalmente, sin bots ni filas de espera.</p>
+    <a href="#" class="btn btn-primary btn-large" id="contactWhatsapp" target="_blank" rel="noopener">
+      Escribir por WhatsApp
+    </a>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="logo">MAISON</span>
+      <p>Ropa y calzado para dama y caballero.</p>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Tienda</h4>
+        <a href="#dama">Dama</a>
+        <a href="#caballero">Caballero</a>
+        <a href="#calzado">Calzado</a>
+      </div>
+      <div class="footer-col">
+        <h4>Maison</h4>
+        <a href="#nosotros">Nuestra historia</a>
+        <a href="#contacto">Contacto</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-legal">© 2026 MAISON. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a></p>
+</footer>
+
+<!-- ============ CARRITO LATERAL ============ -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-panel" id="cartPanel">
+  <div class="cart-panel-head">
+    <h3>Tu selección</h3>
+    <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">&times;</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <p class="cart-empty" id="cartEmptyMsg">Aún no has añadido prendas.</p>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span>Total</span>
+      <span id="cartTotal">$0</span>
+    </div>
+    <a href="#" class="btn btn-primary btn-full" id="checkoutWhatsapp" target="_blank" rel="noopener">
+      Finalizar por WhatsApp
+    </a>
+    <p class="cart-note">Coordinamos talla, color y entrega directamente contigo.</p>
+  </div>
+</aside>
+
+<!-- ============ MODAL PRODUCTO ============ -->
+<div class="product-overlay" id="productOverlay"></div>
+<div class="product-modal" id="productModal">
+  <button class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
+  <div class="modal-grid">
+    <div class="modal-image">
+      <img id="modalImg" src="" alt="">
+    </div>
+    <div class="modal-info">
+      <span class="modal-category" id="modalCategory"></span>
+      <h3 class="modal-name" id="modalName"></h3>
+      <p class="modal-price" id="modalPrice"></p>
+      <p class="modal-desc" id="modalDesc"></p>
+
+      <div class="modal-field">
+        <label>Talla</label>
+        <div class="size-options" id="modalSizes"></div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="modalAddBtn">Añadir a la selección</button>
+    </div>
+  </div>
+</div>
+<!-- ============ MODAL CUENTA: LOGIN / REGISTRO / PERFIL ============ -->
+<div class="account-overlay" id="accountOverlay"></div>
+<div class="account-modal" id="accountModal">
+  <button class="modal-close" id="accountModalClose" aria-label="Cerrar">&times;</button>
+
+  <!-- ---- SELECTOR DE ROL (pestañas) — Solo se muestra si NO está logueado ---- -->
+  <div class="role-tabs" id="roleTabs">
+    <button type="button" class="role-tab active" data-role-tab="comprador">
+      <span class="role-tab-icon">🛍️</span>
+      <span class="role-tab-name">Cliente</span>
+      <span class="role-tab-desc">Comprar prendas</span>
+    </button>
+    <button type="button" class="role-tab" data-role-tab="vendedor">
+      <span class="role-tab-icon">🏪</span>
+      <span class="role-tab-name">Vendedor</span>
+      <span class="role-tab-desc">Gestionar tienda</span>
+    </button>
+  </div>
+
+  <!-- ---- VISTA: LOGIN ---- -->
+  <div class="account-view active" id="viewLogin">
+    <span class="section-eyebrow" id="loginEyebrow">Acceso Cliente</span>
+    <h3 class="account-title">Iniciar sesión</h3>
+    <form id="loginForm" class="account-form">
+      <label>Correo electrónico
+        <input type="email" id="loginEmail" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <input type="password" id="loginPassword" required autocomplete="current-password" minlength="6">
+      </label>
+      <p class="account-error" id="loginError"></p>
+      <button type="submit" class="btn btn-primary btn-full" id="loginSubmitBtn">Ingresar</button>
+    </form>
+    <p class="account-switch">¿Aún no tienes cuenta? <button type="button" class="link-btn" id="goToRegister">Regístrate</button></p>
+  </div>
+
+  <!-- ---- VISTA: REGISTRO ---- -->
+  <div class="account-view" id="viewRegister">
+    <span class="section-eyebrow" id="registerEyebrow">Crear cuenta Cliente</span>
+    <h3 class="account-title">Crear cuenta</h3>
+    <form id="registerForm" class="account-form">
+      <label>Nombre completo
+        <input type="text" id="registerName" required autocomplete="name">
+      </label>
+      <label>Correo electrónico
+        <input type="email" id="registerEmail" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <input type="password" id="registerPassword" required autocomplete="new-password" minlength="6">
+      </label>
+      <p class="account-hint">Mínimo 6 caracteres.</p>
+
+      <!-- Campo WhatsApp solo visible para vendedores -->
+      <div id="vendorFields" style="display:none;">
+        <label>Tu número de WhatsApp
+          <input type="tel" id="registerWhatsapp" placeholder="Ej: 3001234567">
+        </label>
+        <p class="account-hint">Los clientes te contactarán a este número para cerrar sus pedidos.</p>
+      </div>
+
+      <p class="account-error" id="registerError"></p>
+      <button type="submit" class="btn btn-primary btn-full" id="registerSubmitBtn">Crear cuenta</button>
+    </form>
+    <p class="account-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" id="goToLogin">Inicia sesión</button></p>
+  </div>
+
+  <!-- ---- VISTA: VENDEDOR REGISTRADO ---- -->
+  <div class="account-view" id="viewVendor">
+    <span class="section-eyebrow">¡Bienvenido, vendedor!</span>
+    <h3 class="account-title" id="vendorGreeting">Cuenta creada</h3>
+    <p class="account-text">Tu cuenta de vendedor ya está lista. Te estamos llevando al panel para que empieces a gestionar tus productos...</p>
+    <a href="admin.html" class="btn btn-primary btn-full">Ir al panel ahora</a>
+    <p class="account-hint" style="text-align:center; margin-top:1rem;">Serás redirigido automáticamente en unos segundos.</p>
+  </div>
+
+  <!-- ---- VISTA: CONFIRMA CORREO ---- -->
+  <div class="account-view" id="viewConfirm">
+    <span class="section-eyebrow">Casi listo</span>
+    <h3 class="account-title">Confirma tu correo</h3>
+    <p class="account-text">Te enviamos un enlace de confirmación. Ábrelo desde tu correo y luego vuelve a iniciar sesión aquí.</p>
+    <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
+  </div>
+
+  <!-- ---- VISTA: PERFIL (usuario ya autenticado) ---- -->
+  <div class="account-view" id="viewProfile">
+    <span class="section-eyebrow">Tu cuenta</span>
+    <h3 class="account-title" id="profileGreeting">Hola</h3>
+    <form id="profileForm" class="account-form">
+      <label>Nombre completo
+        <input type="text" id="profileName" required>
+      </label>
+      <label>WhatsApp de contacto
+        <input type="tel" id="profilePhone" placeholder="Ej: 3001234567">
+      </label>
+      <label>Dirección de entrega
+        <input type="text" id="profileAddress" placeholder="Calle, número, ciudad">
+      </label>
+      <p class="account-error" id="profileError"></p>
+      <p class="account-success" id="profileSuccess"></p>
+      <button type="submit" class="btn btn-primary btn-full" id="profileSaveBtn">Guardar datos</button>
+    </form>
+    <button type="button" class="btn btn-ghost btn-full logout-btn" id="logoutBtn">Cerrar sesión</button>
+  </div>
+</div>
+
+<script src="js/products.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+
+<!-- ============ NOTIFICACIÓN TOAST ============ -->
+<div class="toast" id="toast">
+  <div class="toast-icon">✓</div>
+  <div class="toast-content">
+    <span class="toast-title">Añadido al carrito</span>
+    <span class="toast-message" id="toastMessage"></span>
+  </div>
+</div>
+
+</body>
+</html>

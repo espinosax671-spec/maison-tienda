@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel — MAISON</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ============ PANTALLA DE ACCESO ============ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Panel de administración</p>
+
+    <form id="gateForm" class="gate-form">
+      <label>Correo electrónico
+        <input type="email" id="gateEmail" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <input type="password" id="gatePassword" required autocomplete="current-password">
+      </label>
+      <p class="gate-error" id="gateError"></p>
+      <div class="forgot-password">
+    <a href="#" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
+</div>
+      <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar al panel</button>
+    </form>
+    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al administrador que te agregue.</p>
+  </div>
+</div>
+
+<!-- ============ PANTALLA: SIN PERMISO ============ -->
+<div class="gate" id="noAccess" style="display:none;">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Sin acceso al panel</p>
+    <p class="gate-text">Tu cuenta inició sesión correctamente, pero todavía no tiene permiso para administrar productos. Pide al dueño de la tienda que te agregue como staff.</p>
+    <button class="btn btn-ghost btn-full" id="noAccessLogout">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ============ PANEL PRINCIPAL ============ -->
+<div class="admin-app" id="adminApp" style="display:none;">
+
+  <header class="admin-header">
+    <span class="admin-logo">MAISON <em>panel</em></span>
+    <div class="admin-user">
+      <span id="adminUserName"></span>
+      <button class="btn-text" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    
+    <!-- ============ TABS DE NAVEGACIÓN ============ -->
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab active" data-tab="productos">
+        <span class="tab-icon">👗</span>
+        <span class="tab-label">Productos</span>
+      </button>
+      <button type="button" class="admin-tab" data-tab="pedidos">
+        <span class="tab-icon">📬</span>
+        <span class="tab-label">Pedidos</span>
+        <span class="tab-badge" id="pendingOrdersBadge" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <!-- ============ VISTA: PRODUCTOS ============ -->
+    <div class="admin-view active" id="viewProductos">
+      <div class="admin-toolbar">
+        <h1>Productos</h1>
+        <button class="btn btn-primary" id="newProductBtn">+ Nuevo producto</button>
+      </div>
+
+      <div class="admin-filters">
+        <button class="filter-chip active" data-filter="todos">Todos</button>
+        <button class="filter-chip" data-filter="dama">Dama</button>
+        <button class="filter-chip" data-filter="caballero">Caballero</button>
+        <button class="filter-chip" data-filter="calzado">Calzado</button>
+      </div>
+
+      <div class="product-table" id="productTable">
+        <p class="loading-msg" id="loadingMsg">Cargando productos...</p>
+      </div>
+    </div>
+    <!-- Fin viewProductos -->
+
+    <!-- ============ VISTA: PEDIDOS ============ -->
+    <div class="admin-view" id="viewPedidos">
+      <div class="admin-toolbar">
+        <h1>Pedidos</h1>
+        <button class="btn btn-ghost" id="refreshOrdersBtn">🔄 Actualizar</button>
+      </div>
+
+      <!-- Filtros de estado -->
+      <div class="admin-filters">
+        <button class="filter-chip active" data-order-filter="pendiente">
+          Pendientes <span class="chip-count" id="countPendiente">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="confirmado">
+          Confirmados <span class="chip-count" id="countConfirmado">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="entregado">
+          Entregados <span class="chip-count" id="countEntregado">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="cancelado">
+          Cancelados <span class="chip-count" id="countCancelado">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="todos">Todos</button>
+      </div>
+
+      <!-- Lista de pedidos -->
+      <div class="orders-list" id="ordersList">
+        <p class="loading-msg">Cargando pedidos...</p>
+      </div>
+    </div>
+    <!-- Fin viewPedidos -->
+
+  </main>
+</div>
+
+<!-- ============ MODAL: CREAR/EDITAR PRODUCTO ============ -->
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="product-form-modal" id="productFormModal">
+  <button class="modal-close" id="formModalClose" aria-label="Cerrar">&times;</button>
+  <h2 id="formTitle">Nuevo producto</h2>
+
+  <form id="productForm" class="product-form">
+    <input type="hidden" id="productId">
+
+    <label>Categoría
+      <select id="productCategory" required>
+        <option value="dama">Dama</option>
+        <option value="caballero">Caballero</option>
+        <option value="calzado">Calzado</option>
+      </select>
+    </label>
+
+    <label>Nombre del producto
+      <input type="text" id="productName" required placeholder="Ej: Vestido Midi Lino">
+    </label>
+
+    <label>Precio (COP)
+      <input type="number" id="productPrice" required min="0" step="1000" placeholder="Ej: 219000">
+    </label>
+
+    <label>Etiqueta (opcional)
+      <input type="text" id="productTag" placeholder="Ej: Nuevo, Edición limitada">
+    </label>
+
+    <label>Descripción
+      <textarea id="productDesc" rows="3" placeholder="Descripción corta que verá el cliente"></textarea>
+    </label>
+
+    <label>Tallas disponibles (separadas por coma)
+      <input type="text" id="productSizes" placeholder="Ej: XS, S, M, L, XL">
+    </label>
+
+    <label>Foto del producto
+      <input type="file" id="productImageFile" accept="image/*">
+    </label>
+    <div class="image-preview-wrap">
+      <img id="imagePreview" class="image-preview" style="display:none;">
+      <p class="image-hint" id="imageHint">Formatos JPG o PNG. Se recomienda foto vertical.</p>
+    </div>
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="productActive" checked>
+      Visible en la tienda
+    </label>
+
+    <p class="form-error" id="formError"></p>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="cancelFormBtn">Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="saveProductBtn">Guardar producto</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: RECUPERAR CONTRASEÑA ============ -->
+<div class="modal-overlay" id="resetOverlay"></div>
+<div class="confirm-modal" id="resetModal">
+  <button class="modal-close" id="resetModalClose">&times;</button>
+  <h3>Recuperar contraseña</h3>
+  <p>Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+  
+  <form id="resetForm" class="product-form">
+    <label>Correo electrónico
+      <input type="email" id="resetEmail" required placeholder="tucorreo@maison.com">
+    </label>
+    <p class="form-error" id="resetError"></p>
+    <p class="reset-success" id="resetSuccess"></p>
+    
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="cancelResetBtn">Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="sendResetBtn">Enviar enlace</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: CONFIRMAR ELIMINAR ============ -->
+<div class="modal-overlay" id="deleteOverlay"></div>
+<div class="confirm-modal" id="deleteConfirmModal">
+  <h3>¿Eliminar este producto?</h3>
+  <p>Esta acción no se puede deshacer. El producto dejará de verse en la tienda.</p>
+  <div class="form-actions">
+    <button class="btn btn-ghost" id="cancelDeleteBtn">Cancelar</button>
+    <button class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+  </div>
+</div>
+
+<!-- ============ MODAL DE GESTIÓN DE STOCK ============ -->
+<div class="modal-overlay" id="stockOverlay"></div>
+<div class="form-modal" id="stockModal">
+  <button class="modal-close" id="stockModalClose">&times;</button>
+  <h2 class="form-title">Gestionar Inventario</h2>
+  <p class="form-subtitle" id="stockProductName">Producto</p>
+  
+  <div class="stock-list" id="stockList">
+    <!-- Se llena dinámicamente -->
+  </div>
+
+  <p class="stock-total-info">
+    Stock total: <strong id="stockTotalDisplay">0</strong> unidades
+  </p>
+
+  <p class="form-error" id="stockError"></p>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-ghost" id="cancelStockBtn">Cancelar</button>
+    <button type="button" class="btn btn-primary" id="saveStockBtn">Guardar stock</button>
+  </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
