@@ -24,8 +24,11 @@
       <label>Correo electrónico
         <input type="email" id="gateEmail" required autocomplete="email">
       </label>
-      <label>Contraseña
-        <input type="password" id="gatePassword" required autocomplete="current-password">
+     <label>Contraseña
+        <div class="password-wrap">
+          <input type="password" id="gatePassword" required autocomplete="current-password">
+          <button type="button" class="toggle-password" data-target="gatePassword" aria-label="Mostrar contraseña">👁️</button>
+        </div>
       </label>
       <p class="gate-error" id="gateError"></p>
       <div class="forgot-password">
