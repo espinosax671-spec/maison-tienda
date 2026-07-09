@@ -259,13 +259,20 @@ function openProductForm(productId) {
   document.getElementById("imagePreview").style.display = "none";
   selectedImageFile = null;
 
+  // Resetear hint del precio
+  const priceHint = document.getElementById("priceHint");
+  if (priceHint) {
+    priceHint.textContent = "Ingresa el precio sin puntos ni comas";
+    priceHint.classList.remove("active");
+  }
+
   if (productId) {
     const p = allProducts.find((x) => x.id === productId);
     document.getElementById("formTitle").textContent = "Editar producto";
     document.getElementById("productId").value = p.id;
     document.getElementById("productCategory").value = p.category;
     document.getElementById("productName").value = p.name;
-    document.getElementById("productPrice").value = p.price;
+    document.getElementById("productPrice").value = formatPriceInput(p.price);
     document.getElementById("productTag").value = p.tag || "";
     document.getElementById("productDesc").value = p.description || "";
     document.getElementById("productSizes").value = (p.sizes || []).join(", ");
@@ -273,6 +280,12 @@ function openProductForm(productId) {
     if (p.image_url) {
       document.getElementById("imagePreview").src = p.image_url;
       document.getElementById("imagePreview").style.display = "block";
+    }
+    
+    // Actualizar el hint del precio con el valor cargado
+    if (priceHint && p.price > 0) {
+      priceHint.textContent = `Precio: $${formatPriceInput(p.price)} COP`;
+      priceHint.classList.add("active");
     }
   } else {
     document.getElementById("formTitle").textContent = "Nuevo producto";
@@ -335,7 +348,7 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     const payload = {
       category: document.getElementById("productCategory").value,
       name: document.getElementById("productName").value.trim(),
-      price: Number(document.getElementById("productPrice").value),
+      price: parsePriceInput(document.getElementById("productPrice").value),
       tag: document.getElementById("productTag").value.trim(),
       description: document.getElementById("productDesc").value.trim(),
       sizes,
@@ -1063,3 +1076,59 @@ async function decrementStock(productId, size, qty) {
   
   console.log(`Stock descontado: ${productId} - ${size}: ${currentQty} -> ${newQty}`);
 }
+
+// ===================================================================
+// FORMATO DE PRECIO COLOMBIANO (con puntos de miles)
+// ===================================================================
+
+// Formatea un número con puntos como separador de miles: 219000 -> "219.000"
+function formatPriceInput(value) {
+  if (!value && value !== 0) return "";
+  const numericValue = value.toString().replace(/\D/g, "");
+  if (!numericValue) return "";
+  return new Intl.NumberFormat("es-CO").format(parseInt(numericValue, 10));
+}
+
+// Extrae solo los dígitos de un texto formateado: "219.000" -> 219000
+function parsePriceInput(formattedValue) {
+  if (!formattedValue) return 0;
+  const digitsOnly = formattedValue.toString().replace(/\D/g, "");
+  return parseInt(digitsOnly, 10) || 0;
+}
+
+// Inicializar el input de precio con formato automático
+document.addEventListener("DOMContentLoaded", () => {
+  const priceInput = document.getElementById("productPrice");
+  const priceHint = document.getElementById("priceHint");
+  
+  if (!priceInput) return;
+
+  priceInput.addEventListener("input", (e) => {
+    const cursorPos = e.target.selectionStart;
+    const oldLength = e.target.value.length;
+    
+    const formatted = formatPriceInput(e.target.value);
+    e.target.value = formatted;
+    
+    // Ajustar posición del cursor para que no salte al final
+    const newLength = formatted.length;
+    const diff = newLength - oldLength;
+    const newCursorPos = Math.max(0, cursorPos + diff);
+    e.target.setSelectionRange(newCursorPos, newCursorPos);
+    
+    // Actualizar hint con el valor legible en tiempo real
+    const numericValue = parsePriceInput(formatted);
+    if (priceHint && numericValue > 0) {
+      priceHint.textContent = `Precio: $${formatted} COP`;
+      priceHint.classList.add("active");
+    } else if (priceHint) {
+      priceHint.textContent = "Ingresa el precio sin puntos ni comas";
+      priceHint.classList.remove("active");
+    }
+  });
+  
+  // Al perder el foco, asegurar que esté bien formateado
+  priceInput.addEventListener("blur", (e) => {
+    e.target.value = formatPriceInput(e.target.value);
+  });
+});
