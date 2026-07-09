@@ -573,6 +573,91 @@ body {
 }
 
 /* ============================================
+   INPUT DE PRECIO CON SÍMBOLO $ Y FORMATO
+   ============================================ */
+.price-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  transition: var(--transition);
+  overflow: hidden;
+  min-height: 46px;
+}
+
+.price-input-wrap:focus-within {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(168, 130, 75, 0.15);
+}
+
+.price-input-wrap:hover:not(:focus-within) {
+  border-color: rgba(168, 130, 75, 0.5);
+}
+
+.price-currency {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-gold-dark);
+  background: rgba(168, 130, 75, 0.08);
+  border-right: 1px solid var(--color-border);
+  user-select: none;
+  min-width: 42px;
+}
+
+.price-input-wrap input {
+  flex: 1;
+  padding: 12px 14px !important;
+  border: none !important;
+  background: transparent !important;
+  font-size: 16px !important;
+  color: var(--color-ink) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 500;
+  letter-spacing: 1px;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: left;
+}
+
+.price-input-wrap input::placeholder {
+  color: rgba(107, 88, 66, 0.4);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+/* Ocultar flechas del input number en algunos navegadores (por si acaso) */
+.price-input-wrap input::-webkit-outer-spin-button,
+.price-input-wrap input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.price-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.5px;
+  text-transform: none;
+  transition: var(--transition);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.price-hint.active {
+  color: var(--color-gold-dark);
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 1px;
+}
+
+/* ============================================
    GESTIÓN DE STOCK (versión unificada MAISON)
    ============================================ */
 
