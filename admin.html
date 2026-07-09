@@ -3,429 +3,252 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MAISON — Ropa y Calzado para Dama y Caballero</title>
-<meta name="description" content="Boutique de ropa y calzado para dama y caballero. Piezas curadas, calidad premium.">
+<title>Panel — MAISON</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/styles.css">
-
-<!-- SDK de Supabase (Auth + Base de datos) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 
-<!-- ============ LOADER ============ -->
-<div class="loader" id="loader">
-  <div class="loader-mark">M</div>
-</div>
+<!-- ============ PANTALLA DE ACCESO ============ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Panel de administración</p>
 
-<!-- ============ HEADER ============ -->
-<header class="site-header" id="siteHeader">
-  <div class="header-inner">
-    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-      <span></span><span></span><span></span>
-    </button>
-
-    <a href="#hero" class="logo">MAISON</a>
-
-    <nav class="main-nav" id="mainNav">
-      <a href="#dama" class="nav-link">Dama</a>
-      <a href="#caballero" class="nav-link">Caballero</a>
-      <a href="#calzado" class="nav-link">Calzado</a>
-      <a href="#nosotros" class="nav-link">La Maison</a>
-      <a href="#contacto" class="nav-link">Contacto</a>
-    </nav>
-
-    <button class="cart-toggle" id="cartToggle" aria-label="Abrir carrito">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
-      <span class="cart-count" id="cartCount">0</span>
-    </button>
-
-    <button class="account-toggle" id="accountToggle" aria-label="Cuenta">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
-      <span class="account-label" id="accountLabel">Ingresar</span>
-    </button>
-  </div>
-</header>
-
-<!-- ============ HERO ============ -->
-<section class="hero" id="hero">
-  <div class="hero-thread" aria-hidden="true">
-    <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
-      <path id="threadPath" d="M -50,400 C 200,250 350,600 600,400 C 850,200 1000,550 1250,350" />
-    </svg>
-  </div>
-  <div class="hero-content">
-    <p class="hero-eyebrow">Colección permanente — Dama &amp; Caballero</p>
-    <h1 class="hero-title">El detalle<br><em>hace la prenda.</em></h1>
-    <p class="hero-sub">Piezas seleccionadas a mano. Calzado y ropa para quienes visten con intención, no con prisa.</p>
-    <div class="hero-actions">
-      <a href="#dama" class="btn btn-primary">Ver colección</a>
-      <a href="#nosotros" class="btn btn-ghost">Nuestra historia</a>
-    </div>
-  </div>
-  <div class="hero-scroll" aria-hidden="true">
-    <span></span>
-    <p>Desliza</p>
-  </div>
-</section>
-
-<!-- ============ DAMA ============ -->
-<section class="catalog" id="dama">
-  <div class="catalog-head">
-    <span class="section-eyebrow">01 — Dama</span>
-    <h2 class="section-title">Para ella</h2>
-  </div>
-  <div class="lookbook-grid" id="damaGrid"></div>
-</section>
-
-<!-- ============ CABALLERO ============ -->
-<section class="catalog catalog-dark" id="caballero">
-  <div class="catalog-head">
-    <span class="section-eyebrow">02 — Caballero</span>
-    <h2 class="section-title">Para él</h2>
-  </div>
-  <div class="lookbook-grid" id="caballeroGrid"></div>
-</section>
-
-<!-- ============ CALZADO ============ -->
-<section class="catalog" id="calzado">
-  <div class="catalog-head">
-    <span class="section-eyebrow">03 — Calzado</span>
-    <h2 class="section-title">Pisada con carácter</h2>
-  </div>
-  <div class="lookbook-grid" id="calzadoGrid"></div>
-</section>
-
-<!-- ============ NOSOTROS ============ -->
-<section class="about" id="nosotros">
-  <div class="about-inner">
-    <span class="section-eyebrow">La Maison</span>
-    <h2 class="about-title">Vestimos lo esencial, <em>no lo excesivo.</em></h2>
-    <p class="about-text">Cada pieza en nuestro catálogo pasa por un proceso de selección: materiales que envejecen bien, cortes que no caducan, y una atención a la terminación que se siente al tacto. No perseguimos tendencias — construimos guardarropa.</p>
-    <div class="about-stitch" aria-hidden="true"></div>
-  </div>
-</section>
-
-<!-- ============ CONTACTO ============ -->
-<section class="contact" id="contacto">
-  <div class="contact-inner">
-    <span class="section-eyebrow">Contacto</span>
-    <h2 class="section-title-light">¿Tienes una pregunta sobre una prenda?</h2>
-    <p class="contact-text">Escríbenos directo por WhatsApp. Respondemos personalmente, sin bots ni filas de espera.</p>
-    <a href="#" class="btn btn-primary btn-large" id="contactWhatsapp" target="_blank" rel="noopener">
-      Escribir por WhatsApp
-    </a>
-  </div>
-</section>
-
-<!-- ============ FOOTER ============ -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <span class="logo">MAISON</span>
-      <p>Ropa y calzado para dama y caballero.</p>
-    </div>
-    <div class="footer-cols">
-      <div class="footer-col">
-        <h4>Tienda</h4>
-        <a href="#dama">Dama</a>
-        <a href="#caballero">Caballero</a>
-        <a href="#calzado">Calzado</a>
-      </div>
-      <div class="footer-col">
-        <h4>Maison</h4>
-        <a href="#nosotros">Nuestra historia</a>
-        <a href="#contacto">Contacto</a>
-      </div>
-    </div>
-  </div>
-  <p class="footer-legal">© 2026 MAISON. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a></p>
-</footer>
-
-<!-- ============ CARRITO LATERAL ============ -->
-<div class="cart-overlay" id="cartOverlay"></div>
-<aside class="cart-panel" id="cartPanel">
-  <div class="cart-panel-head">
-    <h3>Tu selección</h3>
-    <button class="cart-close" id="cartClose" aria-label="Cerrar carrito">&times;</button>
-  </div>
-  <div class="cart-items" id="cartItems">
-    <p class="cart-empty" id="cartEmptyMsg">Aún no has añadido prendas.</p>
-  </div>
-  <div class="cart-footer">
-    <div class="cart-total-row">
-      <span>Total</span>
-      <span id="cartTotal">$0</span>
-    </div>
-    <a href="#" class="btn btn-primary btn-full" id="checkoutWhatsapp" target="_blank" rel="noopener">
-      Finalizar por WhatsApp
-    </a>
-    <p class="cart-note">Coordinamos talla, color y entrega directamente contigo.</p>
-  </div>
-</aside>
-
-<!-- ============ MODAL PRODUCTO ============ -->
-<div class="product-overlay" id="productOverlay"></div>
-<div class="product-modal" id="productModal">
-  <button class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
-  <div class="modal-grid">
-    <div class="modal-image">
-      <img id="modalImg" src="" alt="">
-    </div>
-    <div class="modal-info">
-      <span class="modal-category" id="modalCategory"></span>
-      <h3 class="modal-name" id="modalName"></h3>
-      <p class="modal-price" id="modalPrice"></p>
-      <p class="modal-desc" id="modalDesc"></p>
-
-      <div class="modal-field">
-        <label>Talla</label>
-        <div class="size-options" id="modalSizes"></div>
-      </div>
-
-      <button class="btn btn-primary btn-full" id="modalAddBtn">Añadir a la selección</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============ MODAL CUENTA: LOGIN / REGISTRO / PERFIL ============ -->
-<div class="account-overlay" id="accountOverlay"></div>
-<div class="account-modal" id="accountModal">
-  <button class="modal-close" id="accountModalClose" aria-label="Cerrar">&times;</button>
-
-  <!-- ---- MARCA DENTRO DEL MODAL ---- -->
-  <div class="account-brand">
-    <span class="account-brand-name">MAISON</span>
-    <span class="account-brand-line"></span>
-  </div>
-
-  <!-- ---- SELECTOR DE ROL (pestañas) ---- -->
-  <div class="role-tabs" id="roleTabs">
-    <button type="button" class="role-tab active" data-role-tab="comprador">
-      <span class="role-tab-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <path d="M16 10a4 4 0 0 1-8 0"/>
-        </svg>
-      </span>
-      <span class="role-tab-name">Cliente</span>
-      <span class="role-tab-desc">Comprar prendas</span>
-    </button>
-    <button type="button" class="role-tab" data-role-tab="vendedor">
-      <span class="role-tab-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l1-5h16l1 5"/>
-          <path d="M4 9v12h16V9"/>
-          <path d="M9 21v-6h6v6"/>
-        </svg>
-      </span>
-      <span class="role-tab-name">Vendedor</span>
-      <span class="role-tab-desc">Gestionar tienda</span>
-    </button>
-  </div>
-
-  <!-- ---- VISTA: LOGIN ---- -->
-  <div class="account-view active" id="viewLogin">
-    <span class="section-eyebrow" id="loginEyebrow">Acceso Cliente</span>
-    <h3 class="account-title">Bienvenido de vuelta</h3>
-    <p class="account-subtitle">Ingresa a tu cuenta para continuar tu experiencia MAISON.</p>
-    
-    <form id="loginForm" class="account-form">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-        </span>
-        <input type="email" id="loginEmail" required autocomplete="email" placeholder="Correo electrónico">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </span>
-        <input type="password" id="loginPassword" required autocomplete="current-password" minlength="6" placeholder="Contraseña">
-        <button type="button" class="toggle-password" data-target="loginPassword" aria-label="Mostrar contraseña"></button>
-      </div>
-
-      <div class="form-row-between">
-        <label class="remember-me">
-          <input type="checkbox" id="rememberMe">
-          <span>Recordarme</span>
-        </label>
-        <a href="#" class="forgot-link" id="forgotPasswordLinkTienda">¿Olvidaste tu contraseña?</a>
-      </div>
-
-      <p class="account-error" id="loginError"></p>
-      <button type="submit" class="btn btn-primary btn-full btn-auth" id="loginSubmitBtn">
-        <span>Ingresar</span>
-        <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </button>
-    </form>
-
-    <div class="auth-divider"><span>o</span></div>
-
-    <p class="account-switch">¿Aún no tienes cuenta? <button type="button" class="link-btn" id="goToRegister">Crear cuenta</button></p>
-  </div>
-
-  <!-- ---- VISTA: REGISTRO ---- -->
-  <div class="account-view" id="viewRegister">
-    <span class="section-eyebrow" id="registerEyebrow">Crear cuenta Cliente</span>
-    <h3 class="account-title">Únete a MAISON</h3>
-    <p class="account-subtitle">Crea tu cuenta para descubrir piezas exclusivas.</p>
-    
-    <form id="registerForm" class="account-form">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </span>
-        <input type="text" id="registerName" required autocomplete="name" placeholder="Nombre completo">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-        </span>
-        <input type="email" id="registerEmail" required autocomplete="email" placeholder="Correo electrónico">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </span>
-        <input type="password" id="registerPassword" required autocomplete="new-password" minlength="6" placeholder="Contraseña (mínimo 6 caracteres)">
-        <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Mostrar contraseña"></button>
-      </div>
-
-      <!-- Campo WhatsApp solo visible para vendedores -->
-      <div id="vendorFields" style="display:none;">
-        <div class="input-group">
-          <span class="input-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-          </span>
-          <input type="tel" id="registerWhatsapp" placeholder="Tu número de WhatsApp (ej: 3001234567)">
+    <form id="gateForm" class="gate-form">
+      <label>Correo electrónico
+        <input type="email" id="gateEmail" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <div class="password-wrap">
+          <input type="password" id="gatePassword" required autocomplete="current-password">
+          <button type="button" class="toggle-password" data-target="gatePassword" aria-label="Mostrar contraseña"></button>
         </div>
-        <p class="account-hint">Los clientes te contactarán a este número para cerrar sus pedidos.</p>
-      </div>
-
-      <p class="terms-text">Al registrarte aceptas nuestros <a href="#">términos</a> y <a href="#">política de privacidad</a>.</p>
-
-      <p class="account-error" id="registerError"></p>
-      <button type="submit" class="btn btn-primary btn-full btn-auth" id="registerSubmitBtn">
-        <span>Crear cuenta</span>
-        <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </button>
+      </label>
+      <p class="gate-error" id="gateError"></p>
+      <div class="forgot-password">
+    <a href="#" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
+</div>
+      <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar al panel</button>
     </form>
-
-    <div class="auth-divider"><span>o</span></div>
-
-    <p class="account-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" id="goToLogin">Inicia sesión</button></p>
+    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al administrador que te agregue.</p>
   </div>
+</div>
 
-  <!-- ---- VISTA: VENDEDOR REGISTRADO ---- -->
-  <div class="account-view" id="viewVendor">
-    <div class="success-icon">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
+<!-- ============ PANTALLA: SIN PERMISO ============ -->
+<div class="gate" id="noAccess" style="display:none;">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Sin acceso al panel</p>
+    <p class="gate-text">Tu cuenta inició sesión correctamente, pero todavía no tiene permiso para administrar productos. Pide al dueño de la tienda que te agregue como staff.</p>
+    <button class="btn btn-ghost btn-full" id="noAccessLogout">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ============ PANEL PRINCIPAL ============ -->
+<div class="admin-app" id="adminApp" style="display:none;">
+
+  <header class="admin-header">
+    <span class="admin-logo">MAISON <em>panel</em></span>
+    <div class="admin-user">
+      <span id="adminUserName"></span>
+      <button class="btn-text" id="logoutBtn">Cerrar sesión</button>
     </div>
-    <span class="section-eyebrow">Bienvenido, vendedor</span>
-    <h3 class="account-title" id="vendorGreeting">Cuenta creada</h3>
-    <p class="account-text">Tu cuenta de vendedor ya está lista. Te estamos llevando al panel para que empieces a gestionar tus productos.</p>
-    <a href="admin.html" class="btn btn-primary btn-full btn-auth">
-      <span>Ir al panel ahora</span>
-      <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="5" y1="12" x2="19" y2="12"/>
-        <polyline points="12 5 19 12 12 19"/>
-      </svg>
-    </a>
-    <p class="account-hint" style="text-align:center; margin-top:1rem;">Serás redirigido automáticamente en unos segundos.</p>
-  </div>
+  </header>
 
-  <!-- ---- VISTA: CONFIRMA CORREO ---- -->
-  <div class="account-view" id="viewConfirm">
-    <div class="success-icon">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-        <polyline points="22,6 12,13 2,6"/>
-      </svg>
-    </div>
-    <span class="section-eyebrow">Casi listo</span>
-    <h3 class="account-title">Confirma tu correo</h3>
-    <p class="account-text">Te enviamos un enlace de confirmación. Ábrelo desde tu correo y luego vuelve a iniciar sesión aquí.</p>
-    <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
-  </div>
-
-  <!-- ---- VISTA: PERFIL (usuario ya autenticado) ---- -->
-  <div class="account-view" id="viewProfile">
-    <span class="section-eyebrow">Tu cuenta</span>
-    <h3 class="account-title" id="profileGreeting">Hola</h3>
-    <p class="account-subtitle">Mantén tus datos actualizados para agilizar tus pedidos.</p>
+  <main class="admin-main">
     
-    <form id="profileForm" class="account-form">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </span>
-        <input type="text" id="profileName" required placeholder="Nombre completo">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-          </svg>
-        </span>
-        <input type="tel" id="profilePhone" placeholder="WhatsApp (ej: 3001234567)">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </span>
-        <input type="text" id="profileAddress" placeholder="Dirección de entrega">
-      </div>
-
-      <p class="account-error" id="profileError"></p>
-      <p class="account-success" id="profileSuccess"></p>
-      <button type="submit" class="btn btn-primary btn-full btn-auth" id="profileSaveBtn">
-        <span>Guardar datos</span>
+    <!-- ============ TABS DE NAVEGACIÓN ============ -->
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab active" data-tab="productos">
+        <span class="tab-label">Productos</span>
       </button>
-    </form>
-    <button type="button" class="btn btn-ghost btn-full logout-btn" id="logoutBtn">Cerrar sesión</button>
+      <button type="button" class="admin-tab" data-tab="pedidos">
+        <span class="tab-label">Pedidos</span>
+        <span class="tab-badge" id="pendingOrdersBadge" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <!-- ============ VISTA: PRODUCTOS ============ -->
+    <div class="admin-view active" id="viewProductos">
+      <div class="admin-toolbar">
+        <h1>Productos</h1>
+        <button class="btn btn-primary" id="newProductBtn">+ Nuevo producto</button>
+      </div>
+
+      <div class="admin-filters">
+        <button class="filter-chip active" data-filter="todos">Todos</button>
+        <button class="filter-chip" data-filter="dama">Dama</button>
+        <button class="filter-chip" data-filter="caballero">Caballero</button>
+        <button class="filter-chip" data-filter="calzado">Calzado</button>
+      </div>
+
+      <div class="product-table" id="productTable">
+        <p class="loading-msg" id="loadingMsg">Cargando productos...</p>
+      </div>
+    </div>
+    <!-- Fin viewProductos -->
+
+    <!-- ============ VISTA: PEDIDOS ============ -->
+    <div class="admin-view" id="viewPedidos">
+      <div class="admin-toolbar">
+        <h1>Pedidos</h1>
+        <button class="btn btn-ghost" id="refreshOrdersBtn">Actualizar</button>
+      </div>
+
+      <!-- Filtros de estado -->
+      <div class="admin-filters">
+        <button class="filter-chip active" data-order-filter="pendiente">
+          Pendientes <span class="chip-count" id="countPendiente">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="confirmado">
+          Confirmados <span class="chip-count" id="countConfirmado">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="entregado">
+          Entregados <span class="chip-count" id="countEntregado">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="cancelado">
+          Cancelados <span class="chip-count" id="countCancelado">0</span>
+        </button>
+        <button class="filter-chip" data-order-filter="todos">Todos</button>
+      </div>
+
+      <!-- Lista de pedidos -->
+      <div class="orders-list" id="ordersList">
+        <p class="loading-msg">Cargando pedidos...</p>
+      </div>
+    </div>
+    <!-- Fin viewPedidos -->
+
+  </main>
+</div>
+
+<!-- ============ MODAL: CREAR/EDITAR PRODUCTO ============ -->
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="product-form-modal" id="productFormModal">
+  <button class="modal-close" id="formModalClose" aria-label="Cerrar">&times;</button>
+  <h2 id="formTitle">Nuevo producto</h2>
+
+  <form id="productForm" class="product-form">
+    <input type="hidden" id="productId">
+
+    <label>Categoría
+      <select id="productCategory" required>
+        <option value="dama">Dama</option>
+        <option value="caballero">Caballero</option>
+        <option value="calzado">Calzado</option>
+      </select>
+    </label>
+
+    <label>Nombre del producto
+      <input type="text" id="productName" required placeholder="Ej: Vestido Midi Lino">
+    </label>
+
+    <label>Precio (COP)
+      <div class="price-input-wrap">
+        <span class="price-currency">$</span>
+        <input type="text" id="productPrice" required placeholder="Ej: 219.000" inputmode="numeric" autocomplete="off">
+      </div>
+      <span class="price-hint" id="priceHint">Ingresa el precio sin puntos ni comas</span>
+    </label>
+
+    <label>Etiqueta (opcional)
+      <input type="text" id="productTag" placeholder="Ej: Nuevo, Edición limitada">
+    </label>
+
+    <label>Descripción
+      <textarea id="productDesc" rows="3" placeholder="Descripción corta que verá el cliente"></textarea>
+    </label>
+
+    <label>Tallas disponibles (separadas por coma)
+      <input type="text" id="productSizes" placeholder="Ej: XS, S, M, L, XL">
+    </label>
+
+    <!-- ============ NUEVO: STOCK INICIAL POR TALLA ============ -->
+    <label>Stock inicial por talla
+      <input type="number" id="productInitialStock" min="0" max="9999" value="5" placeholder="Ej: 5">
+      <span class="stock-initial-hint">Cada talla iniciará con este número de unidades. Podrás ajustarlas después desde el botón "Stock".</span>
+    </label>
+
+    <label>Foto del producto
+      <input type="file" id="productImageFile" accept="image/*">
+    </label>
+    <div class="image-preview-wrap">
+      <img id="imagePreview" class="image-preview" style="display:none;">
+      <p class="image-hint" id="imageHint">Formatos JPG o PNG. Se recomienda foto vertical.</p>
+    </div>
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="productActive" checked>
+      Visible en la tienda
+    </label>
+
+    <p class="form-error" id="formError"></p>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="cancelFormBtn">Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="saveProductBtn">Guardar producto</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: RECUPERAR CONTRASEÑA ============ -->
+<div class="modal-overlay" id="resetOverlay"></div>
+<div class="confirm-modal" id="resetModal">
+  <button class="modal-close" id="resetModalClose">&times;</button>
+  <h3>Recuperar contraseña</h3>
+  <p>Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+  
+  <form id="resetForm" class="product-form">
+    <label>Correo electrónico
+      <input type="email" id="resetEmail" required placeholder="tucorreo@maison.com">
+    </label>
+    <p class="form-error" id="resetError"></p>
+    <p class="reset-success" id="resetSuccess"></p>
+    
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="cancelResetBtn">Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="sendResetBtn">Enviar enlace</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: CONFIRMAR ELIMINAR ============ -->
+<div class="modal-overlay" id="deleteOverlay"></div>
+<div class="confirm-modal" id="deleteConfirmModal">
+  <h3>¿Eliminar este producto?</h3>
+  <p>Esta acción no se puede deshacer. El producto dejará de verse en la tienda.</p>
+  <div class="form-actions">
+    <button class="btn btn-ghost" id="cancelDeleteBtn">Cancelar</button>
+    <button class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+  </div>
+</div>
+
+<!-- ============ MODAL DE GESTIÓN DE STOCK ============ -->
+<div class="modal-overlay" id="stockOverlay"></div>
+<div class="form-modal" id="stockModal">
+  <button class="modal-close" id="stockModalClose">&times;</button>
+  <h2 class="form-title">Gestionar Inventario</h2>
+  <p class="form-subtitle" id="stockProductName">Producto</p>
+  
+  <div class="stock-list" id="stockList">
+    <!-- Se llena dinámicamente -->
+  </div>
+
+  <p class="stock-total-info">
+    Stock total: <strong id="stockTotalDisplay">0</strong> unidades
+  </p>
+
+  <p class="form-error" id="stockError"></p>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-ghost" id="cancelStockBtn">Cancelar</button>
+    <button type="button" class="btn btn-primary" id="saveStockBtn">Guardar stock</button>
   </div>
 </div>
 
@@ -446,31 +269,21 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
-<script src="js/products.js"></script>
 <script src="js/supabase-client.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/app.js"></script>
+<script src="js/admin.js"></script>
 
-<!-- ============ NOTIFICACIÓN TOAST ============ -->
-<div class="toast" id="toast">
-  <div class="toast-icon">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  </div>
-  <div class="toast-content">
-    <span class="toast-title">Añadido al carrito</span>
-    <span class="toast-message" id="toastMessage"></span>
-  </div>
-</div>
-
-<!-- ============ BOTÓN VOLVER ARRIBA ============ -->
-<button class="scroll-top-btn" id="scrollTopBtn" aria-label="Volver arriba" title="Volver arriba">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="19" x2="12" y2="5"/>
-    <polyline points="5 12 12 5 19 12"/>
-  </svg>
-</button>
-
+<!-- Estilos rápidos para el hint del stock inicial -->
+<style>
+.stock-initial-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+  font-style: italic;
+  text-transform: none;
+  line-height: 1.5;
+}
+</style>
 </body>
 </html>
