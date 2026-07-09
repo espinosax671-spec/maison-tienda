@@ -1128,6 +1128,8 @@ img { max-width: 100%; display: block; }
   .modal-name { font-size: 28px; }
 
   .footer-inner { grid-template-columns: 1fr; gap: 40px; padding-bottom: 30px; }
+
+  .account-modal { padding: 40px 25px; }
 }
 
 @media (max-width: 500px) {
@@ -1758,5 +1760,127 @@ img { max-width: 100%; display: block; }
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+}
+
+/* ============================================
+   BOTÓN VOLVER ARRIBA
+   ============================================ */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.8);
+  transition: all .4s cubic-bezier(.16, 1, .3, 1);
+  box-shadow: 0 6px 20px rgba(143, 107, 63, 0.35);
+  overflow: hidden;
+}
+
+.scroll-top-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-light));
+  opacity: 0;
+  transition: opacity .3s ease;
+  z-index: -1;
+}
+
+.scroll-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  animation: btnPulse 2s ease-in-out infinite;
+}
+
+.scroll-top-btn:hover {
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 12px 30px rgba(143, 107, 63, 0.5);
+  color: var(--color-white);
+  animation: none;
+}
+
+.scroll-top-btn:hover::before {
+  opacity: 1;
+}
+
+.scroll-top-btn:hover svg {
+  animation: arrowBounce .6s ease infinite;
+}
+
+.scroll-top-btn:active {
+  transform: translateY(-2px) scale(1);
+}
+
+.scroll-top-btn svg {
+  position: relative;
+  z-index: 1;
+  transition: transform .3s ease;
+}
+
+/* Anillo decorativo dorado */
+.scroll-top-btn::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 1px solid var(--color-gold);
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: ringRotate 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(143, 107, 63, 0.35); }
+  50% { box-shadow: 0 6px 30px rgba(212, 168, 105, 0.55); }
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive: móviles */
+@media (max-width: 768px) {
+  .scroll-top-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+  }
+  
+  .scroll-top-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Cuando el carrito está abierto, mover el botón para que no se superponga */
+.cart-panel.active ~ .scroll-top-btn {
+  right: calc(440px + 30px);
+}
+
+@media (max-width: 500px) {
+  .cart-panel.active ~ .scroll-top-btn {
+    display: none;
   }
 }
