@@ -703,3 +703,27 @@ document.addEventListener("DOMContentLoaded", () => {
     checkoutBtn.addEventListener("click", handleCheckoutClick);
   }
 });
+
+// ---------------------------------------------------------------
+// BOTÓN VOLVER ARRIBA
+// ---------------------------------------------------------------
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+if (scrollTopBtn) {
+  // Mostrar/ocultar el botón según el scroll
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 400) {
+      scrollTopBtn.classList.add("visible");
+    } else {
+      scrollTopBtn.classList.remove("visible");
+    }
+  });
+
+  // Al hacer clic, subir suavemente al top
+  scrollTopBtn.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  });
+}
