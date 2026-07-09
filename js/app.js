@@ -1,9 +1,9 @@
 /* ===================================================================
    MAISON — Lógica de la tienda
-   Edita NÚMERO_WHATSAPP con tu número (código de país + número, sin +)
+   Edita NUMERO_WHATSAPP con tu número (código de país + número, sin +)
 =================================================================== */
 
-// ⚠️ EDITA ESTE NÚMERO — formato: código país + número, sin espacios ni +
+// EDITA ESTE NÚMERO — formato: código país + número, sin espacios ni +
 const NUMERO_WHATSAPP = "573001234567";
 
 // Clave para guardar el carrito en localStorage
@@ -21,7 +21,7 @@ function formatPrice(value) {
 }
 
 // ---------------------------------------------------------------
-// 💾 PERSISTENCIA DEL CARRITO EN LOCALSTORAGE
+// PERSISTENCIA DEL CARRITO EN LOCALSTORAGE
 // ---------------------------------------------------------------
 function saveCartToStorage() {
   try {
@@ -142,7 +142,7 @@ async function fetchProductsFromSupabase() {
       tag: p.tag || "",
       desc: p.description || "",
      sizes: p.sizes && p.sizes.length > 0 ? p.sizes : ["Única"],
-      stock: p.stock || {}, // 👈 AGREGA ESTA LÍNEA
+      stock: p.stock || {},
     }));
   } catch (err) {
     console.error("No se pudo cargar el catálogo desde Supabase:", err);
@@ -190,7 +190,7 @@ function categoryLabel(category) {
 }
 
 // ---------------------------------------------------------------
-// 📦 Helpers de stock
+// Helpers de stock
 // ---------------------------------------------------------------
 function getStockForSize(product, size) {
   if (!product.stock || typeof product.stock !== "object") return null;
@@ -302,7 +302,7 @@ function renderQuantitySelector() {
   qtyWrap.innerHTML = `
     <label class="modal-quantity-label">Cantidad</label>
     <div class="quantity-selector">
-      <button type="button" class="qty-btn" id="qtyMinusBtn" aria-label="Disminuir">−</button>
+      <button type="button" class="qty-btn" id="qtyMinusBtn" aria-label="Disminuir">-</button>
       <span class="qty-value" id="qtyValue">${currentQuantity}</span>
       <button type="button" class="qty-btn" id="qtyPlusBtn" aria-label="Aumentar">+</button>
     </div>
@@ -380,7 +380,7 @@ function renderCart() {
         <span class="cart-item-meta">Talla ${item.size}</span>
         <div class="cart-item-controls">
           <div class="quantity-selector-small">
-            <button type="button" class="qty-btn-small" data-minus="${item.key}" aria-label="Disminuir">−</button>
+            <button type="button" class="qty-btn-small" data-minus="${item.key}" aria-label="Disminuir">-</button>
             <span class="qty-value-small">${item.qty}</span>
             <button type="button" class="qty-btn-small" data-plus="${item.key}" aria-label="Aumentar">+</button>
           </div>
@@ -437,14 +437,14 @@ document.getElementById("cartOverlay").addEventListener("click", closeCart);
 function buildOrderMessage(orderNumber = null) {
   if (cart.length === 0) return "Hola, quisiera más información sobre sus prendas.";
 
-  let msg = "¡Hola! Quiero hacer este pedido:\n\n";
+  let msg = "Hola! Quiero hacer este pedido:\n\n";
   
   if (orderNumber) {
         msg += `*Pedido #${orderNumber}*\n\n`;
   }
   
   cart.forEach((item) => {
-    msg += `• ${item.name} (Talla ${item.size}) x ${item.qty} — ${formatPrice(item.price * item.qty)}\n`;
+    msg += `- ${item.name} (Talla ${item.size}) x ${item.qty} - ${formatPrice(item.price * item.qty)}\n`;
   });
   msg += `\n*Total: ${formatPrice(cartTotal())}*\n\n¿Cómo procedemos con el pago?`;
   return msg;
@@ -463,20 +463,20 @@ function updateWhatsappLinks() {
 }
 
 // ---------------------------------------------------------------
-// 📱 MENÚ MÓVIL (arreglado: usa clase "open" que coincide con el CSS)
+// MENÚ MÓVIL (arreglado: usa clase "open" que coincide con el CSS)
 // ---------------------------------------------------------------
 const menuToggle = document.getElementById("menuToggle");
 const mainNav = document.getElementById("mainNav");
 
 menuToggle.addEventListener("click", () => {
   menuToggle.classList.toggle("active");
-  mainNav.classList.toggle("open"); // 👈 antes decía "active" — corregido
+  mainNav.classList.toggle("open"); // antes decía "active" — corregido
 });
 
 mainNav.querySelectorAll(".nav-link").forEach((link) => {
   link.addEventListener("click", () => {
     menuToggle.classList.remove("active");
-    mainNav.classList.remove("open"); // 👈 antes decía "active" — corregido
+    mainNav.classList.remove("open"); // antes decía "active" — corregido
   });
 });
 
@@ -519,7 +519,7 @@ window.addEventListener("scroll", () => {
 // ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", () => {
   renderCatalog();
-  renderCart(); // 💾 Ya carga el carrito desde localStorage automáticamente
+  renderCart(); // Ya carga el carrito desde localStorage automáticamente
   updateWhatsappLinks();
   initScrollReveal();
 
@@ -537,7 +537,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ---------------------------------------------------------------
-// 🎉 NOTIFICACIÓN TOAST
+// NOTIFICACIÓN TOAST
 // ---------------------------------------------------------------
 let toastTimeout = null;
 
@@ -546,7 +546,7 @@ function showToast(productName, quantity) {
   const message = document.getElementById("toastMessage");
   if (!toast || !message) return;
 
-  message.textContent = `${productName} × ${quantity}`;
+  message.textContent = `${productName} x ${quantity}`;
   toast.classList.add("active");
 
   if (toastTimeout) clearTimeout(toastTimeout);
@@ -557,7 +557,7 @@ function showToast(productName, quantity) {
 }
 
 // ---------------------------------------------------------------
-// 📬 SISTEMA DE PEDIDOS: guardar pedido antes de WhatsApp
+// SISTEMA DE PEDIDOS: guardar pedido antes de WhatsApp
 // ---------------------------------------------------------------
 
 async function createOrderInDatabase() {
@@ -632,11 +632,11 @@ async function createOrderInDatabase() {
     
     if (error) throw error;
     
-    console.log("✅ Pedido creado:", data.order_number);
+    console.log("Pedido creado:", data.order_number);
     return data;
     
   } catch (err) {
-    console.error("❌ Error al crear pedido:", err);
+    console.error("Error al crear pedido:", err);
     return null;
   }
 }
