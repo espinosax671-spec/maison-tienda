@@ -689,7 +689,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================================================================
-// SISTEMA DE BÚSQUEDA DE PRODUCTOS (Mejora #2)
+// SISTEMA DE BÚSQUEDA DE PRODUCTOS (Mejora #2 con scroll automático)
 // ===================================================================
 
 // Función auxiliar: normaliza texto para búsqueda (sin tildes, minúsculas)
@@ -699,7 +699,7 @@ function normalizeText(text) {
     .toString()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Eliminar tildes
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
@@ -718,7 +718,6 @@ function openSearchBar() {
   if (!searchBar) return;
   searchBar.classList.add("active");
   document.body.classList.add("search-open");
-  // Enfocar el input automáticamente
   setTimeout(() => {
     if (searchInput) searchInput.focus();
   }, 300);
@@ -728,7 +727,6 @@ function closeSearchBar() {
   if (!searchBar) return;
   searchBar.classList.remove("active");
   document.body.classList.remove("search-open");
-  // Limpiar búsqueda al cerrar
   if (searchInput) searchInput.value = "";
   performSearch("");
 }
@@ -774,7 +772,7 @@ if (searchInput) {
   });
 }
 
-// Función principal de búsqueda
+// Función principal de búsqueda (mejorada con scroll automático)
 function performSearch(query) {
   const normalizedQuery = normalizeText(query);
   
@@ -787,12 +785,16 @@ function performSearch(query) {
   // Obtener todos los productos del catálogo
   const allProductCards = document.querySelectorAll(".product-card");
   let visibleCount = 0;
+  let firstMatchElement = null;
   const categoriesWithResults = new Set();
   
   allProductCards.forEach((card) => {
     const name = card.dataset.productName || "";
     const category = card.dataset.productCategory || "";
     const tag = card.dataset.productTag || "";
+    
+    // Quitar clase de destello anterior
+    card.classList.remove("search-highlight");
     
     // Buscar en nombre, categoría o etiqueta
     const matches = 
@@ -803,6 +805,12 @@ function performSearch(query) {
     if (matches) {
       card.classList.remove("hidden-by-search");
       visibleCount++;
+      
+      // Guardar la primera coincidencia para hacer scroll
+      if (!firstMatchElement) {
+        firstMatchElement = card;
+      }
+      
       // Guardar la categoría del producto encontrado
       const parentCatalog = card.closest(".catalog");
       if (parentCatalog) {
@@ -842,6 +850,32 @@ function performSearch(query) {
     }
   } else {
     if (noResultsMsg) noResultsMsg.style.display = "none";
+    
+    // SCROLL AUTOMÁTICO AL PRIMER RESULTADO
+    if (firstMatchElement) {
+      // Agregar clase de destello para resaltar el producto
+      firstMatchElement.classList.add("search-highlight");
+      
+      // Hacer scroll suave hacia el producto (con un pequeño delay para que se vea la animación)
+      setTimeout(() => {
+        const headerHeight = 78; // Altura del header fijo
+        const searchBarHeight = 90; // Altura de la barra de búsqueda
+        const offset = headerHeight + searchBarHeight + 30; // Espacio extra
+        
+        const elementPosition = firstMatchElement.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }, 100);
+      
+      // Quitar el destello después de 2 segundos
+      setTimeout(() => {
+        firstMatchElement.classList.remove("search-highlight");
+      }, 2100);
+    }
   }
 }
 
@@ -849,6 +883,7 @@ function performSearch(query) {
 function resetSearch() {
   document.querySelectorAll(".product-card").forEach((card) => {
     card.classList.remove("hidden-by-search");
+    card.classList.remove("search-highlight");
   });
   document.querySelectorAll(".catalog").forEach((catalog) => {
     catalog.classList.remove("hidden-by-search");
