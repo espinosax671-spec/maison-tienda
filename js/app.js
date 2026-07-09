@@ -747,6 +747,14 @@ function closeSearchBar() {
   clearAllFilters();
 }
 
+// Cerrar la barra pero MANTENIENDO los filtros aplicados
+function closeSearchBarKeepFilters() {
+  if (!searchBar) return;
+  searchBar.classList.remove("active");
+  document.body.classList.remove("search-open");
+  // NO limpiamos los filtros, solo cerramos la barra
+}
+
 // Escuchar clic en el botón de lupa (header)
 if (searchToggle) {
   searchToggle.addEventListener("click", () => {
@@ -787,6 +795,16 @@ if (searchInput) {
     searchTimeout = setTimeout(() => {
       applyAllFilters();
     }, 200);
+  });
+  
+  // Al presionar Enter, cerrar la barra y ver los resultados
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (searchTimeout) clearTimeout(searchTimeout);
+      applyAllFilters();
+      closeSearchBarKeepFilters();
+    }
   });
 }
 
@@ -846,6 +864,9 @@ if (applyPriceFilterBtn) {
     
     applyAllFilters();
     updatePriceFilterIndicator();
+    
+    // Cerrar la barra de búsqueda automáticamente después de aplicar
+    closeSearchBarKeepFilters();
   });
 }
 
@@ -885,6 +906,9 @@ priceRangeChips.forEach(chip => {
     
     applyAllFilters();
     updatePriceFilterIndicator();
+    
+    // Cerrar la barra de búsqueda automáticamente al elegir un rango
+    closeSearchBarKeepFilters();
   });
 });
 
@@ -1028,7 +1052,7 @@ function applyAllFilters() {
       
       setTimeout(() => {
         const headerHeight = 78;
-        const searchBarHeight = searchBar.offsetHeight || 200;
+        const searchBarHeight = searchBar.classList.contains("active") ? (searchBar.offsetHeight || 200) : 0;
         const offset = headerHeight + searchBarHeight + 30;
         
         const elementPosition = firstMatchElement.getBoundingClientRect().top;
@@ -1038,11 +1062,11 @@ function applyAllFilters() {
           top: offsetPosition,
           behavior: "smooth"
         });
-      }, 100);
+      }, 400); // Delay más largo para dar tiempo a que se cierre la barra
       
       setTimeout(() => {
         firstMatchElement.classList.remove("search-highlight");
-      }, 2100);
+      }, 2400);
     } else if (!hasActiveFilters) {
       // Si no hay filtros, resetear
       resetAllProductVisibility();
