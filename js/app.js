@@ -151,7 +151,7 @@ async function fetchProductsFromSupabase() {
 }
 
 // ---------------------------------------------------------------
-// Render del catálogo
+// Render del catálogo (CON dataset para búsqueda y filtro de precio)
 // ---------------------------------------------------------------
 async function renderCatalog() {
   const grids = {
@@ -168,10 +168,12 @@ async function renderCatalog() {
 
     const card = document.createElement("article");
     card.className = "product-card reveal";
-    // Agregamos data attributes para la búsqueda
+    // Data attributes para búsqueda
     card.dataset.productName = normalizeText(product.name);
     card.dataset.productCategory = normalizeText(product.category);
     card.dataset.productTag = normalizeText(product.tag);
+    // Data attribute para filtro de precio
+    card.dataset.productPrice = product.price;
     
     card.innerHTML = `
       <div class="product-image">
@@ -689,7 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================================================================
-// SISTEMA DE BÚSQUEDA DE PRODUCTOS (Mejora #2 con scroll automático)
+// SISTEMA DE BÚSQUEDA DE PRODUCTOS + FILTRO DE PRECIO (Mejoras #2 y #3)
 // ===================================================================
 
 // Función auxiliar: normaliza texto para búsqueda (sin tildes, minúsculas)
@@ -703,6 +705,11 @@ function normalizeText(text) {
     .trim();
 }
 
+// Estado global de los filtros
+let currentSearchQuery = "";
+let currentMinPrice = 0;
+let currentMaxPrice = Infinity;
+
 // Elementos de la búsqueda
 const searchToggle = document.getElementById("searchToggle");
 const searchBar = document.getElementById("searchBar");
@@ -712,6 +719,14 @@ const searchResultsCount = document.getElementById("searchResultsCount");
 const noResultsMsg = document.getElementById("noResultsMsg");
 const noResultsText = document.getElementById("noResultsText");
 const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+// Elementos del filtro de precio
+const priceMinInput = document.getElementById("priceMinInput");
+const priceMaxInput = document.getElementById("priceMaxInput");
+const applyPriceFilterBtn = document.getElementById("applyPriceFilterBtn");
+const clearPriceFilterBtn = document.getElementById("clearPriceFilterBtn");
+const priceFilterActive = document.getElementById("priceFilterActive");
+const priceRangeChips = document.querySelectorAll(".price-range-chip");
 
 // Abrir/cerrar barra de búsqueda
 function openSearchBar() {
@@ -727,8 +742,9 @@ function closeSearchBar() {
   if (!searchBar) return;
   searchBar.classList.remove("active");
   document.body.classList.remove("search-open");
+  // Limpiar búsqueda y filtro al cerrar
   if (searchInput) searchInput.value = "";
-  performSearch("");
+  clearAllFilters();
 }
 
 // Escuchar clic en el botón de lupa (header)
@@ -752,7 +768,8 @@ if (clearSearchBtn) {
   clearSearchBtn.addEventListener("click", () => {
     if (searchInput) {
       searchInput.value = "";
-      performSearch("");
+      currentSearchQuery = "";
+      applyAllFilters();
       searchInput.focus();
     }
   });
@@ -763,26 +780,156 @@ let searchTimeout = null;
 if (searchInput) {
   searchInput.addEventListener("input", (e) => {
     const query = e.target.value;
+    currentSearchQuery = query;
     
     if (searchTimeout) clearTimeout(searchTimeout);
     
     searchTimeout = setTimeout(() => {
-      performSearch(query);
+      applyAllFilters();
     }, 200);
   });
 }
 
-// Función principal de búsqueda (mejorada con scroll automático)
-function performSearch(query) {
-  const normalizedQuery = normalizeText(query);
+// ---------------------------------------------------------------
+// FILTRO DE PRECIO
+// ---------------------------------------------------------------
+
+// Formatear inputs de precio en tiempo real
+function formatPriceMiniInput(input) {
+  if (!input) return;
   
-  // Si la búsqueda está vacía, mostrar todo
-  if (!normalizedQuery) {
-    resetSearch();
+  input.addEventListener("input", (e) => {
+    const cursorPos = e.target.selectionStart;
+    const oldLength = e.target.value.length;
+    
+    const numericValue = e.target.value.replace(/\D/g, "");
+    let formatted = "";
+    if (numericValue) {
+      formatted = new Intl.NumberFormat("es-CO").format(parseInt(numericValue, 10));
+    }
+    e.target.value = formatted;
+    
+    const newLength = formatted.length;
+    const diff = newLength - oldLength;
+    const newCursorPos = Math.max(0, cursorPos + diff);
+    e.target.setSelectionRange(newCursorPos, newCursorPos);
+  });
+}
+
+// Aplicar formato a los inputs de precio
+formatPriceMiniInput(priceMinInput);
+formatPriceMiniInput(priceMaxInput);
+
+// Extraer número puro del input formateado
+function extractPriceNumber(value) {
+  if (!value) return 0;
+  return parseInt(value.toString().replace(/\D/g, ""), 10) || 0;
+}
+
+// Botón "Aplicar" del filtro de precio
+if (applyPriceFilterBtn) {
+  applyPriceFilterBtn.addEventListener("click", () => {
+    const minVal = extractPriceNumber(priceMinInput?.value);
+    const maxVal = extractPriceNumber(priceMaxInput?.value);
+    
+    currentMinPrice = minVal || 0;
+    currentMaxPrice = maxVal || Infinity;
+    
+    // Validar que min no sea mayor que max
+    if (maxVal > 0 && minVal > maxVal) {
+      alert("El precio mínimo no puede ser mayor que el máximo.");
+      return;
+    }
+    
+    // Quitar el estado activo de los chips
+    priceRangeChips.forEach(chip => chip.classList.remove("active"));
+    
+    applyAllFilters();
+    updatePriceFilterIndicator();
+  });
+}
+
+// Botón "Limpiar" filtro de precio
+if (clearPriceFilterBtn) {
+  clearPriceFilterBtn.addEventListener("click", () => {
+    if (priceMinInput) priceMinInput.value = "";
+    if (priceMaxInput) priceMaxInput.value = "";
+    currentMinPrice = 0;
+    currentMaxPrice = Infinity;
+    priceRangeChips.forEach(chip => chip.classList.remove("active"));
+    applyAllFilters();
+    updatePriceFilterIndicator();
+  });
+}
+
+// Chips de rangos sugeridos
+priceRangeChips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    const min = parseInt(chip.dataset.min, 10) || 0;
+    const max = chip.dataset.max ? parseInt(chip.dataset.max, 10) : Infinity;
+    
+    // Marcar chip activo
+    priceRangeChips.forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    
+    // Llenar inputs con los valores
+    if (priceMinInput) {
+      priceMinInput.value = min > 0 ? new Intl.NumberFormat("es-CO").format(min) : "";
+    }
+    if (priceMaxInput) {
+      priceMaxInput.value = max !== Infinity ? new Intl.NumberFormat("es-CO").format(max) : "";
+    }
+    
+    currentMinPrice = min;
+    currentMaxPrice = max;
+    
+    applyAllFilters();
+    updatePriceFilterIndicator();
+  });
+});
+
+// Actualizar el indicador de filtro activo
+function updatePriceFilterIndicator() {
+  if (!priceFilterActive) return;
+  
+  if (currentMinPrice === 0 && currentMaxPrice === Infinity) {
+    priceFilterActive.classList.remove("visible");
+    priceFilterActive.textContent = "";
     return;
   }
   
-  // Obtener todos los productos del catálogo
+  let text = "";
+  if (currentMinPrice > 0 && currentMaxPrice !== Infinity) {
+    text = `Rango: $${new Intl.NumberFormat("es-CO").format(currentMinPrice)} - $${new Intl.NumberFormat("es-CO").format(currentMaxPrice)}`;
+  } else if (currentMinPrice > 0) {
+    text = `Desde: $${new Intl.NumberFormat("es-CO").format(currentMinPrice)}`;
+  } else if (currentMaxPrice !== Infinity) {
+    text = `Hasta: $${new Intl.NumberFormat("es-CO").format(currentMaxPrice)}`;
+  }
+  
+  priceFilterActive.textContent = text;
+  priceFilterActive.classList.add("visible");
+}
+
+// Limpiar todos los filtros (búsqueda + precio)
+function clearAllFilters() {
+  currentSearchQuery = "";
+  currentMinPrice = 0;
+  currentMaxPrice = Infinity;
+  
+  if (priceMinInput) priceMinInput.value = "";
+  if (priceMaxInput) priceMaxInput.value = "";
+  priceRangeChips.forEach(chip => chip.classList.remove("active"));
+  
+  updatePriceFilterIndicator();
+  applyAllFilters();
+}
+
+// ---------------------------------------------------------------
+// APLICAR TODOS LOS FILTROS (búsqueda + precio combinados)
+// ---------------------------------------------------------------
+function applyAllFilters() {
+  const normalizedQuery = normalizeText(currentSearchQuery);
   const allProductCards = document.querySelectorAll(".product-card");
   let visibleCount = 0;
   let firstMatchElement = null;
@@ -792,32 +939,41 @@ function performSearch(query) {
     const name = card.dataset.productName || "";
     const category = card.dataset.productCategory || "";
     const tag = card.dataset.productTag || "";
+    const price = parseInt(card.dataset.productPrice, 10) || 0;
     
     // Quitar clase de destello anterior
     card.classList.remove("search-highlight");
     
-    // Buscar en nombre, categoría o etiqueta
-    const matches = 
+    // FILTRO 1: Búsqueda por texto
+    const matchesSearch = 
+      !normalizedQuery ||
       name.includes(normalizedQuery) || 
       category.includes(normalizedQuery) || 
       tag.includes(normalizedQuery);
     
+    // FILTRO 2: Rango de precio
+    const matchesPrice = 
+      price >= currentMinPrice && price <= currentMaxPrice;
+    
+    // Ambos filtros deben coincidir
+    const matches = matchesSearch && matchesPrice;
+    
     if (matches) {
       card.classList.remove("hidden-by-search");
+      card.classList.remove("hidden-by-price");
       visibleCount++;
       
-      // Guardar la primera coincidencia para hacer scroll
       if (!firstMatchElement) {
         firstMatchElement = card;
       }
       
-      // Guardar la categoría del producto encontrado
       const parentCatalog = card.closest(".catalog");
       if (parentCatalog) {
         categoriesWithResults.add(parentCatalog.id);
       }
     } else {
-      card.classList.add("hidden-by-search");
+      if (!matchesSearch) card.classList.add("hidden-by-search");
+      if (!matchesPrice) card.classList.add("hidden-by-price");
     }
   });
   
@@ -831,36 +987,49 @@ function performSearch(query) {
   });
   
   // Actualizar contador de resultados
+  const hasActiveFilters = normalizedQuery || currentMinPrice > 0 || currentMaxPrice !== Infinity;
+  
   if (searchResultsCount) {
-    if (visibleCount === 0) {
-      searchResultsCount.textContent = "0 resultados";
-    } else if (visibleCount === 1) {
-      searchResultsCount.textContent = "1 producto";
+    if (hasActiveFilters) {
+      if (visibleCount === 0) {
+        searchResultsCount.textContent = "0 resultados";
+      } else if (visibleCount === 1) {
+        searchResultsCount.textContent = "1 producto";
+      } else {
+        searchResultsCount.textContent = `${visibleCount} productos`;
+      }
+      searchResultsCount.classList.add("visible");
     } else {
-      searchResultsCount.textContent = `${visibleCount} productos`;
+      searchResultsCount.classList.remove("visible");
+      searchResultsCount.textContent = "";
     }
-    searchResultsCount.classList.add("visible");
   }
   
   // Mostrar/ocultar mensaje de "No encontramos productos"
-  if (visibleCount === 0) {
+  if (hasActiveFilters && visibleCount === 0) {
     if (noResultsMsg) noResultsMsg.style.display = "block";
     if (noResultsText) {
-      noResultsText.textContent = `No hay productos que coincidan con "${query}". Prueba con otra palabra.`;
+      let msg = "No hay productos que coincidan con";
+      if (normalizedQuery && (currentMinPrice > 0 || currentMaxPrice !== Infinity)) {
+        msg += ` "${currentSearchQuery}" en ese rango de precio.`;
+      } else if (normalizedQuery) {
+        msg += ` "${currentSearchQuery}". Prueba con otra palabra.`;
+      } else {
+        msg += " ese rango de precio. Prueba ampliar el rango.";
+      }
+      noResultsText.textContent = msg;
     }
   } else {
     if (noResultsMsg) noResultsMsg.style.display = "none";
     
-    // SCROLL AUTOMÁTICO AL PRIMER RESULTADO
-    if (firstMatchElement) {
-      // Agregar clase de destello para resaltar el producto
+    // Scroll automático al primer resultado (solo si hay búsqueda activa)
+    if (hasActiveFilters && firstMatchElement) {
       firstMatchElement.classList.add("search-highlight");
       
-      // Hacer scroll suave hacia el producto (con un pequeño delay para que se vea la animación)
       setTimeout(() => {
-        const headerHeight = 78; // Altura del header fijo
-        const searchBarHeight = 90; // Altura de la barra de búsqueda
-        const offset = headerHeight + searchBarHeight + 30; // Espacio extra
+        const headerHeight = 78;
+        const searchBarHeight = searchBar.offsetHeight || 200;
+        const offset = headerHeight + searchBarHeight + 30;
         
         const elementPosition = firstMatchElement.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - offset;
@@ -871,28 +1040,27 @@ function performSearch(query) {
         });
       }, 100);
       
-      // Quitar el destello después de 2 segundos
       setTimeout(() => {
         firstMatchElement.classList.remove("search-highlight");
       }, 2100);
+    } else if (!hasActiveFilters) {
+      // Si no hay filtros, resetear
+      resetAllProductVisibility();
     }
   }
 }
 
-// Resetear búsqueda (mostrar todos los productos)
-function resetSearch() {
+// Resetear visibilidad de todos los productos
+function resetAllProductVisibility() {
   document.querySelectorAll(".product-card").forEach((card) => {
     card.classList.remove("hidden-by-search");
+    card.classList.remove("hidden-by-price");
     card.classList.remove("search-highlight");
   });
   document.querySelectorAll(".catalog").forEach((catalog) => {
     catalog.classList.remove("hidden-by-search");
   });
   if (noResultsMsg) noResultsMsg.style.display = "none";
-  if (searchResultsCount) {
-    searchResultsCount.classList.remove("visible");
-    searchResultsCount.textContent = "";
-  }
 }
 
 // ---------------------------------------------------------------
