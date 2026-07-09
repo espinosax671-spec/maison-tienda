@@ -39,7 +39,7 @@
       <a href="#contacto" class="nav-link">Contacto</a>
     </nav>
 
-    <!-- NUEVO: Botón de búsqueda -->
+    <!-- Botón de búsqueda -->
     <button class="search-toggle" id="searchToggle" aria-label="Buscar productos" title="Buscar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/>
@@ -59,7 +59,7 @@
   </div>
 </header>
 
-<!-- ============ BARRA DE BÚSQUEDA (aparece al hacer clic en la lupa) ============ -->
+<!-- ============ BARRA DE BÚSQUEDA + FILTRO DE PRECIO ============ -->
 <div class="search-bar" id="searchBar">
   <div class="search-bar-inner">
     <span class="search-icon-inside">
@@ -81,6 +81,74 @@
         <line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
+  </div>
+
+  <!-- ============ NUEVO: FILTRO DE PRECIO ============ -->
+  <div class="price-filter-wrap">
+    <div class="price-filter-inner">
+      <div class="price-filter-header">
+        <span class="price-filter-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+          </svg>
+          Filtrar por precio
+        </span>
+        <span class="price-filter-active" id="priceFilterActive"></span>
+      </div>
+
+      <div class="price-filter-inputs">
+        <div class="price-input-mini">
+          <span class="price-mini-label">Mínimo</span>
+          <div class="price-mini-wrap">
+            <span class="price-mini-currency">$</span>
+            <input 
+              type="text" 
+              id="priceMinInput" 
+              placeholder="0" 
+              inputmode="numeric" 
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <span class="price-filter-separator">—</span>
+
+        <div class="price-input-mini">
+          <span class="price-mini-label">Máximo</span>
+          <div class="price-mini-wrap">
+            <span class="price-mini-currency">$</span>
+            <input 
+              type="text" 
+              id="priceMaxInput" 
+              placeholder="Sin límite" 
+              inputmode="numeric" 
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <div class="price-filter-actions">
+          <button type="button" class="btn-price-apply" id="applyPriceFilterBtn">
+            Aplicar
+          </button>
+          <button type="button" class="btn-price-clear" id="clearPriceFilterBtn" title="Limpiar filtro">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Rangos rápidos sugeridos -->
+      <div class="price-quick-ranges">
+        <span class="quick-ranges-label">Rangos sugeridos:</span>
+        <button type="button" class="price-range-chip" data-min="0" data-max="50000">Hasta $50.000</button>
+        <button type="button" class="price-range-chip" data-min="50000" data-max="100000">$50.000 - $100.000</button>
+        <button type="button" class="price-range-chip" data-min="100000" data-max="200000">$100.000 - $200.000</button>
+        <button type="button" class="price-range-chip" data-min="200000" data-max="">Más de $200.000</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -106,7 +174,7 @@
   </div>
 </section>
 
-<!-- ============ MENSAJE DE NO RESULTADOS (aparece si la búsqueda no encuentra nada) ============ -->
+<!-- ============ MENSAJE DE NO RESULTADOS ============ -->
 <div class="no-results-msg" id="noResultsMsg" style="display:none;">
   <div class="no-results-inner">
     <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
@@ -544,7 +612,6 @@ document.addEventListener("DOMContentLoaded", () => {
 </button>
 
 <script>
-  // Mostrar/ocultar botón "Volver arriba" según el scroll
   (function() {
     var scrollBtn = document.getElementById("scrollTopBtn");
     if (!scrollBtn) return;
