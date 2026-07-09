@@ -370,7 +370,7 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     await loadProducts();
   } catch (err) {
     console.error(err);
-    errorEl.textContent = "No se pudo guardar el producto. Intenta de nuevo.";
+    errorEl.textContent = err.message || "No se pudo guardar el producto. Intenta de nuevo.";
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Guardar producto";
@@ -378,23 +378,53 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------
-// Subir imagen a Supabase Storage
+// Subir imagen a Supabase Storage (bucket: product_images)
 // ---------------------------------------------------------------
 async function uploadProductImage(file) {
-  const ext = file.name.split(".").pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  try {
+    // Validar tamaño de imagen (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("La imagen no debe pesar más de 5MB.");
+    }
 
-  const { error } = await supabaseClient.storage
-    .from("imágenes_del_producto")
-    .upload(fileName, file);
+    // Limpiar el nombre del archivo (sin tildes ni caracteres raros)
+    const ext = file.name.split(".").pop().toLowerCase();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
 
-  if (error) throw error;
+    console.log("Subiendo imagen:", fileName);
 
-  const { data } = supabaseClient.storage
-    .from("imágenes_del_producto")
-    .getPublicUrl(fileName);
+    // Subir al bucket product_images (con guion bajo)
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+      .from("product_images")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
 
-  return data.publicUrl;
+    if (uploadError) {
+      console.error("Error al subir imagen:", uploadError);
+      throw new Error(`Error al subir imagen: ${uploadError.message}`);
+    }
+
+    console.log("Imagen subida:", uploadData);
+
+    // Obtener URL pública
+    const { data: urlData } = supabaseClient.storage
+      .from("product_images")
+      .getPublicUrl(fileName);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error("No se pudo obtener la URL de la imagen.");
+    }
+
+    console.log("URL pública:", urlData.publicUrl);
+    return urlData.publicUrl;
+
+  } catch (err) {
+    console.error("Error completo:", err);
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------
