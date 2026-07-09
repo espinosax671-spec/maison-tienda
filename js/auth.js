@@ -8,7 +8,7 @@ let currentRole = null;
 let selectedRole = 'comprador';
 
 // ---------------------------------------------------------------
-// 🔧 TODO EL CÓDIGO SE EJECUTA CUANDO EL DOM ESTÁ LISTO
+// TODO EL CÓDIGO SE EJECUTA CUANDO EL DOM ESTÁ LISTO
 // ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", () => {
 
@@ -270,7 +270,7 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    successEl.textContent = "Datos guardados ✓";
+    successEl.textContent = "Datos guardados";
     document.getElementById("profileGreeting").textContent = `Hola, ${name.split(" ")[0]}`;
   });
 
@@ -288,7 +288,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const firstName = user.user_metadata?.full_name?.split(" ")[0] || "vendedor";
       const vendorGreeting = document.getElementById("vendorGreeting");
       if (vendorGreeting) {
-        vendorGreeting.textContent = `¡Hola, ${firstName}!`;
+        vendorGreeting.textContent = `Hola, ${firstName}`;
       }
       
       setTimeout(() => {
