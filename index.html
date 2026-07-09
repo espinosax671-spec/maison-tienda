@@ -199,12 +199,24 @@
   <!-- ---- SELECTOR DE ROL (pestañas) — Solo se muestra si NO está logueado ---- -->
   <div class="role-tabs" id="roleTabs">
     <button type="button" class="role-tab active" data-role-tab="comprador">
-      <span class="role-tab-icon">🛍️</span>
+      <span class="role-tab-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </span>
       <span class="role-tab-name">Cliente</span>
       <span class="role-tab-desc">Comprar prendas</span>
     </button>
     <button type="button" class="role-tab" data-role-tab="vendedor">
-      <span class="role-tab-icon">🏪</span>
+      <span class="role-tab-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l1-5h16l1 5"/>
+          <path d="M4 9v12h16V9"/>
+          <path d="M9 21v-6h6v6"/>
+        </svg>
+      </span>
       <span class="role-tab-name">Vendedor</span>
       <span class="role-tab-desc">Gestionar tienda</span>
     </button>
@@ -265,7 +277,7 @@
 
   <!-- ---- VISTA: VENDEDOR REGISTRADO ---- -->
   <div class="account-view" id="viewVendor">
-    <span class="section-eyebrow">¡Bienvenido, vendedor!</span>
+    <span class="section-eyebrow">Bienvenido, vendedor</span>
     <h3 class="account-title" id="vendorGreeting">Cuenta creada</h3>
     <p class="account-text">Tu cuenta de vendedor ya está lista. Te estamos llevando al panel para que empieces a gestionar tus productos...</p>
     <a href="admin.html" class="btn btn-primary btn-full">Ir al panel ahora</a>
@@ -326,7 +338,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <!-- ============ NOTIFICACIÓN TOAST ============ -->
 <div class="toast" id="toast">
-  <div class="toast-icon">✓</div>
+  <div class="toast-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </div>
   <div class="toast-content">
     <span class="toast-title">Añadido al carrito</span>
     <span class="toast-message" id="toastMessage"></span>
