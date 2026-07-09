@@ -266,6 +266,9 @@ function openProductForm(productId) {
     priceHint.classList.remove("active");
   }
 
+  // Resetear stock inicial a 5 por defecto
+  document.getElementById("productInitialStock").value = "5";
+
   if (productId) {
     const p = allProducts.find((x) => x.id === productId);
     document.getElementById("formTitle").textContent = "Editar producto";
@@ -277,6 +280,11 @@ function openProductForm(productId) {
     document.getElementById("productDesc").value = p.description || "";
     document.getElementById("productSizes").value = (p.sizes || []).join(", ");
     document.getElementById("productActive").checked = p.active;
+    
+    // Al editar, ocultamos el campo de "Stock inicial" porque ya tiene stock
+    const stockInitialLabel = document.getElementById("productInitialStock").closest("label");
+    if (stockInitialLabel) stockInitialLabel.style.display = "none";
+    
     if (p.image_url) {
       document.getElementById("imagePreview").src = p.image_url;
       document.getElementById("imagePreview").style.display = "block";
@@ -291,6 +299,10 @@ function openProductForm(productId) {
     document.getElementById("formTitle").textContent = "Nuevo producto";
     document.getElementById("productId").value = "";
     document.getElementById("productActive").checked = true;
+    
+    // Al crear un producto nuevo, mostramos el campo de "Stock inicial"
+    const stockInitialLabel = document.getElementById("productInitialStock").closest("label");
+    if (stockInitialLabel) stockInitialLabel.style.display = "flex";
   }
 
   formOverlay.classList.add("active");
@@ -318,7 +330,7 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
 });
 
 // ---------------------------------------------------------------
-// Guardar producto
+// Guardar producto (CON STOCK INICIAL AUTOMÁTICO)
 // ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -358,10 +370,25 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     };
 
     if (id) {
+      // EDITAR — no tocamos el stock, ya lo maneja el modal de stock
       const { error } = await supabaseClient.from("products").update(payload).eq("id", id);
       if (error) throw error;
     } else {
+      // NUEVO — llenamos el stock automáticamente
+      const initialStock = parseInt(document.getElementById("productInitialStock").value, 10) || 0;
+      
+      // Crear objeto de stock: {"XS": 5, "S": 5, "M": 5, ...}
+      const stockObject = {};
+      sizes.forEach((size) => {
+        stockObject[size] = initialStock;
+      });
+      
       payload.created_by = adminUser.id;
+      payload.stock = stockObject; // ← STOCK AUTOMÁTICO
+      
+      console.log(`Creando producto con stock inicial: ${initialStock} unidades por talla`);
+      console.log("Stock generado:", stockObject);
+      
       const { error } = await supabaseClient.from("products").insert(payload);
       if (error) throw error;
     }
