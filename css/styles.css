@@ -90,9 +90,9 @@ img { max-width: 100%; display: block; }
   margin: 0 auto;
   padding: 20px 40px;
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
 }
 
 .logo {
@@ -138,6 +138,7 @@ img { max-width: 100%; display: block; }
 
 .cart-toggle,
 .account-toggle,
+.search-toggle,
 .menu-toggle {
   background: none;
   border: none;
@@ -152,10 +153,12 @@ img { max-width: 100%; display: block; }
 }
 
 .cart-toggle:hover,
-.account-toggle:hover { color: var(--color-gold); }
+.account-toggle:hover,
+.search-toggle:hover { color: var(--color-gold); }
 
 .cart-toggle svg,
-.account-toggle svg { width: 22px; height: 22px; }
+.account-toggle svg,
+.search-toggle svg { width: 22px; height: 22px; }
 
 .cart-toggle { position: relative; }
 
@@ -193,6 +196,178 @@ img { max-width: 100%; display: block; }
   height: 1.5px;
   background: var(--color-ink);
   transition: var(--transition);
+}
+
+/* ============================================
+   BARRA DE BÚSQUEDA
+   ============================================ */
+.search-bar {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  padding: 20px 40px;
+  z-index: 99;
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all .4s cubic-bezier(.16, 1, .3, 1);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.search-bar.active {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.search-bar-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  padding: 4px 4px 4px 20px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.search-bar-inner:focus-within {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(168, 130, 75, 0.15);
+}
+
+.search-icon-inside {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink-soft);
+  transition: color .3s ease;
+  flex-shrink: 0;
+}
+
+.search-bar-inner:focus-within .search-icon-inside {
+  color: var(--color-gold);
+}
+
+#searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 14px 8px;
+  font-size: 15px;
+  color: var(--color-ink);
+  font-family: inherit;
+  outline: none;
+  letter-spacing: 0.3px;
+}
+
+#searchInput::placeholder {
+  color: rgba(107, 88, 66, 0.5);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.search-results-count {
+  font-size: 11px;
+  color: var(--color-gold-dark);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.search-results-count.visible {
+  opacity: 1;
+}
+
+.search-clear {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-ink);
+  border: none;
+  cursor: pointer;
+  padding: 12px 14px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .3s ease;
+  flex-shrink: 0;
+}
+
+.search-clear:hover {
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-light));
+  color: var(--color-white);
+  transform: scale(1.05);
+}
+
+.search-clear:active {
+  transform: scale(0.95);
+}
+
+/* Cuando la barra de búsqueda está abierta, empuja el contenido hacia abajo */
+body.search-open .hero,
+body.search-open .catalog:first-of-type {
+  margin-top: 78px;
+}
+
+/* ============================================
+   MENSAJE DE NO RESULTADOS
+   ============================================ */
+.no-results-msg {
+  padding: 80px 40px;
+  text-align: center;
+  background: var(--color-bg);
+  animation: fadeIn .4s ease;
+}
+
+.no-results-inner {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.no-results-inner svg {
+  color: var(--color-gold);
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.no-results-inner h3 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  color: var(--color-ink);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.no-results-inner p {
+  color: var(--color-ink-soft);
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ocultar catálogos completos cuando no hay resultados en ellos */
+.catalog.hidden-by-search {
+  display: none;
+}
+
+/* Producto oculto por búsqueda */
+.product-item.hidden-by-search,
+.product-card.hidden-by-search {
+  display: none;
 }
 
 /* ============================================
@@ -1103,7 +1278,7 @@ img { max-width: 100%; display: block; }
    RESPONSIVE GENERAL
    ============================================ */
 @media (max-width: 900px) {
-  .header-inner { padding: 15px 20px; gap: 15px; }
+  .header-inner { padding: 15px 20px; gap: 12px; }
   .menu-toggle  { display: flex; order: -1; }
   .main-nav {
     position: fixed;
@@ -1130,6 +1305,13 @@ img { max-width: 100%; display: block; }
   .footer-inner { grid-template-columns: 1fr; gap: 40px; padding-bottom: 30px; }
 
   .account-modal { padding: 40px 25px; }
+
+  /* Barra de búsqueda responsive */
+  .search-bar { padding: 15px 20px; }
+  .search-bar-inner { padding-left: 15px; }
+  #searchInput { font-size: 14px; padding: 12px 6px; }
+  #searchInput::placeholder { font-size: 13px; }
+  .search-results-count { display: none; }
 }
 
 @media (max-width: 500px) {
@@ -1330,7 +1512,6 @@ img { max-width: 100%; display: block; }
    LOGIN PROFESIONAL — Estilo boutique MAISON
    ============================================ */
 
-/* Marca dentro del modal */
 .account-brand {
   text-align: center;
   margin-bottom: 30px;
@@ -1354,7 +1535,6 @@ img { max-width: 100%; display: block; }
   margin: 12px auto 0;
 }
 
-/* Subtítulo elegante */
 .account-subtitle {
   color: var(--color-ink-soft);
   font-size: 13px;
@@ -1363,7 +1543,6 @@ img { max-width: 100%; display: block; }
   text-align: left;
 }
 
-/* Título más grande y refinado */
 .account-title {
   font-family: var(--font-serif);
   font-size: 32px;
@@ -1374,7 +1553,6 @@ img { max-width: 100%; display: block; }
   line-height: 1.15;
 }
 
-/* Grupo de input con ícono */
 .input-group {
   position: relative;
   display: flex;
@@ -1427,7 +1605,6 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.5px;
 }
 
-/* Ojito de contraseña dentro del input-group */
 .input-group .toggle-password {
   position: static;
   padding: 0 16px;
@@ -1448,7 +1625,6 @@ img { max-width: 100%; display: block; }
   color: var(--color-gold);
 }
 
-/* Fila con "Recordarme" y "Olvidé contraseña" */
 .form-row-between {
   display: flex;
   justify-content: space-between;
@@ -1491,7 +1667,6 @@ img { max-width: 100%; display: block; }
   border-bottom-color: var(--color-gold);
 }
 
-/* Botón de autenticación con flecha */
 .btn-auth {
   position: relative;
   overflow: hidden;
@@ -1522,7 +1697,6 @@ img { max-width: 100%; display: block; }
   left: 100%;
 }
 
-/* Divisor "o" */
 .auth-divider {
   display: flex;
   align-items: center;
@@ -1546,7 +1720,6 @@ img { max-width: 100%; display: block; }
   color: var(--color-ink-soft);
 }
 
-/* Texto de términos */
 .terms-text {
   font-size: 11px;
   color: var(--color-ink-soft);
@@ -1566,7 +1739,6 @@ img { max-width: 100%; display: block; }
   border-bottom-color: var(--color-gold-dark);
 }
 
-/* Ícono de éxito (para vistas de confirmación) */
 .success-icon {
   width: 80px;
   height: 80px;
@@ -1586,7 +1758,6 @@ img { max-width: 100%; display: block; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Role tabs mejorados */
 .role-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1658,12 +1829,10 @@ img { max-width: 100%; display: block; }
   color: var(--color-gold-dark);
 }
 
-/* Ocultar tabs cuando el usuario ya está logueado */
 .role-tabs.hidden {
   display: none;
 }
 
-/* Botón "Regístrate/Inicia sesión" */
 .account-switch {
   text-align: center;
   margin-top: 5px;
@@ -1689,7 +1858,6 @@ img { max-width: 100%; display: block; }
   border-bottom-color: var(--color-gold);
 }
 
-/* Section eyebrow más refinado en modal cuenta */
 .account-modal .section-eyebrow {
   font-size: 10px;
   letter-spacing: 3.5px;
@@ -1697,7 +1865,6 @@ img { max-width: 100%; display: block; }
   font-weight: 500;
 }
 
-/* Estados de error mejorados */
 .account-error {
   color: var(--color-danger);
   font-size: 12px;
@@ -1729,7 +1896,6 @@ img { max-width: 100%; display: block; }
   text-align: left;
 }
 
-/* Logout más sutil */
 .logout-btn {
   margin-top: 12px;
   opacity: 0.7;
@@ -1740,7 +1906,6 @@ img { max-width: 100%; display: block; }
   opacity: 1;
 }
 
-/* Responsive del modal de cuenta */
 @media (max-width: 500px) {
   .account-modal {
     padding: 35px 25px 30px;
@@ -1760,127 +1925,5 @@ img { max-width: 100%; display: block; }
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-  }
-}
-
-/* ============================================
-   BOTÓN VOLVER ARRIBA
-   ============================================ */
-.scroll-top-btn {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
-  border: none;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
-  color: var(--color-ink);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 400;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(20px) scale(0.8);
-  transition: all .4s cubic-bezier(.16, 1, .3, 1);
-  box-shadow: 0 6px 20px rgba(143, 107, 63, 0.35);
-  overflow: hidden;
-}
-
-.scroll-top-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-light));
-  opacity: 0;
-  transition: opacity .3s ease;
-  z-index: -1;
-}
-
-.scroll-top-btn.visible {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0) scale(1);
-  animation: btnPulse 2s ease-in-out infinite;
-}
-
-.scroll-top-btn:hover {
-  transform: translateY(-4px) scale(1.08);
-  box-shadow: 0 12px 30px rgba(143, 107, 63, 0.5);
-  color: var(--color-white);
-  animation: none;
-}
-
-.scroll-top-btn:hover::before {
-  opacity: 1;
-}
-
-.scroll-top-btn:hover svg {
-  animation: arrowBounce .6s ease infinite;
-}
-
-.scroll-top-btn:active {
-  transform: translateY(-2px) scale(1);
-}
-
-.scroll-top-btn svg {
-  position: relative;
-  z-index: 1;
-  transition: transform .3s ease;
-}
-
-/* Anillo decorativo dorado */
-.scroll-top-btn::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border: 1px solid var(--color-gold);
-  border-radius: 50%;
-  opacity: 0.4;
-  animation: ringRotate 8s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes btnPulse {
-  0%, 100% { box-shadow: 0 6px 20px rgba(143, 107, 63, 0.35); }
-  50% { box-shadow: 0 6px 30px rgba(212, 168, 105, 0.55); }
-}
-
-@keyframes arrowBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-@keyframes ringRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Responsive: móviles */
-@media (max-width: 768px) {
-  .scroll-top-btn {
-    bottom: 20px;
-    right: 20px;
-    width: 44px;
-    height: 44px;
-  }
-  
-  .scroll-top-btn svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-/* Cuando el carrito está abierto, mover el botón para que no se superponga */
-.cart-panel.active ~ .scroll-top-btn {
-  right: calc(440px + 30px);
-}
-
-@media (max-width: 500px) {
-  .cart-panel.active ~ .scroll-top-btn {
-    display: none;
   }
 }
