@@ -803,7 +803,7 @@ img { max-width: 100%; display: block; }
 
 .account-modal {
   max-width: 480px;
-  padding: 50px 45px;
+  padding: 45px 40px 40px;
 }
 
 .product-modal.active,
@@ -898,79 +898,6 @@ img { max-width: 100%; display: block; }
 }
 
 /* ============================================
-   SELECTOR DE ROL EN MODAL DE CUENTA (pestañas)
-   ============================================ */
-.role-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 30px;
-  padding: 6px;
-  background: var(--color-cream);
-  border-radius: 4px;
-}
-
-.role-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 16px 12px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  border-radius: 3px;
-  transition: var(--transition);
-  color: var(--color-ink-soft);
-  text-align: center;
-}
-
-.role-tab:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.role-tab.active {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.role-tab-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2px;
-  color: var(--color-ink-soft);
-}
-
-.role-tab.active .role-tab-icon {
-  color: var(--color-gold-dark);
-}
-
-.role-tab-name {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.role-tab-desc {
-  font-size: 11px;
-  color: var(--color-ink-soft);
-  letter-spacing: 0.5px;
-}
-
-.role-tab.active .role-tab-desc {
-  color: var(--color-gold-dark);
-}
-
-/* Ocultar tabs cuando el usuario ya está logueado */
-.role-tabs.hidden {
-  display: none;
-}
-
-/* ============================================
    TALLAS
    ============================================ */
 .size-options {
@@ -1024,7 +951,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ============================================
-   FORMULARIOS DE CUENTA
+   FORMULARIOS DE CUENTA (base)
    ============================================ */
 .account-view { display: none; }
 .account-view.active { display: block; animation: fade .4s; }
@@ -1032,14 +959,6 @@ img { max-width: 100%; display: block; }
 @keyframes fade {
   from { opacity: 0; }
   to   { opacity: 1; }
-}
-
-.account-title {
-  font-family: var(--font-serif);
-  font-size: 30px;
-  font-weight: 500;
-  color: var(--color-ink);
-  margin: 12px 0 25px;
 }
 
 .account-text {
@@ -1052,34 +971,7 @@ img { max-width: 100%; display: block; }
 .account-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-}
-
-.account-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--color-ink-soft);
-}
-
-.account-form input {
-  padding: 13px 15px;
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  font-size: 14px;
-  color: var(--color-ink);
-  font-family: inherit;
-  letter-spacing: normal;
-  text-transform: none;
-  outline: none;
-  transition: var(--transition);
-}
-.account-form input:focus {
-  border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(168,130,75,0.15);
+  gap: 16px;
 }
 
 .account-hint {
@@ -1087,38 +979,6 @@ img { max-width: 100%; display: block; }
   color: var(--color-ink-soft);
   margin-top: -8px;
 }
-
-.account-error {
-  color: var(--color-danger);
-  font-size: 13px;
-  min-height: 18px;
-}
-
-.account-success {
-  color: var(--color-success);
-  font-size: 13px;
-  min-height: 18px;
-}
-
-.account-switch {
-  text-align: center;
-  margin-top: 22px;
-  font-size: 13px;
-  color: var(--color-ink-soft);
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  color: var(--color-gold);
-  cursor: pointer;
-  text-decoration: underline;
-  font-family: inherit;
-  font-size: inherit;
-}
-.link-btn:hover { color: var(--color-gold-dark); }
-
-.logout-btn { margin-top: 15px; }
 
 /* ============================================
    SELECTOR DE CANTIDAD (Modal producto)
@@ -1240,7 +1100,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIVE GENERAL
    ============================================ */
 @media (max-width: 900px) {
   .header-inner { padding: 15px 20px; gap: 15px; }
@@ -1268,8 +1128,6 @@ img { max-width: 100%; display: block; }
   .modal-name { font-size: 28px; }
 
   .footer-inner { grid-template-columns: 1fr; gap: 40px; padding-bottom: 30px; }
-
-  .account-modal { padding: 40px 25px; }
 }
 
 @media (max-width: 500px) {
@@ -1341,7 +1199,6 @@ img { max-width: 100%; display: block; }
   color: var(--color-ink-soft);
 }
 
-/* Responsive */
 @media (max-width: 500px) {
   .toast {
     right: 15px;
@@ -1375,7 +1232,6 @@ img { max-width: 100%; display: block; }
   font-weight: 400;
 }
 
-/* Talla AGOTADA */
 .size-btn.size-out {
   opacity: 0.45;
   cursor: not-allowed;
@@ -1399,7 +1255,6 @@ img { max-width: 100%; display: block; }
   opacity: 1;
 }
 
-/* Talla con ÚLTIMAS UNIDADES */
 .size-btn.size-low {
   border-color: #d4a869;
   color: #8f6b3f;
@@ -1426,7 +1281,6 @@ img { max-width: 100%; display: block; }
   color: #d4a869;
 }
 
-/* Botón "Añadir" deshabilitado (producto agotado) */
 #modalAddBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1440,7 +1294,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ============================================
-   BOTON MOSTRAR/OCULTAR CONTRASEÑA
+   BOTON MOSTRAR/OCULTAR CONTRASEÑA (base)
    ============================================ */
 .password-wrap {
   position: relative;
@@ -1468,4 +1322,441 @@ img { max-width: 100%; display: block; }
 }
 .toggle-password:hover {
   opacity: 1;
+}
+
+/* ============================================
+   LOGIN PROFESIONAL — Estilo boutique MAISON
+   ============================================ */
+
+/* Marca dentro del modal */
+.account-brand {
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.account-brand-name {
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  letter-spacing: 8px;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.account-brand-line {
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--color-gold);
+  margin: 12px auto 0;
+}
+
+/* Subtítulo elegante */
+.account-subtitle {
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: -15px 0 25px;
+  text-align: left;
+}
+
+/* Título más grande y refinado */
+.account-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--color-ink);
+  margin: 10px 0 8px;
+  letter-spacing: -0.3px;
+  line-height: 1.15;
+}
+
+/* Grupo de input con ícono */
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.input-group:focus-within {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(168, 130, 75, 0.12);
+}
+
+.input-group:hover:not(:focus-within) {
+  border-color: rgba(168, 130, 75, 0.5);
+}
+
+.input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 16px;
+  color: var(--color-ink-soft);
+  transition: var(--transition);
+  pointer-events: none;
+}
+
+.input-group:focus-within .input-icon {
+  color: var(--color-gold);
+}
+
+.input-group input {
+  flex: 1;
+  padding: 15px 16px !important;
+  border: none !important;
+  background: transparent !important;
+  font-size: 14px;
+  color: var(--color-ink);
+  font-family: inherit;
+  outline: none !important;
+  box-shadow: none !important;
+  letter-spacing: 0.3px;
+}
+
+.input-group input::placeholder {
+  color: rgba(107, 88, 66, 0.5);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* Ojito de contraseña dentro del input-group */
+.input-group .toggle-password {
+  position: static;
+  padding: 0 16px;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: var(--transition);
+}
+
+.input-group .toggle-password:hover {
+  opacity: 1;
+  color: var(--color-gold);
+}
+
+/* Fila con "Recordarme" y "Olvidé contraseña" */
+.form-row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: -5px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+
+.remember-me input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-gold);
+  cursor: pointer;
+  margin: 0;
+}
+
+.forgot-link {
+  font-size: 12px;
+  color: var(--color-gold-dark);
+  text-decoration: none;
+  transition: var(--transition);
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid transparent;
+}
+
+.forgot-link:hover {
+  color: var(--color-gold);
+  border-bottom-color: var(--color-gold);
+}
+
+/* Botón de autenticación con flecha */
+.btn-auth {
+  position: relative;
+  overflow: hidden;
+  gap: 10px;
+  transition: all .4s cubic-bezier(.16, 1, .3, 1);
+}
+
+.btn-auth .btn-arrow {
+  transition: transform .3s ease;
+}
+
+.btn-auth:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+.btn-auth::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left .6s ease;
+}
+
+.btn-auth:hover::before {
+  left: 100%;
+}
+
+/* Divisor "o" */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 25px 0 20px;
+  color: var(--color-ink-soft);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.auth-divider span {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+/* Texto de términos */
+.terms-text {
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: -5px;
+}
+
+.terms-text a {
+  color: var(--color-gold-dark);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.terms-text a:hover {
+  border-bottom-color: var(--color-gold-dark);
+}
+
+/* Ícono de éxito (para vistas de confirmación) */
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 130, 75, 0.1);
+  border-radius: 50%;
+  color: var(--color-gold-dark);
+  animation: successPop .5s cubic-bezier(.16, 1, .3, 1);
+}
+
+@keyframes successPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Role tabs mejorados */
+.role-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-bottom: 30px;
+  padding: 5px;
+  background: rgba(232, 220, 200, 0.6);
+  border-radius: 6px;
+}
+
+.role-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .3s cubic-bezier(.16, 1, .3, 1);
+  color: var(--color-ink-soft);
+  text-align: center;
+}
+
+.role-tab:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.role-tab.active {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+.role-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink-soft);
+  transition: color .3s ease, transform .3s ease;
+  margin-bottom: 4px;
+}
+
+.role-tab.active .role-tab-icon {
+  color: var(--color-gold-dark);
+  transform: scale(1.1);
+}
+
+.role-tab-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.role-tab-desc {
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  opacity: 0.75;
+  margin-top: 2px;
+  color: var(--color-ink-soft);
+}
+
+.role-tab.active .role-tab-desc {
+  color: var(--color-gold-dark);
+}
+
+/* Ocultar tabs cuando el usuario ya está logueado */
+.role-tabs.hidden {
+  display: none;
+}
+
+/* Botón "Regístrate/Inicia sesión" */
+.account-switch {
+  text-align: center;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+}
+
+.link-btn {
+  color: var(--color-gold-dark);
+  font-weight: 500;
+  border: none;
+  border-bottom: 1px solid var(--color-gold-dark);
+  padding-bottom: 1px;
+  transition: var(--transition);
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.link-btn:hover {
+  color: var(--color-gold);
+  border-bottom-color: var(--color-gold);
+}
+
+/* Section eyebrow más refinado en modal cuenta */
+.account-modal .section-eyebrow {
+  font-size: 10px;
+  letter-spacing: 3.5px;
+  color: var(--color-gold);
+  font-weight: 500;
+}
+
+/* Estados de error mejorados */
+.account-error {
+  color: var(--color-danger);
+  font-size: 12px;
+  min-height: 16px;
+  padding: 4px 0;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.account-error:not(:empty) {
+  padding: 10px 14px;
+  background: rgba(184, 74, 63, 0.08);
+  border-left: 3px solid var(--color-danger);
+  text-align: left;
+}
+
+.account-success {
+  color: var(--color-success);
+  font-size: 12px;
+  min-height: 16px;
+  padding: 4px 0;
+  text-align: center;
+}
+
+.account-success:not(:empty) {
+  padding: 10px 14px;
+  background: rgba(74, 138, 92, 0.08);
+  border-left: 3px solid var(--color-success);
+  text-align: left;
+}
+
+/* Logout más sutil */
+.logout-btn {
+  margin-top: 12px;
+  opacity: 0.7;
+  transition: var(--transition);
+}
+
+.logout-btn:hover {
+  opacity: 1;
+}
+
+/* Responsive del modal de cuenta */
+@media (max-width: 500px) {
+  .account-modal {
+    padding: 35px 25px 30px;
+    max-width: 95%;
+  }
+  
+  .account-title {
+    font-size: 26px;
+  }
+  
+  .account-brand-name {
+    font-size: 22px;
+    letter-spacing: 6px;
+  }
+  
+  .form-row-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
