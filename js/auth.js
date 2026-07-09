@@ -136,7 +136,8 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     btn.disabled = true;
-    btn.textContent = "Creando cuenta...";
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "<span>Creando cuenta...</span>";
 
     const { data, error } = await supabaseClient.auth.signUp({
       email,
@@ -151,7 +152,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     btn.disabled = false;
-    btn.textContent = "Crear cuenta";
+    btn.innerHTML = originalHtml;
 
     if (error) {
       errorEl.textContent = traduceErrorAuth(error.message);
@@ -201,12 +202,13 @@ window.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("loginSubmitBtn");
 
     btn.disabled = true;
-    btn.textContent = "Ingresando...";
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "<span>Ingresando...</span>";
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     btn.disabled = false;
-    btn.textContent = "Ingresar";
+    btn.innerHTML = originalHtml;
 
     if (error) {
       errorEl.textContent = traduceErrorAuth(error.message);
@@ -251,7 +253,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("profileSaveBtn");
 
     btn.disabled = true;
-    btn.textContent = "Guardando...";
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "<span>Guardando...</span>";
 
     const { error } = await supabaseClient.from("profiles").upsert({
       id: currentUser.id,
@@ -263,16 +266,46 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     btn.disabled = false;
-    btn.textContent = "Guardar datos";
+    btn.innerHTML = originalHtml;
 
     if (error) {
       errorEl.textContent = "No se pudo guardar. Intenta de nuevo.";
       return;
     }
 
-    successEl.textContent = "Datos guardados";
+    successEl.textContent = "Datos guardados correctamente";
     document.getElementById("profileGreeting").textContent = `Hola, ${name.split(" ")[0]}`;
   });
+
+  // ---------------------------------------------------------------
+  // RECUPERAR CONTRASEÑA (desde la tienda)
+  // ---------------------------------------------------------------
+  const forgotLinkTienda = document.getElementById("forgotPasswordLinkTienda");
+  if (forgotLinkTienda) {
+    forgotLinkTienda.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const errorEl = document.getElementById("loginError");
+      
+      if (!email) {
+        errorEl.textContent = "Ingresa tu correo primero para recuperar la contraseña.";
+        return;
+      }
+      
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/reset-password.html"
+        });
+        
+        if (error) throw error;
+        
+        errorEl.textContent = "";
+        alert("Enviamos un enlace de recuperación a " + email + ". Revisa tu correo (y la carpeta de spam).");
+      } catch (err) {
+        errorEl.textContent = "No se pudo enviar el enlace. Intenta de nuevo.";
+      }
+    });
+  }
 
   // ---------------------------------------------------------------
   // Tras login/registro exitoso
