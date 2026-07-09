@@ -1,7 +1,7 @@
 /* ===================================================================
    PANEL DE ADMINISTRACIÓN — Lógica
    Requiere: js/supabase-client.js cargado antes que este archivo
-   🛡️ Protegido: solo vendedores autorizados pueden acceder
+   Protegido: solo vendedores autorizados pueden acceder
 =================================================================== */
 
 let adminUser = null;
@@ -50,7 +50,7 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------
-// 🛡️ PROTECCIÓN DEL PANEL
+// PROTECCIÓN DEL PANEL
 // ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
@@ -186,14 +186,14 @@ function renderProductTable() {
           <span>${categoryLabel(p.category)}</span>
           ${p.tag ? `<span>· ${escapeHtml(p.tag)}</span>` : ""}
           <span class="stock-badge ${stockClass}">
-            📦 ${totalStock} en stock
+            ${totalStock} en stock
           </span>
         </div>
       </div>
       <div class="product-row-price">${formatPrice(p.price)}</div>
       <span class="status-pill ${p.active ? "active" : "inactive"}">${p.active ? "Visible" : "Oculto"}</span>
       <div class="product-row-actions">
-        <button class="btn-stock" data-stock="${p.id}">📦 Stock</button>
+        <button class="btn-stock" data-stock="${p.id}">Stock</button>
         <button class="icon-btn" data-edit="${p.id}">Editar</button>
         <button class="icon-btn danger" data-delete="${p.id}">Eliminar</button>
       </div>
@@ -468,7 +468,7 @@ document.getElementById("resetForm").addEventListener("submit", async function(e
     
     if (error) throw error;
     
-    successEl.innerHTML = "✓ Enviamos el enlace a <strong>" + email + "</strong>. Revisa tu correo (y spam).";
+    successEl.innerHTML = "Enviamos el enlace a <strong>" + email + "</strong>. Revisa tu correo (y spam).";
     document.getElementById("resetEmail").value = "";
     
     setTimeout(cerrarReset, 5000);
@@ -481,7 +481,7 @@ document.getElementById("resetForm").addEventListener("submit", async function(e
 });
 
 // ---------------------------------------------------------------
-// 📦 GESTIÓN DE INVENTARIO / STOCK
+// GESTIÓN DE INVENTARIO / STOCK
 // ---------------------------------------------------------------
 const stockOverlay = document.getElementById("stockOverlay");
 const stockModal = document.getElementById("stockModal");
@@ -561,7 +561,7 @@ function renderStockList() {
         <div class="stock-status ${statusClass}">${statusText}</div>
       </div>
       <div class="stock-controls">
-        <button type="button" class="stock-btn" data-size="${size}" data-action="minus">−</button>
+        <button type="button" class="stock-btn" data-size="${size}" data-action="minus">-</button>
         <input type="number" class="stock-input" data-size="${size}" value="${qty}" min="0" max="9999">
         <button type="button" class="stock-btn" data-size="${size}" data-action="plus">+</button>
       </div>
@@ -649,7 +649,7 @@ function getTotalStock(stock) {
 }
 
 // ===================================================================
-// 📑 SISTEMA DE TABS (Productos / Pedidos)
+// SISTEMA DE TABS (Productos / Pedidos)
 // ===================================================================
 
 let currentTab = "productos";
@@ -687,7 +687,7 @@ function capitalize(str) {
 }
 
 // ===================================================================
-// 📬 CARGAR PEDIDOS DESDE SUPABASE
+// CARGAR PEDIDOS DESDE SUPABASE
 // ===================================================================
 
 async function loadOrders() {
@@ -842,7 +842,7 @@ function createOrderCard(order) {
     `;
   } else if (order.status === "confirmado") {
     actionsHtml += `
-      <button class="btn-deliver" data-deliver="${order.id}">📦 Marcar entregado</button>
+      <button class="btn-deliver" data-deliver="${order.id}">Marcar entregado</button>
     `;
   }
   
@@ -888,16 +888,16 @@ function createOrderCard(order) {
 
 function statusLabel(status) {
   const labels = {
-    pendiente: "⏳ Pendiente",
-    confirmado: "✅ Confirmado",
-    entregado: "📦 Entregado",
-    cancelado: "❌ Cancelado"
+    pendiente: "Pendiente",
+    confirmado: "Confirmado",
+    entregado: "Entregado",
+    cancelado: "Cancelado"
   };
   return labels[status] || status;
 }
 
 // ===================================================================
-// 🔘 FILTROS DE PEDIDOS
+// FILTROS DE PEDIDOS
 // ===================================================================
 document.querySelectorAll("[data-order-filter]").forEach((chip) => {
   chip.addEventListener("click", () => {
@@ -909,19 +909,19 @@ document.querySelectorAll("[data-order-filter]").forEach((chip) => {
 });
 
 // ===================================================================
-// 🔄 BOTÓN ACTUALIZAR
+// BOTÓN ACTUALIZAR
 // ===================================================================
 document.getElementById("refreshOrdersBtn").addEventListener("click", () => {
   loadOrders();
 });
 
 // ===================================================================
-// ✅ CONFIRMAR PEDIDO (descuenta stock automáticamente)
+// CONFIRMAR PEDIDO (descuenta stock automáticamente)
 // ===================================================================
 async function handleConfirmOrder(order) {
   const confirmMsg = `¿Confirmar el pedido #${order.order_number}?\n\n` +
     `Se descontará el stock automáticamente:\n` +
-    order.items.map(i => `• ${i.name} (Talla ${i.size}) x ${i.qty}`).join("\n") +
+    order.items.map(i => `- ${i.name} (Talla ${i.size}) x ${i.qty}`).join("\n") +
     `\n\nTotal: ${formatPrice(order.total)}`;
   
   if (!confirm(confirmMsg)) return;
@@ -948,16 +948,16 @@ async function handleConfirmOrder(order) {
     await loadOrders();
     await loadProducts();
     
-    alert(`✅ Pedido #${order.order_number} confirmado.\nStock actualizado.`);
+    alert(`Pedido #${order.order_number} confirmado.\nStock actualizado.`);
     
   } catch (err) {
     console.error("Error al confirmar pedido:", err);
-    alert("❌ No se pudo confirmar el pedido. Intenta de nuevo.");
+    alert("No se pudo confirmar el pedido. Intenta de nuevo.");
   }
 }
 
 // ===================================================================
-// ❌ CANCELAR PEDIDO
+// CANCELAR PEDIDO
 // ===================================================================
 async function handleCancelOrder(order) {
   const confirmMsg = `¿Cancelar el pedido #${order.order_number}?\n\n` +
@@ -982,12 +982,12 @@ async function handleCancelOrder(order) {
     
   } catch (err) {
     console.error("Error al cancelar pedido:", err);
-    alert("❌ No se pudo cancelar el pedido.");
+    alert("No se pudo cancelar el pedido.");
   }
 }
 
 // ===================================================================
-// 📦 MARCAR COMO ENTREGADO
+// MARCAR COMO ENTREGADO
 // ===================================================================
 async function handleDeliverOrder(order) {
   if (!confirm(`¿Marcar el pedido #${order.order_number} como ENTREGADO?`)) return;
@@ -1004,16 +1004,16 @@ async function handleDeliverOrder(order) {
     if (error) throw error;
     
     await loadOrders();
-    alert(`✅ Pedido #${order.order_number} marcado como entregado.`);
+    alert(`Pedido #${order.order_number} marcado como entregado.`);
     
   } catch (err) {
     console.error("Error:", err);
-    alert("❌ No se pudo actualizar el pedido.");
+    alert("No se pudo actualizar el pedido.");
   }
 }
 
 // ===================================================================
-// 📦 DECREMENTAR STOCK (helper)
+// DECREMENTAR STOCK (helper)
 // ===================================================================
 async function decrementStock(productId, size, qty) {
   const { data: product, error: fetchError } = await supabaseClient
@@ -1041,5 +1041,5 @@ async function decrementStock(productId, size, qty) {
   
   if (updateError) throw updateError;
   
-  console.log(`✅ Stock descontado: ${productId} - ${size}: ${currentQty} → ${newQty}`);
+  console.log(`Stock descontado: ${productId} - ${size}: ${currentQty} -> ${newQty}`);
 }
