@@ -150,7 +150,11 @@
     </label>
 
     <label>Precio (COP)
-      <input type="number" id="productPrice" required min="0" step="1000" placeholder="Ej: 219000">
+      <div class="price-input-wrap">
+        <span class="price-currency">$</span>
+        <input type="text" id="productPrice" required placeholder="Ej: 219.000" inputmode="numeric" autocomplete="off">
+      </div>
+      <span class="price-hint" id="priceHint">Ingresa el precio sin puntos ni comas</span>
     </label>
 
     <label>Etiqueta (opcional)
