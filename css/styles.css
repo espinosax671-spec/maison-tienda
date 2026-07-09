@@ -937,8 +937,15 @@ img { max-width: 100%; display: block; }
 }
 
 .role-tab-icon {
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 2px;
+  color: var(--color-ink-soft);
+}
+
+.role-tab.active .role-tab-icon {
+  color: var(--color-gold-dark);
 }
 
 .role-tab-name {
@@ -1308,9 +1315,12 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
   flex-shrink: 0;
+}
+
+.toast-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .toast-content {
@@ -1428,6 +1438,7 @@ img { max-width: 100%; display: block; }
   transform: none;
   box-shadow: none;
 }
+
 /* ============================================
    BOTON MOSTRAR/OCULTAR CONTRASEÑA
    ============================================ */
