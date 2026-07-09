@@ -168,6 +168,11 @@ async function renderCatalog() {
 
     const card = document.createElement("article");
     card.className = "product-card reveal";
+    // Agregamos data attributes para la búsqueda
+    card.dataset.productName = normalizeText(product.name);
+    card.dataset.productCategory = normalizeText(product.category);
+    card.dataset.productTag = normalizeText(product.tag);
+    
     card.innerHTML = `
       <div class="product-image">
         ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ""}
@@ -227,7 +232,6 @@ function openProductModal(product) {
   const sizesWrap = document.getElementById("modalSizes");
   sizesWrap.innerHTML = "";
   
-  // Verificar si el producto tiene stock configurado
   const hasStockConfig = product.stock && Object.keys(product.stock).length > 0;
   
   product.sizes.forEach((size) => {
@@ -239,20 +243,16 @@ function openProductModal(product) {
     
     if (hasStockConfig) {
       if (stockQty === 0 || stockQty === null) {
-        // AGOTADO
         btn.classList.add("size-out");
         btn.disabled = true;
         btn.innerHTML = `${size}<span class="size-label">Agotado</span>`;
       } else if (stockQty < 3) {
-        // ÚLTIMAS UNIDADES
         btn.classList.add("size-low");
         btn.innerHTML = `${size}<span class="size-label">Últimas ${stockQty}</span>`;
       } else {
-        // DISPONIBLE
         btn.textContent = size;
       }
     } else {
-      // Sin stock configurado — comportamiento normal
       btn.textContent = size;
     }
     
@@ -270,7 +270,6 @@ function openProductModal(product) {
     sizesWrap.appendChild(btn);
   });
   
-  // Si TODAS las tallas están agotadas
   const totalStock = hasStockConfig ? getTotalStock(product) : 999;
   const addBtn = document.getElementById("modalAddBtn");
   if (totalStock === 0) {
@@ -360,7 +359,6 @@ function renderCart() {
   totalLabel.textContent = formatPrice(cartTotal());
 
   if (cart.length === 0) {
-    // Crear mensaje de carrito vacío dinámicamente
     const emptyMsg = document.createElement("p");
     emptyMsg.className = "cart-empty";
     emptyMsg.id = "cartEmptyMsg";
@@ -453,30 +451,27 @@ function buildOrderMessage(orderNumber = null) {
 function updateWhatsappLinks() {
   const baseUrl = `https://wa.me/${NUMERO_WHATSAPP}`;
   
-  // El link de contacto sigue igual
   const contactLink = document.getElementById("contactWhatsapp");
   if (contactLink) {
     contactLink.href = `${baseUrl}?text=${encodeURIComponent("Hola, tengo una pregunta sobre sus productos.")}`;
   }
-  
-  // El link de checkout YA NO se actualiza aquí — ahora se maneja con clic
 }
 
 // ---------------------------------------------------------------
-// MENÚ MÓVIL (arreglado: usa clase "open" que coincide con el CSS)
+// MENÚ MÓVIL
 // ---------------------------------------------------------------
 const menuToggle = document.getElementById("menuToggle");
 const mainNav = document.getElementById("mainNav");
 
 menuToggle.addEventListener("click", () => {
   menuToggle.classList.toggle("active");
-  mainNav.classList.toggle("open"); // antes decía "active" — corregido
+  mainNav.classList.toggle("open");
 });
 
 mainNav.querySelectorAll(".nav-link").forEach((link) => {
   link.addEventListener("click", () => {
     menuToggle.classList.remove("active");
-    mainNav.classList.remove("open"); // antes decía "active" — corregido
+    mainNav.classList.remove("open");
   });
 });
 
@@ -519,7 +514,7 @@ window.addEventListener("scroll", () => {
 // ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", () => {
   renderCatalog();
-  renderCart(); // Ya carga el carrito desde localStorage automáticamente
+  renderCart();
   updateWhatsappLinks();
   initScrollReveal();
 
@@ -533,6 +528,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeCart();
     closeProductModal();
+    closeSearchBar();
   }
 });
 
@@ -564,7 +560,6 @@ async function createOrderInDatabase() {
   if (cart.length === 0) return null;
   
   try {
-    // Obtener el vendedor dueño del primer producto (asumimos que todo el pedido va al mismo vendedor)
     const firstProductId = cart[0].id;
     const { data: productData, error: productError } = await supabaseClient
       .from("products")
@@ -576,7 +571,6 @@ async function createOrderInDatabase() {
     
     const sellerId = productData?.created_by || null;
     
-    // Obtener info del cliente si está logueado
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData?.user || null;
     
@@ -597,11 +591,9 @@ async function createOrderInDatabase() {
       }
     }
     
-    // Generar número de pedido
     const orderNumber = 'M' + new Date().toISOString().slice(2,10).replace(/-/g,'') + '-' + 
                         Math.random().toString(36).substring(2, 6).toUpperCase();
     
-    // Preparar items (guardamos toda la info importante)
     const items = cart.map(item => ({
       product_id: item.id,
       name: item.name,
@@ -612,7 +604,6 @@ async function createOrderInDatabase() {
       image: item.image
     }));
     
-    // Insertar pedido
     const { data, error } = await supabaseClient
       .from("orders")
       .insert({
@@ -652,7 +643,6 @@ async function handleCheckoutClick(e) {
   const btn = document.getElementById("checkoutWhatsapp");
   const originalText = btn.innerHTML;
   
-  // Abrir WhatsApp INMEDIATAMENTE (evita que el navegador bloquee)
   const whatsappWindow = window.open("about:blank", "_blank");
   
   btn.innerHTML = "Procesando pedido...";
@@ -660,22 +650,17 @@ async function handleCheckoutClick(e) {
   btn.style.opacity = "0.7";
   
   try {
-    // 1. Guardar pedido en la base de datos
     const order = await createOrderInDatabase();
     
-    // 2. Construir mensaje de WhatsApp
     const message = buildOrderMessage(order?.order_number);
     const whatsappUrl = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(message)}`;
     
-    // 3. Redirigir la ventana ya abierta a WhatsApp
     if (whatsappWindow) {
       whatsappWindow.location.href = whatsappUrl;
     } else {
-      // Fallback: si se bloqueó la ventana, redirigir en la misma pestaña
       window.location.href = whatsappUrl;
     }
     
-    // 4. Limpiar carrito
     if (order) {
       clearCart();
       closeCart();
@@ -689,7 +674,6 @@ async function handleCheckoutClick(e) {
     alert("Hubo un problema procesando el pedido. Intenta de nuevo.");
     if (whatsappWindow) whatsappWindow.close();
   } finally {
-    // 5. Restaurar botón siempre
     btn.innerHTML = originalText;
     btn.style.pointerEvents = "";
     btn.style.opacity = "";
@@ -704,13 +688,184 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ===================================================================
+// SISTEMA DE BÚSQUEDA DE PRODUCTOS (Mejora #2)
+// ===================================================================
+
+// Función auxiliar: normaliza texto para búsqueda (sin tildes, minúsculas)
+function normalizeText(text) {
+  if (!text) return "";
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Eliminar tildes
+    .trim();
+}
+
+// Elementos de la búsqueda
+const searchToggle = document.getElementById("searchToggle");
+const searchBar = document.getElementById("searchBar");
+const searchInput = document.getElementById("searchInput");
+const searchClear = document.getElementById("searchClear");
+const searchResultsCount = document.getElementById("searchResultsCount");
+const noResultsMsg = document.getElementById("noResultsMsg");
+const noResultsText = document.getElementById("noResultsText");
+const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+// Abrir/cerrar barra de búsqueda
+function openSearchBar() {
+  if (!searchBar) return;
+  searchBar.classList.add("active");
+  document.body.classList.add("search-open");
+  // Enfocar el input automáticamente
+  setTimeout(() => {
+    if (searchInput) searchInput.focus();
+  }, 300);
+}
+
+function closeSearchBar() {
+  if (!searchBar) return;
+  searchBar.classList.remove("active");
+  document.body.classList.remove("search-open");
+  // Limpiar búsqueda al cerrar
+  if (searchInput) searchInput.value = "";
+  performSearch("");
+}
+
+// Escuchar clic en el botón de lupa (header)
+if (searchToggle) {
+  searchToggle.addEventListener("click", () => {
+    if (searchBar.classList.contains("active")) {
+      closeSearchBar();
+    } else {
+      openSearchBar();
+    }
+  });
+}
+
+// Escuchar clic en el botón cerrar (X)
+if (searchClear) {
+  searchClear.addEventListener("click", closeSearchBar);
+}
+
+// Escuchar clic en "Limpiar búsqueda" del mensaje sin resultados
+if (clearSearchBtn) {
+  clearSearchBtn.addEventListener("click", () => {
+    if (searchInput) {
+      searchInput.value = "";
+      performSearch("");
+      searchInput.focus();
+    }
+  });
+}
+
+// Ejecutar búsqueda al escribir (con debounce simple)
+let searchTimeout = null;
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value;
+    
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    searchTimeout = setTimeout(() => {
+      performSearch(query);
+    }, 200);
+  });
+}
+
+// Función principal de búsqueda
+function performSearch(query) {
+  const normalizedQuery = normalizeText(query);
+  
+  // Si la búsqueda está vacía, mostrar todo
+  if (!normalizedQuery) {
+    resetSearch();
+    return;
+  }
+  
+  // Obtener todos los productos del catálogo
+  const allProductCards = document.querySelectorAll(".product-card");
+  let visibleCount = 0;
+  const categoriesWithResults = new Set();
+  
+  allProductCards.forEach((card) => {
+    const name = card.dataset.productName || "";
+    const category = card.dataset.productCategory || "";
+    const tag = card.dataset.productTag || "";
+    
+    // Buscar en nombre, categoría o etiqueta
+    const matches = 
+      name.includes(normalizedQuery) || 
+      category.includes(normalizedQuery) || 
+      tag.includes(normalizedQuery);
+    
+    if (matches) {
+      card.classList.remove("hidden-by-search");
+      visibleCount++;
+      // Guardar la categoría del producto encontrado
+      const parentCatalog = card.closest(".catalog");
+      if (parentCatalog) {
+        categoriesWithResults.add(parentCatalog.id);
+      }
+    } else {
+      card.classList.add("hidden-by-search");
+    }
+  });
+  
+  // Ocultar catálogos completos sin resultados
+  document.querySelectorAll(".catalog").forEach((catalog) => {
+    if (categoriesWithResults.has(catalog.id)) {
+      catalog.classList.remove("hidden-by-search");
+    } else {
+      catalog.classList.add("hidden-by-search");
+    }
+  });
+  
+  // Actualizar contador de resultados
+  if (searchResultsCount) {
+    if (visibleCount === 0) {
+      searchResultsCount.textContent = "0 resultados";
+    } else if (visibleCount === 1) {
+      searchResultsCount.textContent = "1 producto";
+    } else {
+      searchResultsCount.textContent = `${visibleCount} productos`;
+    }
+    searchResultsCount.classList.add("visible");
+  }
+  
+  // Mostrar/ocultar mensaje de "No encontramos productos"
+  if (visibleCount === 0) {
+    if (noResultsMsg) noResultsMsg.style.display = "block";
+    if (noResultsText) {
+      noResultsText.textContent = `No hay productos que coincidan con "${query}". Prueba con otra palabra.`;
+    }
+  } else {
+    if (noResultsMsg) noResultsMsg.style.display = "none";
+  }
+}
+
+// Resetear búsqueda (mostrar todos los productos)
+function resetSearch() {
+  document.querySelectorAll(".product-card").forEach((card) => {
+    card.classList.remove("hidden-by-search");
+  });
+  document.querySelectorAll(".catalog").forEach((catalog) => {
+    catalog.classList.remove("hidden-by-search");
+  });
+  if (noResultsMsg) noResultsMsg.style.display = "none";
+  if (searchResultsCount) {
+    searchResultsCount.classList.remove("visible");
+    searchResultsCount.textContent = "";
+  }
+}
+
 // ---------------------------------------------------------------
 // BOTÓN VOLVER ARRIBA
 // ---------------------------------------------------------------
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 
 if (scrollTopBtn) {
-  // Mostrar/ocultar el botón según el scroll
   window.addEventListener("scroll", () => {
     if (window.scrollY > 400) {
       scrollTopBtn.classList.add("visible");
@@ -719,7 +874,6 @@ if (scrollTopBtn) {
     }
   });
 
-  // Al hacer clic, subir suavemente al top
   scrollTopBtn.addEventListener("click", () => {
     window.scrollTo({
       top: 0,
