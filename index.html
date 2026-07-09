@@ -464,5 +464,58 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
+<!-- ============ BOTÓN VOLVER ARRIBA (versión garantizada con estilos inline) ============ -->
+<button 
+  id="scrollTopBtn" 
+  onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+  aria-label="Volver arriba"
+  title="Volver arriba"
+  style="
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 55px;
+    height: 55px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4a869, #8f6b3f);
+    color: #1a1410;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    box-shadow: 0 6px 20px rgba(143, 107, 63, 0.4);
+    transition: all 0.3s ease;
+    font-family: inherit;
+  "
+  onmouseover="this.style.transform='translateY(-4px) scale(1.08)'; this.style.boxShadow='0 12px 30px rgba(143, 107, 63, 0.5)'; this.style.background='linear-gradient(135deg, #8f6b3f, #d4a869)'; this.style.color='#ffffff';"
+  onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 6px 20px rgba(143, 107, 63, 0.4)'; this.style.background='linear-gradient(135deg, #d4a869, #8f6b3f)'; this.style.color='#1a1410';">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="5 12 12 5 19 12"/>
+  </svg>
+</button>
+
+<script>
+  // Mostrar/ocultar botón "Volver arriba" según el scroll
+  (function() {
+    var scrollBtn = document.getElementById("scrollTopBtn");
+    if (!scrollBtn) return;
+    
+    function toggleScrollBtn() {
+      if (window.pageYOffset > 400 || document.documentElement.scrollTop > 400) {
+        scrollBtn.style.display = "flex";
+      } else {
+        scrollBtn.style.display = "none";
+      }
+    }
+    
+    window.addEventListener("scroll", toggleScrollBtn);
+    window.addEventListener("load", toggleScrollBtn);
+    toggleScrollBtn(); // Ejecutar al cargar
+  })();
+</script>
+
 </body>
 </html>
