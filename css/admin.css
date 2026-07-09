@@ -684,7 +684,7 @@ body {
   font-weight: 600;
 }
 
-/* Controles + / − / input */
+/* Controles + / - / input */
 .stock-controls {
   display: flex;
   align-items: center;
@@ -826,7 +826,7 @@ body {
 }
 
 /* ============================================
-   📑 TABS DE NAVEGACIÓN (Productos / Pedidos)
+   TABS DE NAVEGACIÓN (Productos / Pedidos)
    ============================================ */
 .admin-tabs {
   display: flex;
@@ -921,7 +921,7 @@ body {
 }
 
 /* ============================================
-   📬 LISTA DE PEDIDOS
+   LISTA DE PEDIDOS
    ============================================ */
 .orders-list {
   display: flex;
@@ -1250,6 +1250,7 @@ body {
     width: 100%;
   }
 }
+
 /* ============================================
    BOTON MOSTRAR/OCULTAR CONTRASEÑA
    ============================================ */
