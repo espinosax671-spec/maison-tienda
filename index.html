@@ -39,7 +39,6 @@
       <a href="#contacto" class="nav-link">Contacto</a>
     </nav>
 
-    <!-- Botón de búsqueda -->
     <button class="search-toggle" id="searchToggle" aria-label="Buscar productos" title="Buscar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/>
@@ -83,7 +82,7 @@
     </button>
   </div>
 
-  <!-- ============ NUEVO: FILTRO DE PRECIO ============ -->
+  <!-- FILTRO DE PRECIO -->
   <div class="price-filter-wrap">
     <div class="price-filter-inner">
       <div class="price-filter-header">
@@ -140,7 +139,6 @@
         </div>
       </div>
 
-      <!-- Rangos rápidos sugeridos -->
       <div class="price-quick-ranges">
         <span class="quick-ranges-label">Rangos sugeridos:</span>
         <button type="button" class="price-range-chip" data-min="0" data-max="50000">Hasta $50.000</button>
@@ -282,7 +280,7 @@
   </div>
 </aside>
 
-<!-- ============ MODAL PRODUCTO ============ -->
+<!-- ============ MODAL PRODUCTO (con botón compartir NUEVO) ============ -->
 <div class="product-overlay" id="productOverlay"></div>
 <div class="product-modal" id="productModal">
   <button class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
@@ -302,6 +300,76 @@
       </div>
 
       <button class="btn btn-primary btn-full" id="modalAddBtn">Añadir a la selección</button>
+
+      <!-- ============ NUEVO: BOTÓN COMPARTIR PRODUCTO ============ -->
+      <div class="share-product-wrap">
+        <button type="button" class="btn-share-product" id="shareProductBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <span>Compartir producto</span>
+        </button>
+
+        <!-- Menú de opciones para compartir -->
+        <div class="share-menu" id="shareMenu">
+          <div class="share-menu-arrow"></div>
+          
+          <button type="button" class="share-option" data-share="whatsapp">
+            <span class="share-option-icon whatsapp">
+              <svg viewBox="0 0 32 32" width="22" height="22" fill="currentColor">
+                <path d="M16.003 3C9.373 3 4 8.373 4 15.003c0 2.647.858 5.093 2.316 7.09L4 29l7.116-2.267a11.94 11.94 0 0 0 4.887 1.038h.001C22.634 27.771 28 22.399 28 15.77c0-3.187-1.241-6.183-3.495-8.437A11.925 11.925 0 0 0 16.003 3zm0 21.771h-.003a9.94 9.94 0 0 1-5.062-1.386l-.363-.216-4.222 1.346 1.36-4.114-.236-.377a9.929 9.929 0 0 1-1.523-5.291c0-5.487 4.466-9.953 9.953-9.953a9.888 9.888 0 0 1 7.036 2.914 9.884 9.884 0 0 1 2.914 7.04c0 5.488-4.466 9.953-9.855 9.953l.001.084zm5.458-7.451c-.299-.15-1.769-.873-2.043-.973-.274-.1-.474-.15-.673.15-.199.299-.772.973-.947 1.173-.174.199-.349.224-.648.075-.299-.15-1.264-.466-2.408-1.486-.89-.794-1.491-1.774-1.666-2.073-.174-.299-.019-.461.131-.61.135-.134.299-.349.449-.524.15-.174.199-.299.299-.499.1-.199.05-.374-.025-.524-.075-.15-.673-1.623-.923-2.222-.243-.583-.489-.504-.673-.513-.174-.008-.374-.01-.573-.01a1.098 1.098 0 0 0-.798.374c-.274.299-1.047 1.023-1.047 2.496 0 1.473 1.072 2.895 1.222 3.095.15.199 2.109 3.222 5.115 4.518.716.309 1.274.494 1.71.632.719.229 1.373.196 1.89.119.577-.086 1.769-.723 2.019-1.421.249-.698.249-1.297.174-1.421-.075-.125-.274-.199-.573-.349z"/>
+              </svg>
+            </span>
+            <div class="share-option-info">
+              <span class="share-option-name">WhatsApp</span>
+              <span class="share-option-desc">Comparte por mensaje</span>
+            </div>
+          </button>
+
+          <button type="button" class="share-option" data-share="facebook">
+            <span class="share-option-icon facebook">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </span>
+            <div class="share-option-info">
+              <span class="share-option-name">Facebook</span>
+              <span class="share-option-desc">Publica en tu muro</span>
+            </div>
+          </button>
+
+          <button type="button" class="share-option" data-share="instagram">
+            <span class="share-option-icon instagram">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+              </svg>
+            </span>
+            <div class="share-option-info">
+              <span class="share-option-name">Instagram</span>
+              <span class="share-option-desc">Copia el mensaje</span>
+            </div>
+          </button>
+
+          <button type="button" class="share-option" data-share="copy">
+            <span class="share-option-icon copy">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </span>
+            <div class="share-option-info">
+              <span class="share-option-name">Copiar link</span>
+              <span class="share-option-desc">Al portapapeles</span>
+            </div>
+          </button>
+        </div>
+      </div>
+      <!-- FIN BOTÓN COMPARTIR -->
+
     </div>
   </div>
 </div>
@@ -311,13 +379,11 @@
 <div class="account-modal" id="accountModal">
   <button class="modal-close" id="accountModalClose" aria-label="Cerrar">&times;</button>
 
-  <!-- ---- MARCA DENTRO DEL MODAL ---- -->
   <div class="account-brand">
     <span class="account-brand-name">MAISON</span>
     <span class="account-brand-line"></span>
   </div>
 
-  <!-- ---- SELECTOR DE ROL (pestañas) ---- -->
   <div class="role-tabs" id="roleTabs">
     <button type="button" class="role-tab active" data-role-tab="comprador">
       <span class="role-tab-icon">
@@ -343,7 +409,6 @@
     </button>
   </div>
 
-  <!-- ---- VISTA: LOGIN ---- -->
   <div class="account-view active" id="viewLogin">
     <span class="section-eyebrow" id="loginEyebrow">Acceso Cliente</span>
     <h3 class="account-title">Bienvenido de vuelta</h3>
@@ -394,7 +459,6 @@
     <p class="account-switch">¿Aún no tienes cuenta? <button type="button" class="link-btn" id="goToRegister">Crear cuenta</button></p>
   </div>
 
-  <!-- ---- VISTA: REGISTRO ---- -->
   <div class="account-view" id="viewRegister">
     <span class="section-eyebrow" id="registerEyebrow">Crear cuenta Cliente</span>
     <h3 class="account-title">Únete a MAISON</h3>
@@ -432,7 +496,6 @@
         <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Mostrar contraseña"></button>
       </div>
 
-      <!-- Campo WhatsApp solo visible para vendedores -->
       <div id="vendorFields" style="display:none;">
         <div class="input-group">
           <span class="input-icon">
@@ -462,7 +525,6 @@
     <p class="account-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" id="goToLogin">Inicia sesión</button></p>
   </div>
 
-  <!-- ---- VISTA: VENDEDOR REGISTRADO ---- -->
   <div class="account-view" id="viewVendor">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -483,7 +545,6 @@
     <p class="account-hint" style="text-align:center; margin-top:1rem;">Serás redirigido automáticamente en unos segundos.</p>
   </div>
 
-  <!-- ---- VISTA: CONFIRMA CORREO ---- -->
   <div class="account-view" id="viewConfirm">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -497,7 +558,6 @@
     <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
   </div>
 
-  <!-- ---- VISTA: PERFIL (usuario ya autenticado) ---- -->
   <div class="account-view" id="viewProfile">
     <span class="section-eyebrow">Tu cuenta</span>
     <h3 class="account-title" id="profileGreeting">Hola</h3>
