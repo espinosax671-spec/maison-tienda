@@ -174,6 +174,8 @@ async function renderCatalog() {
     card.dataset.productTag = normalizeText(product.tag);
     // Data attribute para filtro de precio
     card.dataset.productPrice = product.price;
+    // Data attribute para compartir (id del producto)
+    card.dataset.productId = product.id;
     
     card.innerHTML = `
       <div class="product-image">
@@ -284,6 +286,9 @@ function openProductModal(product) {
 
   renderQuantitySelector();
 
+  // Cerrar el menú de compartir si estaba abierto
+  closeShareMenu();
+
   document.getElementById("productOverlay").classList.add("active");
   document.getElementById("productModal").classList.add("active");
   document.body.style.overflow = "hidden";
@@ -331,6 +336,7 @@ function closeProductModal() {
   document.getElementById("productOverlay").classList.remove("active");
   document.getElementById("productModal").classList.remove("active");
   document.body.style.overflow = "";
+  closeShareMenu(); // Cerrar también el menú de compartir
 }
 
 document.getElementById("modalAddBtn").addEventListener("click", () => {
@@ -531,6 +537,7 @@ document.addEventListener("keydown", (e) => {
     closeCart();
     closeProductModal();
     closeSearchBar();
+    closeShareMenu();
   }
 });
 
@@ -551,6 +558,29 @@ function showToast(productName, quantity) {
 
   toastTimeout = setTimeout(() => {
     toast.classList.remove("active");
+  }, 3000);
+}
+
+// Toast personalizado (para compartir)
+function showCustomToast(title, message) {
+  const toast = document.getElementById("toast");
+  const titleEl = toast?.querySelector(".toast-title");
+  const messageEl = document.getElementById("toastMessage");
+  
+  if (!toast || !titleEl || !messageEl) return;
+
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+  toast.classList.add("active");
+
+  if (toastTimeout) clearTimeout(toastTimeout);
+
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove("active");
+    // Restaurar el título original después
+    setTimeout(() => {
+      titleEl.textContent = "Añadido al carrito";
+    }, 500);
   }, 3000);
 }
 
@@ -728,7 +758,6 @@ const clearPriceFilterBtn = document.getElementById("clearPriceFilterBtn");
 const priceFilterActive = document.getElementById("priceFilterActive");
 const priceRangeChips = document.querySelectorAll(".price-range-chip");
 
-// Abrir/cerrar barra de búsqueda
 function openSearchBar() {
   if (!searchBar) return;
   searchBar.classList.add("active");
@@ -742,20 +771,16 @@ function closeSearchBar() {
   if (!searchBar) return;
   searchBar.classList.remove("active");
   document.body.classList.remove("search-open");
-  // Limpiar búsqueda y filtro al cerrar
   if (searchInput) searchInput.value = "";
   clearAllFilters();
 }
 
-// Cerrar la barra pero MANTENIENDO los filtros aplicados
 function closeSearchBarKeepFilters() {
   if (!searchBar) return;
   searchBar.classList.remove("active");
   document.body.classList.remove("search-open");
-  // NO limpiamos los filtros, solo cerramos la barra
 }
 
-// Escuchar clic en el botón de lupa (header)
 if (searchToggle) {
   searchToggle.addEventListener("click", () => {
     if (searchBar.classList.contains("active")) {
@@ -766,12 +791,10 @@ if (searchToggle) {
   });
 }
 
-// Escuchar clic en el botón cerrar (X)
 if (searchClear) {
   searchClear.addEventListener("click", closeSearchBar);
 }
 
-// Escuchar clic en "Limpiar búsqueda" del mensaje sin resultados
 if (clearSearchBtn) {
   clearSearchBtn.addEventListener("click", () => {
     if (searchInput) {
@@ -783,7 +806,6 @@ if (clearSearchBtn) {
   });
 }
 
-// Ejecutar búsqueda al escribir (con debounce simple)
 let searchTimeout = null;
 if (searchInput) {
   searchInput.addEventListener("input", (e) => {
@@ -797,7 +819,6 @@ if (searchInput) {
     }, 200);
   });
   
-  // Al presionar Enter, cerrar la barra y ver los resultados
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -808,11 +829,8 @@ if (searchInput) {
   });
 }
 
-// ---------------------------------------------------------------
 // FILTRO DE PRECIO
-// ---------------------------------------------------------------
 
-// Formatear inputs de precio en tiempo real
 function formatPriceMiniInput(input) {
   if (!input) return;
   
@@ -834,17 +852,14 @@ function formatPriceMiniInput(input) {
   });
 }
 
-// Aplicar formato a los inputs de precio
 formatPriceMiniInput(priceMinInput);
 formatPriceMiniInput(priceMaxInput);
 
-// Extraer número puro del input formateado
 function extractPriceNumber(value) {
   if (!value) return 0;
   return parseInt(value.toString().replace(/\D/g, ""), 10) || 0;
 }
 
-// Botón "Aplicar" del filtro de precio
 if (applyPriceFilterBtn) {
   applyPriceFilterBtn.addEventListener("click", () => {
     const minVal = extractPriceNumber(priceMinInput?.value);
@@ -853,24 +868,19 @@ if (applyPriceFilterBtn) {
     currentMinPrice = minVal || 0;
     currentMaxPrice = maxVal || Infinity;
     
-    // Validar que min no sea mayor que max
     if (maxVal > 0 && minVal > maxVal) {
       alert("El precio mínimo no puede ser mayor que el máximo.");
       return;
     }
     
-    // Quitar el estado activo de los chips
     priceRangeChips.forEach(chip => chip.classList.remove("active"));
     
     applyAllFilters();
     updatePriceFilterIndicator();
-    
-    // Cerrar la barra de búsqueda automáticamente después de aplicar
     closeSearchBarKeepFilters();
   });
 }
 
-// Botón "Limpiar" filtro de precio
 if (clearPriceFilterBtn) {
   clearPriceFilterBtn.addEventListener("click", () => {
     if (priceMinInput) priceMinInput.value = "";
@@ -883,17 +893,14 @@ if (clearPriceFilterBtn) {
   });
 }
 
-// Chips de rangos sugeridos
 priceRangeChips.forEach(chip => {
   chip.addEventListener("click", () => {
     const min = parseInt(chip.dataset.min, 10) || 0;
     const max = chip.dataset.max ? parseInt(chip.dataset.max, 10) : Infinity;
     
-    // Marcar chip activo
     priceRangeChips.forEach(c => c.classList.remove("active"));
     chip.classList.add("active");
     
-    // Llenar inputs con los valores
     if (priceMinInput) {
       priceMinInput.value = min > 0 ? new Intl.NumberFormat("es-CO").format(min) : "";
     }
@@ -906,13 +913,10 @@ priceRangeChips.forEach(chip => {
     
     applyAllFilters();
     updatePriceFilterIndicator();
-    
-    // Cerrar la barra de búsqueda automáticamente al elegir un rango
     closeSearchBarKeepFilters();
   });
 });
 
-// Actualizar el indicador de filtro activo
 function updatePriceFilterIndicator() {
   if (!priceFilterActive) return;
   
@@ -935,7 +939,6 @@ function updatePriceFilterIndicator() {
   priceFilterActive.classList.add("visible");
 }
 
-// Limpiar todos los filtros (búsqueda + precio)
 function clearAllFilters() {
   currentSearchQuery = "";
   currentMinPrice = 0;
@@ -949,9 +952,6 @@ function clearAllFilters() {
   applyAllFilters();
 }
 
-// ---------------------------------------------------------------
-// APLICAR TODOS LOS FILTROS (búsqueda + precio combinados)
-// ---------------------------------------------------------------
 function applyAllFilters() {
   const normalizedQuery = normalizeText(currentSearchQuery);
   const allProductCards = document.querySelectorAll(".product-card");
@@ -965,21 +965,17 @@ function applyAllFilters() {
     const tag = card.dataset.productTag || "";
     const price = parseInt(card.dataset.productPrice, 10) || 0;
     
-    // Quitar clase de destello anterior
     card.classList.remove("search-highlight");
     
-    // FILTRO 1: Búsqueda por texto
     const matchesSearch = 
       !normalizedQuery ||
       name.includes(normalizedQuery) || 
       category.includes(normalizedQuery) || 
       tag.includes(normalizedQuery);
     
-    // FILTRO 2: Rango de precio
     const matchesPrice = 
       price >= currentMinPrice && price <= currentMaxPrice;
     
-    // Ambos filtros deben coincidir
     const matches = matchesSearch && matchesPrice;
     
     if (matches) {
@@ -1001,7 +997,6 @@ function applyAllFilters() {
     }
   });
   
-  // Ocultar catálogos completos sin resultados
   document.querySelectorAll(".catalog").forEach((catalog) => {
     if (categoriesWithResults.has(catalog.id)) {
       catalog.classList.remove("hidden-by-search");
@@ -1010,7 +1005,6 @@ function applyAllFilters() {
     }
   });
   
-  // Actualizar contador de resultados
   const hasActiveFilters = normalizedQuery || currentMinPrice > 0 || currentMaxPrice !== Infinity;
   
   if (searchResultsCount) {
@@ -1029,7 +1023,6 @@ function applyAllFilters() {
     }
   }
   
-  // Mostrar/ocultar mensaje de "No encontramos productos"
   if (hasActiveFilters && visibleCount === 0) {
     if (noResultsMsg) noResultsMsg.style.display = "block";
     if (noResultsText) {
@@ -1046,7 +1039,6 @@ function applyAllFilters() {
   } else {
     if (noResultsMsg) noResultsMsg.style.display = "none";
     
-    // Scroll automático al primer resultado (solo si hay búsqueda activa)
     if (hasActiveFilters && firstMatchElement) {
       firstMatchElement.classList.add("search-highlight");
       
@@ -1062,19 +1054,17 @@ function applyAllFilters() {
           top: offsetPosition,
           behavior: "smooth"
         });
-      }, 400); // Delay más largo para dar tiempo a que se cierre la barra
+      }, 400);
       
       setTimeout(() => {
         firstMatchElement.classList.remove("search-highlight");
       }, 2400);
     } else if (!hasActiveFilters) {
-      // Si no hay filtros, resetear
       resetAllProductVisibility();
     }
   }
 }
 
-// Resetear visibilidad de todos los productos
 function resetAllProductVisibility() {
   document.querySelectorAll(".product-card").forEach((card) => {
     card.classList.remove("hidden-by-search");
@@ -1108,3 +1098,168 @@ if (scrollTopBtn) {
     });
   });
 }
+
+// ===================================================================
+// SISTEMA DE COMPARTIR PRODUCTOS (Mejora #4)
+// ===================================================================
+
+const shareProductBtn = document.getElementById("shareProductBtn");
+const shareMenu = document.getElementById("shareMenu");
+
+// Abrir/cerrar menú de compartir
+function openShareMenu() {
+  if (!shareMenu) return;
+  shareMenu.classList.add("active");
+}
+
+function closeShareMenu() {
+  if (!shareMenu) return;
+  shareMenu.classList.remove("active");
+}
+
+// Toggle del menú al hacer clic en el botón compartir
+if (shareProductBtn) {
+  shareProductBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (shareMenu.classList.contains("active")) {
+      closeShareMenu();
+    } else {
+      openShareMenu();
+    }
+  });
+}
+
+// Cerrar menú al hacer clic fuera de él
+document.addEventListener("click", (e) => {
+  if (shareMenu && shareMenu.classList.contains("active")) {
+    if (!shareMenu.contains(e.target) && e.target !== shareProductBtn && !shareProductBtn?.contains(e.target)) {
+      closeShareMenu();
+    }
+  }
+});
+
+// Generar el mensaje para compartir
+function buildShareMessage(product) {
+  const productUrl = generateProductUrl(product);
+  return `Mira este producto de MAISON:
+
+*${product.name}*
+Categoría: ${categoryLabel(product.category)}
+Precio: ${formatPrice(product.price)}
+
+Ver más aquí: ${productUrl}
+
+Ropa y calzado premium para dama y caballero.`;
+}
+
+// Generar URL única del producto
+function generateProductUrl(product) {
+  const baseUrl = window.location.origin + window.location.pathname;
+  return `${baseUrl}?producto=${product.id}`;
+}
+
+// Copiar texto al portapapeles
+async function copyToClipboard(text) {
+  try {
+    // Método moderno (funciona en HTTPS)
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } else {
+      // Fallback para navegadores viejos o HTTP
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    }
+  } catch (err) {
+    console.error("Error al copiar al portapapeles:", err);
+    return false;
+  }
+}
+
+// Función principal para compartir por cada red
+function shareToNetwork(network, product) {
+  if (!product) return;
+  
+  const message = buildShareMessage(product);
+  const productUrl = generateProductUrl(product);
+  const encodedMessage = encodeURIComponent(message);
+  const encodedUrl = encodeURIComponent(productUrl);
+  
+  let shareUrl = "";
+  
+  switch (network) {
+    case "whatsapp":
+      shareUrl = `https://wa.me/?text=${encodedMessage}`;
+      window.open(shareUrl, "_blank");
+      showCustomToast("Compartiendo...", `${product.name} por WhatsApp`);
+      break;
+      
+    case "facebook":
+      // Facebook Share Dialog
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedMessage}`;
+      window.open(shareUrl, "_blank", "width=600,height=400");
+      showCustomToast("Compartiendo...", `${product.name} en Facebook`);
+      break;
+      
+    case "instagram":
+      // Instagram no permite compartir directamente por URL, copiamos el mensaje
+      copyToClipboard(message).then(success => {
+        if (success) {
+          showCustomToast("Mensaje copiado", "Pégalo en Instagram Stories o DM");
+        } else {
+          alert("No se pudo copiar. Copia manualmente el mensaje.");
+        }
+      });
+      break;
+      
+    case "copy":
+      copyToClipboard(productUrl).then(success => {
+        if (success) {
+          showCustomToast("Link copiado", "Puedes pegarlo donde quieras");
+        } else {
+          alert("No se pudo copiar el link.");
+        }
+      });
+      break;
+  }
+  
+  // Cerrar el menú después de compartir
+  closeShareMenu();
+}
+
+// Registrar clicks en cada opción del menú
+document.querySelectorAll(".share-option").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const network = btn.dataset.share;
+    shareToNetwork(network, currentProduct);
+  });
+});
+
+// Detectar si viene con ?producto=xxx en la URL y abrir el modal del producto
+function checkProductInUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get("producto");
+  
+  if (productId) {
+    // Esperar a que se cargue el catálogo
+    setTimeout(() => {
+      const product = STORE_PRODUCTS.find(p => p.id === productId);
+      if (product) {
+        openProductModal(product);
+      }
+    }, 1500);
+  }
+}
+
+// Ejecutar al cargar la página
+window.addEventListener("load", checkProductInUrl);
