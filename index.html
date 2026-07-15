@@ -14,6 +14,53 @@
 
 <!-- SDK de Supabase (Auth + Base de datos) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- ============ BOTÓN VOLVER ARRIBA — CSS EN EL HEAD ============ -->
+<style>
+#scrollTopBtnFixed {
+  position: fixed !important;
+  bottom: 30px !important;
+  right: 30px !important;
+  width: 55px !important;
+  height: 55px !important;
+  border: none !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #d4a869, #8f6b3f) !important;
+  color: #1a1410 !important;
+  cursor: pointer !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  box-shadow: 0 6px 20px rgba(143, 107, 63, 0.4) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+  font-family: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+}
+
+#scrollTopBtnFixed.show {
+  display: flex !important;
+}
+
+#scrollTopBtnFixed:hover {
+  transform: translateY(-4px) scale(1.08) !important;
+  box-shadow: 0 12px 30px rgba(143, 107, 63, 0.5) !important;
+  background: linear-gradient(135deg, #8f6b3f, #d4a869) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  #scrollTopBtnFixed {
+    bottom: 20px !important;
+    right: 20px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -57,6 +104,40 @@
     </button>
   </div>
 </header>
+
+<!-- ============ BOTÓN VOLVER ARRIBA — INMEDIATAMENTE DESPUÉS DEL HEADER ============ -->
+<button id="scrollTopBtnFixed" aria-label="Volver arriba" title="Volver arriba">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="5 12 12 5 19 12"/>
+  </svg>
+</button>
+
+<script>
+// Script inmediato para el botón volver arriba
+(function() {
+  var btn = document.getElementById("scrollTopBtnFixed");
+  if (!btn) return;
+  
+  btn.onclick = function() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  
+  function checkScroll() {
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (y > 300) {
+      btn.classList.add("show");
+    } else {
+      btn.classList.remove("show");
+    }
+  }
+  
+  window.addEventListener("scroll", checkScroll, { passive: true });
+  window.addEventListener("load", checkScroll);
+  window.addEventListener("resize", checkScroll);
+  checkScroll();
+})();
+</script>
 
 <!-- ============ BARRA DE BÚSQUEDA + FILTRO DE PRECIO ============ -->
 <div class="search-bar" id="searchBar">
@@ -288,7 +369,6 @@
 
       <button class="btn btn-primary btn-full" id="modalAddBtn">Añadir a la selección</button>
 
-      <!-- BOTÓN COMPARTIR PRODUCTO -->
       <div class="share-product-wrap">
         <button type="button" class="btn-share-product" id="shareProductBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -394,7 +474,6 @@
     </button>
   </div>
 
-  <!-- VISTA: LOGIN -->
   <div class="account-view active" id="viewLogin">
     <span class="section-eyebrow" id="loginEyebrow">Acceso Cliente</span>
     <h3 class="account-title">Bienvenido de vuelta</h3>
@@ -445,7 +524,6 @@
     <p class="account-switch">¿Aún no tienes cuenta? <button type="button" class="link-btn" id="goToRegister">Crear cuenta</button></p>
   </div>
 
-  <!-- VISTA: REGISTRO -->
   <div class="account-view" id="viewRegister">
     <span class="section-eyebrow" id="registerEyebrow">Crear cuenta Cliente</span>
     <h3 class="account-title">Únete a MAISON</h3>
@@ -512,7 +590,6 @@
     <p class="account-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" id="goToLogin">Inicia sesión</button></p>
   </div>
 
-  <!-- VISTA: VENDEDOR REGISTRADO -->
   <div class="account-view" id="viewVendor">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -533,7 +610,6 @@
     <p class="account-hint" style="text-align:center; margin-top:1rem;">Serás redirigido automáticamente en unos segundos.</p>
   </div>
 
-  <!-- VISTA: CONFIRMA CORREO -->
   <div class="account-view" id="viewConfirm">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -547,7 +623,6 @@
     <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
   </div>
 
-  <!-- VISTA: PERFIL (usuario ya autenticado) -->
   <div class="account-view" id="viewProfile">
     <span class="section-eyebrow">Tu cuenta</span>
     <h3 class="account-title" id="profileGreeting">Hola</h3>
@@ -590,7 +665,6 @@
       </button>
     </form>
 
-    <!-- SECCIÓN DE FAVORITOS -->
     <div class="favorites-section">
       <div class="favorites-header">
         <span class="section-eyebrow">Mis Favoritos</span>
@@ -647,106 +721,6 @@ document.addEventListener("DOMContentLoaded", () => {
     <span class="toast-message" id="toastMessage"></span>
   </div>
 </div>
-
-<!-- ============ BOTÓN VOLVER ARRIBA (VERSIÓN DEFINITIVA) ============ -->
-<button 
-  id="scrollTopBtn" 
-  aria-label="Volver arriba"
-  title="Volver arriba">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="19" x2="12" y2="5"/>
-    <polyline points="5 12 12 5 19 12"/>
-  </svg>
-</button>
-
-<style>
-/* Estilos del botón volver arriba (con !important para que no fallen) */
-#scrollTopBtn {
-  position: fixed !important;
-  bottom: 30px !important;
-  right: 30px !important;
-  width: 55px !important;
-  height: 55px !important;
-  border: none !important;
-  border-radius: 50% !important;
-  background: linear-gradient(135deg, #d4a869, #8f6b3f) !important;
-  color: #1a1410 !important;
-  cursor: pointer !important;
-  display: none;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 999999 !important;
-  box-shadow: 0 6px 20px rgba(143, 107, 63, 0.4) !important;
-  transition: all 0.3s ease !important;
-  font-family: inherit !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  outline: none !important;
-}
-
-#scrollTopBtn.visible {
-  display: flex !important;
-}
-
-#scrollTopBtn:hover {
-  transform: translateY(-4px) scale(1.08) !important;
-  box-shadow: 0 12px 30px rgba(143, 107, 63, 0.5) !important;
-  background: linear-gradient(135deg, #8f6b3f, #d4a869) !important;
-  color: #ffffff !important;
-}
-
-#scrollTopBtn:active {
-  transform: translateY(-2px) scale(1) !important;
-}
-
-@media (max-width: 768px) {
-  #scrollTopBtn {
-    bottom: 20px !important;
-    right: 20px !important;
-    width: 48px !important;
-    height: 48px !important;
-  }
-}
-</style>
-
-<script>
-// Mostrar/ocultar el botón "Volver arriba" según el scroll
-(function() {
-  var btn = document.getElementById("scrollTopBtn");
-  if (!btn) {
-    console.error("Botón scrollTopBtn no encontrado en el DOM");
-    return;
-  }
-  
-  console.log("Botón scrollTopBtn inicializado correctamente");
-  
-  // Click para subir suavemente al inicio
-  btn.addEventListener("click", function() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-  
-  // Función para mostrar/ocultar según scroll
-  function toggleScrollBtn() {
-    var scrollTop = window.pageYOffset || 
-                    document.documentElement.scrollTop || 
-                    document.body.scrollTop || 0;
-    
-    if (scrollTop > 400) {
-      btn.classList.add("visible");
-    } else {
-      btn.classList.remove("visible");
-    }
-  }
-  
-  // Escuchar todos los eventos posibles
-  window.addEventListener("scroll", toggleScrollBtn, { passive: true });
-  window.addEventListener("load", toggleScrollBtn);
-  document.addEventListener("DOMContentLoaded", toggleScrollBtn);
-  
-  // Ejecutar de inmediato
-  toggleScrollBtn();
-})();
-</script>
 
 </body>
 </html>
