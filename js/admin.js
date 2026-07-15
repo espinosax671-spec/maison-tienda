@@ -158,7 +158,7 @@ async function loadProducts() {
 }
 
 // ---------------------------------------------------------------
-// Renderizar tabla de productos (CON stock)
+// Renderizar tabla de productos (CON stock y descuento)
 // ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
@@ -175,6 +175,22 @@ function renderProductTable() {
   filtered.forEach((p) => {
     const totalStock = getTotalStock(p.stock);
     const stockClass = totalStock === 0 ? 'out' : totalStock < 5 ? 'low' : '';
+    
+    // Determinar si el producto tiene descuento activo
+    const hasDiscount = p.discount_percent && p.discount_percent > 0 && p.original_price;
+    
+    let priceHtml = '';
+    if (hasDiscount) {
+      priceHtml = `
+        <div class="product-row-price">
+          <span class="price-original-small">${formatPrice(p.original_price)}</span>
+          <span class="price-new-small">${formatPrice(p.price)}</span>
+          <span class="discount-badge-small">-${p.discount_percent}%</span>
+        </div>
+      `;
+    } else {
+      priceHtml = `<div class="product-row-price">${formatPrice(p.price)}</div>`;
+    }
 
     const row = document.createElement("div");
     row.className = "product-row";
@@ -190,7 +206,7 @@ function renderProductTable() {
           </span>
         </div>
       </div>
-      <div class="product-row-price">${formatPrice(p.price)}</div>
+      ${priceHtml}
       <span class="status-pill ${p.active ? "active" : "inactive"}">${p.active ? "Visible" : "Oculto"}</span>
       <div class="product-row-actions">
         <button class="btn-stock" data-stock="${p.id}">Stock</button>
@@ -268,6 +284,10 @@ function openProductForm(productId) {
 
   // Resetear stock inicial a 5 por defecto
   document.getElementById("productInitialStock").value = "5";
+  
+  // Resetear descuento a 0
+  document.getElementById("productDiscount").value = "0";
+  updateDiscountPreview();
 
   if (productId) {
     const p = allProducts.find((x) => x.id === productId);
@@ -275,7 +295,15 @@ function openProductForm(productId) {
     document.getElementById("productId").value = p.id;
     document.getElementById("productCategory").value = p.category;
     document.getElementById("productName").value = p.name;
-    document.getElementById("productPrice").value = formatPriceInput(p.price);
+    
+    // Al editar: si tiene descuento, mostramos el precio ORIGINAL (no el ya descontado)
+    const hasDiscount = p.discount_percent && p.discount_percent > 0 && p.original_price;
+    const priceToShow = hasDiscount ? p.original_price : p.price;
+    document.getElementById("productPrice").value = formatPriceInput(priceToShow);
+    
+    // Cargar el descuento
+    document.getElementById("productDiscount").value = p.discount_percent || 0;
+    
     document.getElementById("productTag").value = p.tag || "";
     document.getElementById("productDesc").value = p.description || "";
     document.getElementById("productSizes").value = (p.sizes || []).join(", ");
@@ -291,10 +319,13 @@ function openProductForm(productId) {
     }
     
     // Actualizar el hint del precio con el valor cargado
-    if (priceHint && p.price > 0) {
-      priceHint.textContent = `Precio: $${formatPriceInput(p.price)} COP`;
+    if (priceHint && priceToShow > 0) {
+      priceHint.textContent = `Precio: $${formatPriceInput(priceToShow)} COP`;
       priceHint.classList.add("active");
     }
+    
+    // Actualizar preview del descuento
+    updateDiscountPreview();
   } else {
     document.getElementById("formTitle").textContent = "Nuevo producto";
     document.getElementById("productId").value = "";
@@ -330,7 +361,7 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
 });
 
 // ---------------------------------------------------------------
-// Guardar producto (CON STOCK INICIAL AUTOMÁTICO)
+// Guardar producto (CON DESCUENTO)
 // ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -356,11 +387,28 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     if (selectedImageFile) {
       imageUrl = await uploadProductImage(selectedImageFile);
     }
+    
+    // ============ CALCULAR PRECIO CON DESCUENTO ============
+    const priceInput = parsePriceInput(document.getElementById("productPrice").value);
+    const discountInput = parseInt(document.getElementById("productDiscount").value, 10) || 0;
+    
+    let finalPrice = priceInput;
+    let originalPrice = null;
+    let discountPercent = 0;
+    
+    if (discountInput > 0 && discountInput <= 99) {
+      // HAY descuento
+      originalPrice = priceInput;
+      finalPrice = Math.round(priceInput * (1 - discountInput / 100));
+      discountPercent = discountInput;
+    }
 
     const payload = {
       category: document.getElementById("productCategory").value,
       name: document.getElementById("productName").value.trim(),
-      price: parsePriceInput(document.getElementById("productPrice").value),
+      price: finalPrice,                    // Precio final (con descuento aplicado si hay)
+      original_price: originalPrice,        // Precio original (null si no hay descuento)
+      discount_percent: discountPercent,    // Porcentaje de descuento (0 si no hay)
       tag: document.getElementById("productTag").value.trim(),
       description: document.getElementById("productDesc").value.trim(),
       sizes,
@@ -370,23 +418,22 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     };
 
     if (id) {
-      // EDITAR — no tocamos el stock, ya lo maneja el modal de stock
+      // EDITAR
       const { error } = await supabaseClient.from("products").update(payload).eq("id", id);
       if (error) throw error;
     } else {
       // NUEVO — llenamos el stock automáticamente
       const initialStock = parseInt(document.getElementById("productInitialStock").value, 10) || 0;
       
-      // Crear objeto de stock: {"XS": 5, "S": 5, "M": 5, ...}
       const stockObject = {};
       sizes.forEach((size) => {
         stockObject[size] = initialStock;
       });
       
       payload.created_by = adminUser.id;
-      payload.stock = stockObject; // ← STOCK AUTOMÁTICO
+      payload.stock = stockObject;
       
-      console.log(`Creando producto con stock inicial: ${initialStock} unidades por talla`);
+      console.log(`Creando producto con precio final: $${finalPrice}${discountPercent > 0 ? ` (descuento ${discountPercent}%)` : ''}`);
       console.log("Stock generado:", stockObject);
       
       const { error } = await supabaseClient.from("products").insert(payload);
@@ -409,18 +456,15 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
 // ---------------------------------------------------------------
 async function uploadProductImage(file) {
   try {
-    // Validar tamaño de imagen (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       throw new Error("La imagen no debe pesar más de 5MB.");
     }
 
-    // Limpiar el nombre del archivo (sin tildes ni caracteres raros)
     const ext = file.name.split(".").pop().toLowerCase();
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
 
     console.log("Subiendo imagen:", fileName);
 
-    // Subir al bucket product_images (con guion bajo)
     const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from("product_images")
       .upload(fileName, file, {
@@ -436,7 +480,6 @@ async function uploadProductImage(file) {
 
     console.log("Imagen subida:", uploadData);
 
-    // Obtener URL pública
     const { data: urlData } = supabaseClient.storage
       .from("product_images")
       .getPublicUrl(fileName);
@@ -588,16 +631,10 @@ function closeStockModal() {
 }
 
 function renderStockList() {
-  if (!currentStockProduct) {
-    console.warn("renderStockList llamado sin producto activo");
-    return;
-  }
+  if (!currentStockProduct) return;
 
   const list = document.getElementById("stockList");
-  if (!list) {
-    console.error("No se encontró #stockList en el HTML");
-    return;
-  }
+  if (!list) return;
 
   list.innerHTML = "";
 
@@ -712,7 +749,6 @@ document.getElementById("cancelStockBtn").addEventListener("click", closeStockMo
 document.getElementById("stockModalClose").addEventListener("click", closeStockModal);
 if (stockOverlay) stockOverlay.addEventListener("click", closeStockModal);
 
-// Función auxiliar para calcular stock total
 function getTotalStock(stock) {
   if (!stock || typeof stock !== "object") return 0;
   return Object.values(stock).reduce((sum, qty) => sum + (Number(qty) || 0), 0);
@@ -782,12 +818,7 @@ async function loadOrders() {
 }
 
 function updateOrderCounts() {
-  const counts = {
-    pendiente: 0,
-    confirmado: 0,
-    entregado: 0,
-    cancelado: 0
-  };
+  const counts = { pendiente: 0, confirmado: 0, entregado: 0, cancelado: 0 };
   
   allOrders.forEach((order) => {
     if (counts[order.status] !== undefined) {
@@ -892,7 +923,6 @@ function createOrderCard(order) {
   });
   itemsHtml += `</div>`;
   
-  // ============ BOTONES DE ACCIÓN REDISEÑADOS ============
   let actionsHtml = `<div class="order-actions">`;
   
   if (order.customer_phone) {
@@ -959,19 +989,13 @@ function createOrderCard(order) {
   `;
   
   const confirmBtn = card.querySelector("[data-confirm]");
-  if (confirmBtn) {
-    confirmBtn.addEventListener("click", () => handleConfirmOrder(order));
-  }
+  if (confirmBtn) confirmBtn.addEventListener("click", () => handleConfirmOrder(order));
   
   const cancelBtn = card.querySelector("[data-cancel]");
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => handleCancelOrder(order));
-  }
+  if (cancelBtn) cancelBtn.addEventListener("click", () => handleCancelOrder(order));
   
   const deliverBtn = card.querySelector("[data-deliver]");
-  if (deliverBtn) {
-    deliverBtn.addEventListener("click", () => handleDeliverOrder(order));
-  }
+  if (deliverBtn) deliverBtn.addEventListener("click", () => handleDeliverOrder(order));
   
   return card;
 }
@@ -986,9 +1010,6 @@ function statusLabel(status) {
   return labels[status] || status;
 }
 
-// ===================================================================
-// FILTROS DE PEDIDOS
-// ===================================================================
 document.querySelectorAll("[data-order-filter]").forEach((chip) => {
   chip.addEventListener("click", () => {
     document.querySelectorAll("[data-order-filter]").forEach((c) => c.classList.remove("active"));
@@ -998,16 +1019,10 @@ document.querySelectorAll("[data-order-filter]").forEach((chip) => {
   });
 });
 
-// ===================================================================
-// BOTÓN ACTUALIZAR
-// ===================================================================
 document.getElementById("refreshOrdersBtn").addEventListener("click", () => {
   loadOrders();
 });
 
-// ===================================================================
-// CONFIRMAR PEDIDO (descuenta stock automáticamente)
-// ===================================================================
 async function handleConfirmOrder(order) {
   const confirmMsg = `¿Confirmar el pedido #${order.order_number}?\n\n` +
     `Se descontará el stock automáticamente:\n` +
@@ -1017,12 +1032,10 @@ async function handleConfirmOrder(order) {
   if (!confirm(confirmMsg)) return;
   
   try {
-    // 1. Descontar stock de cada producto
     for (const item of order.items) {
       await decrementStock(item.product_id, item.size, item.qty);
     }
     
-    // 2. Actualizar estado del pedido
     const { error } = await supabaseClient
       .from("orders")
       .update({
@@ -1034,7 +1047,6 @@ async function handleConfirmOrder(order) {
     
     if (error) throw error;
     
-    // 3. Recargar pedidos y productos
     await loadOrders();
     await loadProducts();
     
@@ -1046,9 +1058,6 @@ async function handleConfirmOrder(order) {
   }
 }
 
-// ===================================================================
-// CANCELAR PEDIDO
-// ===================================================================
 async function handleCancelOrder(order) {
   const confirmMsg = `¿Cancelar el pedido #${order.order_number}?\n\n` +
     `No se descontará ningún stock (el pedido no había sido confirmado).`;
@@ -1076,9 +1085,6 @@ async function handleCancelOrder(order) {
   }
 }
 
-// ===================================================================
-// MARCAR COMO ENTREGADO
-// ===================================================================
 async function handleDeliverOrder(order) {
   if (!confirm(`¿Marcar el pedido #${order.order_number} como ENTREGADO?`)) return;
   
@@ -1102,9 +1108,6 @@ async function handleDeliverOrder(order) {
   }
 }
 
-// ===================================================================
-// DECREMENTAR STOCK (helper)
-// ===================================================================
 async function decrementStock(productId, size, qty) {
   const { data: product, error: fetchError } = await supabaseClient
     .from("products")
@@ -1113,10 +1116,7 @@ async function decrementStock(productId, size, qty) {
     .maybeSingle();
   
   if (fetchError) throw fetchError;
-  if (!product) {
-    console.warn(`Producto ${productId} no encontrado`);
-    return;
-  }
+  if (!product) return;
   
   const currentStock = product.stock || {};
   const currentQty = Number(currentStock[size]) || 0;
@@ -1135,10 +1135,9 @@ async function decrementStock(productId, size, qty) {
 }
 
 // ===================================================================
-// FORMATO DE PRECIO COLOMBIANO (con puntos de miles)
+// FORMATO DE PRECIO COLOMBIANO
 // ===================================================================
 
-// Formatea un número con puntos como separador de miles: 219000 -> "219.000"
 function formatPriceInput(value) {
   if (!value && value !== 0) return "";
   const numericValue = value.toString().replace(/\D/g, "");
@@ -1146,17 +1145,50 @@ function formatPriceInput(value) {
   return new Intl.NumberFormat("es-CO").format(parseInt(numericValue, 10));
 }
 
-// Extrae solo los dígitos de un texto formateado: "219.000" -> 219000
 function parsePriceInput(formattedValue) {
   if (!formattedValue) return 0;
   const digitsOnly = formattedValue.toString().replace(/\D/g, "");
   return parseInt(digitsOnly, 10) || 0;
 }
 
+// ===================================================================
+// FUNCIÓN: ACTUALIZAR PREVIEW DEL DESCUENTO
+// ===================================================================
+function updateDiscountPreview() {
+  const priceInput = document.getElementById("productPrice");
+  const discountInput = document.getElementById("productDiscount");
+  const preview = document.getElementById("discountPreview");
+  
+  if (!priceInput || !discountInput || !preview) return;
+  
+  const price = parsePriceInput(priceInput.value);
+  const discount = parseInt(discountInput.value, 10) || 0;
+  
+  if (discount > 0 && discount <= 99 && price > 0) {
+    // Calcular precio con descuento
+    const newPrice = Math.round(price * (1 - discount / 100));
+    const savings = price - newPrice;
+    
+    preview.classList.add("active");
+    preview.innerHTML = `
+      <span class="discount-preview-label">Descuento del ${discount}% aplicado:</span>
+      <div class="discount-preview-values">
+        <span class="discount-preview-old">${formatPrice(price)}</span>
+        <span class="discount-preview-new">${formatPrice(newPrice)}</span>
+        <span class="discount-preview-savings">Ahorras ${formatPrice(savings)}</span>
+      </div>
+    `;
+  } else {
+    preview.classList.remove("active");
+    preview.innerHTML = `<span class="discount-preview-label">Sin descuento aplicado</span>`;
+  }
+}
+
 // Inicializar el input de precio con formato automático
 document.addEventListener("DOMContentLoaded", () => {
   const priceInput = document.getElementById("productPrice");
   const priceHint = document.getElementById("priceHint");
+  const discountInput = document.getElementById("productDiscount");
   
   if (!priceInput) return;
 
@@ -1167,13 +1199,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const formatted = formatPriceInput(e.target.value);
     e.target.value = formatted;
     
-    // Ajustar posición del cursor para que no salte al final
     const newLength = formatted.length;
     const diff = newLength - oldLength;
     const newCursorPos = Math.max(0, cursorPos + diff);
     e.target.setSelectionRange(newCursorPos, newCursorPos);
     
-    // Actualizar hint con el valor legible en tiempo real
     const numericValue = parsePriceInput(formatted);
     if (priceHint && numericValue > 0) {
       priceHint.textContent = `Precio: $${formatted} COP`;
@@ -1182,10 +1212,26 @@ document.addEventListener("DOMContentLoaded", () => {
       priceHint.textContent = "Ingresa el precio sin puntos ni comas";
       priceHint.classList.remove("active");
     }
+    
+    // Actualizar preview del descuento cuando cambie el precio
+    updateDiscountPreview();
   });
   
-  // Al perder el foco, asegurar que esté bien formateado
   priceInput.addEventListener("blur", (e) => {
     e.target.value = formatPriceInput(e.target.value);
   });
+  
+  // Listener del descuento
+  if (discountInput) {
+    discountInput.addEventListener("input", (e) => {
+      // Limitar a 0-99
+      let val = parseInt(e.target.value, 10);
+      if (isNaN(val)) val = 0;
+      if (val < 0) val = 0;
+      if (val > 99) val = 99;
+      e.target.value = val;
+      
+      updateDiscountPreview();
+    });
+  }
 });
