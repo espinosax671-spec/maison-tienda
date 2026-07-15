@@ -1,6 +1,7 @@
 /* ===================================================================
    AUTENTICACIÓN — Registro, Login, Perfil, Sesión
    Con roles: comprador (tienda) y vendedor (panel admin)
+   Integrado con sistema de FAVORITOS (Mejora #5)
 =================================================================== */
 
 let currentUser = null;
@@ -95,6 +96,11 @@ window.addEventListener("DOMContentLoaded", () => {
     if (currentUser) {
       toggleRoleTabs(false);
       showAccountView(currentRole === "vendedor" ? "vendor" : "profile");
+      
+      // Al abrir el perfil, cargar los favoritos
+      if (currentRole !== "vendedor" && typeof window.renderFavoritesSection === "function") {
+        window.renderFavoritesSection();
+      }
     } else {
       toggleRoleTabs(true);
       showAccountView("login");
@@ -233,6 +239,16 @@ window.addEventListener("DOMContentLoaded", () => {
     await supabaseClient.auth.signOut();
     currentUser = null;
     currentRole = null;
+    
+    // Limpiar favoritos al cerrar sesión
+    if (typeof window.userFavorites !== "undefined") {
+      window.userFavorites = new Set();
+    }
+    // Actualizar corazones en el catálogo (todos vacíos)
+    if (typeof window.updateAllFavoriteButtons === "function") {
+      window.updateAllFavoriteButtons();
+    }
+    
     updateAccountUI();
     closeAccountModal();
   });
@@ -329,6 +345,21 @@ window.addEventListener("DOMContentLoaded", () => {
       }, 2500);
     } else {
       showAccountView("profile");
+      
+      // Cargar favoritos del usuario recién logueado
+      if (typeof window.loadUserFavorites === "function") {
+        await window.loadUserFavorites();
+        
+        // Actualizar los corazones en el catálogo
+        if (typeof window.updateAllFavoriteButtons === "function") {
+          window.updateAllFavoriteButtons();
+        }
+        
+        // Mostrar la sección de favoritos en el perfil
+        if (typeof window.renderFavoritesSection === "function") {
+          window.renderFavoritesSection();
+        }
+      }
     }
   }
 
@@ -381,6 +412,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
       currentRole = profile?.role || currentUser.user_metadata?.role || "comprador";
       await loadProfileIntoForm();
+      
+      // Cargar favoritos al iniciar si hay sesión activa
+      if (currentRole !== "vendedor" && typeof window.loadUserFavorites === "function") {
+        await window.loadUserFavorites();
+        
+        // Actualizar corazones en el catálogo
+        setTimeout(() => {
+          if (typeof window.updateAllFavoriteButtons === "function") {
+            window.updateAllFavoriteButtons();
+          }
+        }, 500);
+      }
     }
     updateAccountUI();
   }
