@@ -92,7 +92,6 @@
         <p class="loading-msg" id="loadingMsg">Cargando productos...</p>
       </div>
     </div>
-    <!-- Fin viewProductos -->
 
     <!-- ============ VISTA: PEDIDOS ============ -->
     <div class="admin-view" id="viewPedidos">
@@ -101,7 +100,6 @@
         <button class="btn btn-ghost" id="refreshOrdersBtn">Actualizar</button>
       </div>
 
-      <!-- Filtros de estado -->
       <div class="admin-filters">
         <button class="filter-chip active" data-order-filter="pendiente">
           Pendientes <span class="chip-count" id="countPendiente">0</span>
@@ -118,12 +116,10 @@
         <button class="filter-chip" data-order-filter="todos">Todos</button>
       </div>
 
-      <!-- Lista de pedidos -->
       <div class="orders-list" id="ordersList">
         <p class="loading-msg">Cargando pedidos...</p>
       </div>
     </div>
-    <!-- Fin viewPedidos -->
 
   </main>
 </div>
@@ -157,6 +153,17 @@
       <span class="price-hint" id="priceHint">Ingresa el precio sin puntos ni comas</span>
     </label>
 
+    <!-- ============ NUEVO: DESCUENTO ============ -->
+    <label>Descuento (%)  <span class="optional-label">Opcional</span>
+      <div class="discount-input-wrap">
+        <input type="number" id="productDiscount" min="0" max="99" placeholder="0" value="0">
+        <span class="discount-symbol">%</span>
+      </div>
+      <div class="discount-preview" id="discountPreview">
+        <span class="discount-preview-label">Sin descuento aplicado</span>
+      </div>
+    </label>
+
     <label>Etiqueta (opcional)
       <input type="text" id="productTag" placeholder="Ej: Nuevo, Edición limitada">
     </label>
@@ -169,7 +176,6 @@
       <input type="text" id="productSizes" placeholder="Ej: XS, S, M, L, XL">
     </label>
 
-    <!-- ============ NUEVO: STOCK INICIAL POR TALLA ============ -->
     <label>Stock inicial por talla
       <input type="number" id="productInitialStock" min="0" max="9999" value="5" placeholder="Ej: 5">
       <span class="stock-initial-hint">Cada talla iniciará con este número de unidades. Podrás ajustarlas después desde el botón "Stock".</span>
@@ -237,7 +243,6 @@
   <p class="form-subtitle" id="stockProductName">Producto</p>
   
   <div class="stock-list" id="stockList">
-    <!-- Se llena dinámicamente -->
   </div>
 
   <p class="stock-total-info">
@@ -272,7 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="js/supabase-client.js"></script>
 <script src="js/admin.js"></script>
 
-<!-- Estilos rápidos para el hint del stock inicial -->
+<!-- Estilos rápidos para nuevos elementos -->
 <style>
 .stock-initial-hint {
   display: block;
@@ -283,6 +288,143 @@ document.addEventListener("DOMContentLoaded", () => {
   font-style: italic;
   text-transform: none;
   line-height: 1.5;
+}
+
+/* ============ DESCUENTO EN FORMULARIO ============ */
+.optional-label {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  background: rgba(168, 130, 75, 0.15);
+  color: var(--color-gold-dark);
+  border-radius: 10px;
+  margin-left: 8px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.discount-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  transition: var(--transition);
+  max-width: 200px;
+}
+
+.discount-input-wrap:focus-within {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(168, 130, 75, 0.15);
+}
+
+.discount-input-wrap input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  padding: 12px 14px !important;
+  font-size: 18px !important;
+  color: var(--color-ink) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 600;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.discount-input-wrap input::-webkit-outer-spin-button,
+.discount-input-wrap input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.discount-symbol {
+  padding: 0 14px;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-gold-dark);
+  background: rgba(168, 130, 75, 0.08);
+  border-left: 1px solid var(--color-border);
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.discount-preview {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(232, 220, 200, 0.4);
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+  transition: all .3s ease;
+}
+
+.discount-preview.active {
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.15), rgba(143, 107, 63, 0.1));
+  border: 1px solid var(--color-gold-light);
+  border-style: solid;
+}
+
+.discount-preview-label {
+  display: block;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.5px;
+  text-transform: none;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.discount-preview.active .discount-preview-label {
+  font-style: normal;
+  color: var(--color-gold-dark);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.discount-preview-values {
+  display: none;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.discount-preview.active .discount-preview-values {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.discount-preview-old {
+  text-decoration: line-through;
+  color: var(--color-ink-soft);
+  font-size: 13px;
+}
+
+.discount-preview-new {
+  font-weight: 700;
+  color: var(--color-gold-dark);
+  font-size: 16px;
+}
+
+.discount-preview-savings {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: var(--color-success);
+  color: var(--color-white);
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 </style>
 </body>
