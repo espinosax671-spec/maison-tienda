@@ -59,6 +59,9 @@ function clearCartStorage() {
 // ---------------------------------------------------------------
 let cart = loadCartFromStorage();
 
+// Estado de favoritos (se carga desde Supabase cuando el usuario está logueado)
+let userFavorites = new Set();
+
 function getCartKey(productId, size) {
   return `${productId}__${size}`;
 }
@@ -151,7 +154,7 @@ async function fetchProductsFromSupabase() {
 }
 
 // ---------------------------------------------------------------
-// Render del catálogo (CON dataset para búsqueda y filtro de precio)
+// Render del catálogo (CON dataset + botón favorito)
 // ---------------------------------------------------------------
 async function renderCatalog() {
   const grids = {
@@ -172,14 +175,20 @@ async function renderCatalog() {
     card.dataset.productName = normalizeText(product.name);
     card.dataset.productCategory = normalizeText(product.category);
     card.dataset.productTag = normalizeText(product.tag);
-    // Data attribute para filtro de precio
     card.dataset.productPrice = product.price;
-    // Data attribute para compartir (id del producto)
     card.dataset.productId = product.id;
+    
+    // El botón de favorito se agrega al HTML de la tarjeta
+    const isFav = userFavorites.has(product.id);
     
     card.innerHTML = `
       <div class="product-image">
         ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ""}
+        <button type="button" class="favorite-btn ${isFav ? 'is-favorite' : ''}" data-favorite-btn="${product.id}" aria-label="Añadir a favoritos" title="Añadir a favoritos">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
         <img src="${product.image}" alt="${product.name}" loading="lazy">
       </div>
       <div class="product-info">
@@ -188,7 +197,23 @@ async function renderCatalog() {
         <p class="product-price">${formatPrice(product.price)}</p>
       </div>
     `;
-    card.addEventListener("click", () => openProductModal(product));
+    
+    // Click en la tarjeta abre el modal (excepto en el botón de favorito)
+    card.addEventListener("click", (e) => {
+      // Si se hizo clic en el botón de favorito, NO abrir el modal
+      if (e.target.closest(".favorite-btn")) return;
+      openProductModal(product);
+    });
+    
+    // Click en el botón de favorito
+    const favBtn = card.querySelector(".favorite-btn");
+    if (favBtn) {
+      favBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFavorite(product);
+      });
+    }
+    
     grid.appendChild(card);
   });
 }
@@ -285,8 +310,6 @@ function openProductModal(product) {
   }
 
   renderQuantitySelector();
-
-  // Cerrar el menú de compartir si estaba abierto
   closeShareMenu();
 
   document.getElementById("productOverlay").classList.add("active");
@@ -336,7 +359,7 @@ function closeProductModal() {
   document.getElementById("productOverlay").classList.remove("active");
   document.getElementById("productModal").classList.remove("active");
   document.body.style.overflow = "";
-  closeShareMenu(); // Cerrar también el menú de compartir
+  closeShareMenu();
 }
 
 document.getElementById("modalAddBtn").addEventListener("click", () => {
@@ -520,8 +543,11 @@ window.addEventListener("scroll", () => {
 // ---------------------------------------------------------------
 // Inicialización
 // ---------------------------------------------------------------
-window.addEventListener("DOMContentLoaded", () => {
-  renderCatalog();
+window.addEventListener("DOMContentLoaded", async () => {
+  // Cargar favoritos del usuario ANTES de renderizar el catálogo
+  await loadUserFavorites();
+  
+  await renderCatalog();
   renderCart();
   updateWhatsappLinks();
   initScrollReveal();
@@ -561,7 +587,7 @@ function showToast(productName, quantity) {
   }, 3000);
 }
 
-// Toast personalizado (para compartir)
+// Toast personalizado (para compartir y favoritos)
 function showCustomToast(title, message) {
   const toast = document.getElementById("toast");
   const titleEl = toast?.querySelector(".toast-title");
@@ -577,7 +603,6 @@ function showCustomToast(title, message) {
 
   toastTimeout = setTimeout(() => {
     toast.classList.remove("active");
-    // Restaurar el título original después
     setTimeout(() => {
       titleEl.textContent = "Añadido al carrito";
     }, 500);
@@ -585,7 +610,7 @@ function showCustomToast(title, message) {
 }
 
 // ---------------------------------------------------------------
-// SISTEMA DE PEDIDOS: guardar pedido antes de WhatsApp
+// SISTEMA DE PEDIDOS
 // ---------------------------------------------------------------
 
 async function createOrderInDatabase() {
@@ -712,7 +737,6 @@ async function handleCheckoutClick(e) {
   }
 }
 
-// Registrar el listener del botón de checkout
 document.addEventListener("DOMContentLoaded", () => {
   const checkoutBtn = document.getElementById("checkoutWhatsapp");
   if (checkoutBtn) {
@@ -721,10 +745,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================================================================
-// SISTEMA DE BÚSQUEDA DE PRODUCTOS + FILTRO DE PRECIO (Mejoras #2 y #3)
+// SISTEMA DE BÚSQUEDA + FILTRO DE PRECIO (Mejoras #2 y #3)
 // ===================================================================
 
-// Función auxiliar: normaliza texto para búsqueda (sin tildes, minúsculas)
 function normalizeText(text) {
   if (!text) return "";
   return text
@@ -735,12 +758,10 @@ function normalizeText(text) {
     .trim();
 }
 
-// Estado global de los filtros
 let currentSearchQuery = "";
 let currentMinPrice = 0;
 let currentMaxPrice = Infinity;
 
-// Elementos de la búsqueda
 const searchToggle = document.getElementById("searchToggle");
 const searchBar = document.getElementById("searchBar");
 const searchInput = document.getElementById("searchInput");
@@ -750,7 +771,6 @@ const noResultsMsg = document.getElementById("noResultsMsg");
 const noResultsText = document.getElementById("noResultsText");
 const clearSearchBtn = document.getElementById("clearSearchBtn");
 
-// Elementos del filtro de precio
 const priceMinInput = document.getElementById("priceMinInput");
 const priceMaxInput = document.getElementById("priceMaxInput");
 const applyPriceFilterBtn = document.getElementById("applyPriceFilterBtn");
@@ -828,8 +848,6 @@ if (searchInput) {
     }
   });
 }
-
-// FILTRO DE PRECIO
 
 function formatPriceMiniInput(input) {
   if (!input) return;
@@ -1106,7 +1124,6 @@ if (scrollTopBtn) {
 const shareProductBtn = document.getElementById("shareProductBtn");
 const shareMenu = document.getElementById("shareMenu");
 
-// Abrir/cerrar menú de compartir
 function openShareMenu() {
   if (!shareMenu) return;
   shareMenu.classList.add("active");
@@ -1117,7 +1134,6 @@ function closeShareMenu() {
   shareMenu.classList.remove("active");
 }
 
-// Toggle del menú al hacer clic en el botón compartir
 if (shareProductBtn) {
   shareProductBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1129,7 +1145,6 @@ if (shareProductBtn) {
   });
 }
 
-// Cerrar menú al hacer clic fuera de él
 document.addEventListener("click", (e) => {
   if (shareMenu && shareMenu.classList.contains("active")) {
     if (!shareMenu.contains(e.target) && e.target !== shareProductBtn && !shareProductBtn?.contains(e.target)) {
@@ -1138,7 +1153,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Generar el mensaje para compartir
 function buildShareMessage(product) {
   const productUrl = generateProductUrl(product);
   return `Mira este producto de MAISON:
@@ -1152,21 +1166,17 @@ Ver más aquí: ${productUrl}
 Ropa y calzado premium para dama y caballero.`;
 }
 
-// Generar URL única del producto
 function generateProductUrl(product) {
   const baseUrl = window.location.origin + window.location.pathname;
   return `${baseUrl}?producto=${product.id}`;
 }
 
-// Copiar texto al portapapeles
 async function copyToClipboard(text) {
   try {
-    // Método moderno (funciona en HTTPS)
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
       return true;
     } else {
-      // Fallback para navegadores viejos o HTTP
       const textArea = document.createElement("textarea");
       textArea.value = text;
       textArea.style.position = "fixed";
@@ -1185,7 +1195,6 @@ async function copyToClipboard(text) {
   }
 }
 
-// Función principal para compartir por cada red
 function shareToNetwork(network, product) {
   if (!product) return;
   
@@ -1204,14 +1213,12 @@ function shareToNetwork(network, product) {
       break;
       
     case "facebook":
-      // Facebook Share Dialog
       shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedMessage}`;
       window.open(shareUrl, "_blank", "width=600,height=400");
       showCustomToast("Compartiendo...", `${product.name} en Facebook`);
       break;
       
     case "instagram":
-      // Instagram no permite compartir directamente por URL, copiamos el mensaje
       copyToClipboard(message).then(success => {
         if (success) {
           showCustomToast("Mensaje copiado", "Pégalo en Instagram Stories o DM");
@@ -1232,11 +1239,9 @@ function shareToNetwork(network, product) {
       break;
   }
   
-  // Cerrar el menú después de compartir
   closeShareMenu();
 }
 
-// Registrar clicks en cada opción del menú
 document.querySelectorAll(".share-option").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1245,13 +1250,11 @@ document.querySelectorAll(".share-option").forEach((btn) => {
   });
 });
 
-// Detectar si viene con ?producto=xxx en la URL y abrir el modal del producto
 function checkProductInUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   const productId = urlParams.get("producto");
   
   if (productId) {
-    // Esperar a que se cargue el catálogo
     setTimeout(() => {
       const product = STORE_PRODUCTS.find(p => p.id === productId);
       if (product) {
@@ -1261,5 +1264,269 @@ function checkProductInUrl() {
   }
 }
 
-// Ejecutar al cargar la página
 window.addEventListener("load", checkProductInUrl);
+
+// ===================================================================
+// SISTEMA DE FAVORITOS (Mejora #5)
+// ===================================================================
+
+// Cargar los favoritos del usuario desde Supabase
+async function loadUserFavorites() {
+  try {
+    const { data: authData } = await supabaseClient.auth.getUser();
+    const user = authData?.user;
+    
+    if (!user) {
+      // Usuario no logueado, no hay favoritos
+      userFavorites = new Set();
+      return;
+    }
+    
+    const { data, error } = await supabaseClient
+      .from("favorites")
+      .select("product_id")
+      .eq("user_id", user.id);
+    
+    if (error) {
+      console.error("Error cargando favoritos:", error);
+      return;
+    }
+    
+    // Guardar los IDs en un Set para búsqueda rápida
+    userFavorites = new Set((data || []).map(f => f.product_id));
+    console.log(`Favoritos cargados: ${userFavorites.size}`);
+    
+  } catch (err) {
+    console.error("Error en loadUserFavorites:", err);
+  }
+}
+
+// Toggle: agregar o quitar de favoritos
+async function toggleFavorite(product) {
+  try {
+    // Verificar si el usuario está logueado
+    const { data: authData } = await supabaseClient.auth.getUser();
+    const user = authData?.user;
+    
+    if (!user) {
+      // Usuario NO logueado, mostrar mensaje
+      showCustomToast("Inicia sesión", "Necesitas una cuenta para guardar favoritos");
+      // Abrir el modal de cuenta
+      setTimeout(() => {
+        const accountToggle = document.getElementById("accountToggle");
+        if (accountToggle) accountToggle.click();
+      }, 800);
+      return;
+    }
+    
+    const isFav = userFavorites.has(product.id);
+    const btn = document.querySelector(`[data-favorite-btn="${product.id}"]`);
+    
+    if (isFav) {
+      // ELIMINAR de favoritos
+      const { error } = await supabaseClient
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("product_id", product.id);
+      
+      if (error) throw error;
+      
+      userFavorites.delete(product.id);
+      
+      // Actualizar UI
+      if (btn) {
+        btn.classList.add("removing");
+        setTimeout(() => {
+          btn.classList.remove("is-favorite");
+          btn.classList.remove("removing");
+          const svg = btn.querySelector("svg");
+          if (svg) svg.setAttribute("fill", "none");
+        }, 200);
+      }
+      
+      showCustomToast("Quitado de favoritos", product.name);
+      
+    } else {
+      // AGREGAR a favoritos
+      const { error } = await supabaseClient
+        .from("favorites")
+        .insert({
+          user_id: user.id,
+          product_id: product.id
+        });
+      
+      if (error) throw error;
+      
+      userFavorites.add(product.id);
+      
+      // Actualizar UI
+      if (btn) {
+        btn.classList.add("is-favorite");
+        const svg = btn.querySelector("svg");
+        if (svg) svg.setAttribute("fill", "currentColor");
+      }
+      
+      showCustomToast("Agregado a favoritos", product.name);
+    }
+    
+    // Actualizar la sección de favoritos en el perfil si está visible
+    renderFavoritesSection();
+    
+  } catch (err) {
+    console.error("Error al modificar favorito:", err);
+    alert("No se pudo actualizar el favorito. Intenta de nuevo.");
+  }
+}
+
+// Renderizar la sección de favoritos en el perfil
+async function renderFavoritesSection() {
+  const favoritesGrid = document.getElementById("favoritesGrid");
+  const favoritesCount = document.getElementById("favoritesCount");
+  
+  if (!favoritesGrid || !favoritesCount) return;
+  
+  // Verificar si el usuario está logueado
+  const { data: authData } = await supabaseClient.auth.getUser();
+  const user = authData?.user;
+  
+  if (!user) {
+    favoritesGrid.innerHTML = `
+      <p class="favorites-empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span>Inicia sesión para ver tus favoritos</span>
+      </p>
+    `;
+    favoritesCount.textContent = "0";
+    return;
+  }
+  
+  // Obtener favoritos completos con info de productos
+  const { data, error } = await supabaseClient
+    .from("favorites")
+    .select(`
+      product_id,
+      created_at,
+      products (
+        id,
+        category,
+        name,
+        price,
+        image_url,
+        tag,
+        description,
+        sizes,
+        stock,
+        active
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  
+  if (error) {
+    console.error("Error cargando favoritos completos:", error);
+    return;
+  }
+  
+  // Filtrar solo productos activos
+  const validFavorites = (data || []).filter(f => f.products && f.products.active);
+  
+  favoritesCount.textContent = validFavorites.length;
+  
+  if (validFavorites.length === 0) {
+    favoritesGrid.innerHTML = `
+      <p class="favorites-empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span>Aún no tienes productos favoritos</span>
+        <small>Toca el corazón en cualquier producto para guardarlo aquí</small>
+      </p>
+    `;
+    return;
+  }
+  
+  favoritesGrid.innerHTML = "";
+  
+  validFavorites.forEach((fav) => {
+    const p = fav.products;
+    const product = {
+      id: p.id,
+      category: p.category,
+      name: p.name,
+      price: p.price,
+      image: p.image_url || "",
+      tag: p.tag || "",
+      desc: p.description || "",
+      sizes: p.sizes && p.sizes.length > 0 ? p.sizes : ["Única"],
+      stock: p.stock || {}
+    };
+    
+    const item = document.createElement("div");
+    item.className = "favorite-item";
+    item.innerHTML = `
+      <button type="button" class="favorite-item-remove" data-remove-fav="${p.id}" title="Quitar de favoritos" aria-label="Quitar de favoritos">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <img src="${product.image}" alt="${product.name}" class="favorite-item-img">
+      <div class="favorite-item-info">
+        <div class="favorite-item-name">${product.name}</div>
+        <div class="favorite-item-price">${formatPrice(product.price)}</div>
+      </div>
+    `;
+    
+    // Click en la tarjeta abre el modal del producto
+    item.addEventListener("click", (e) => {
+      if (e.target.closest("[data-remove-fav]")) return;
+      // Cerrar modal de cuenta primero
+      const accountOverlay = document.getElementById("accountOverlay");
+      const accountModal = document.getElementById("accountModal");
+      if (accountOverlay) accountOverlay.classList.remove("active");
+      if (accountModal) accountModal.classList.remove("active");
+      document.body.style.overflow = "";
+      
+      setTimeout(() => {
+        openProductModal(product);
+      }, 300);
+    });
+    
+    // Click en X quita de favoritos
+    const removeBtn = item.querySelector("[data-remove-fav]");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await toggleFavorite(product);
+      });
+    }
+    
+    favoritesGrid.appendChild(item);
+  });
+}
+
+// Hacer las funciones accesibles globalmente para auth.js
+window.loadUserFavorites = loadUserFavorites;
+window.renderFavoritesSection = renderFavoritesSection;
+window.userFavorites = userFavorites;
+
+// Actualizar corazones en el catálogo cuando cambia el estado de login
+window.updateAllFavoriteButtons = function() {
+  document.querySelectorAll("[data-favorite-btn]").forEach((btn) => {
+    const productId = btn.dataset.favoriteBtn;
+    const isFav = userFavorites.has(productId);
+    
+    if (isFav) {
+      btn.classList.add("is-favorite");
+      const svg = btn.querySelector("svg");
+      if (svg) svg.setAttribute("fill", "currentColor");
+    } else {
+      btn.classList.remove("is-favorite");
+      const svg = btn.querySelector("svg");
+      if (svg) svg.setAttribute("fill", "none");
+    }
+  });
+};
