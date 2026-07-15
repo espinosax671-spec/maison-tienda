@@ -3,7 +3,7 @@
    Edita NUMERO_WHATSAPP con tu número (código de país + número, sin +)
 =================================================================== */
 
-// EDITA ESTE NÚMERO — formato: código país + número, sin espacios ni +
+// EDITA ESTE NÚMERO
 const NUMERO_WHATSAPP = "573001234567";
 
 // Clave para guardar el carrito en localStorage
@@ -21,7 +21,7 @@ function formatPrice(value) {
 }
 
 // ---------------------------------------------------------------
-// PERSISTENCIA DEL CARRITO EN LOCALSTORAGE
+// PERSISTENCIA DEL CARRITO
 // ---------------------------------------------------------------
 function saveCartToStorage() {
   try {
@@ -36,9 +36,7 @@ function loadCartFromStorage() {
     const saved = localStorage.getItem(CART_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (err) {
     console.error("No se pudo cargar el carrito:", err);
@@ -54,12 +52,7 @@ function clearCartStorage() {
   }
 }
 
-// ---------------------------------------------------------------
-// Estado del carrito (se carga desde localStorage al iniciar)
-// ---------------------------------------------------------------
 let cart = loadCartFromStorage();
-
-// Estado de favoritos (se carga desde Supabase cuando el usuario está logueado)
 let userFavorites = new Set();
 
 function getCartKey(productId, size) {
@@ -121,7 +114,7 @@ function cartCount() {
 }
 
 // ---------------------------------------------------------------
-// Catálogo desde Supabase
+// Catálogo desde Supabase (con descuentos)
 // ---------------------------------------------------------------
 let STORE_PRODUCTS = [];
 
@@ -141,10 +134,12 @@ async function fetchProductsFromSupabase() {
       category: p.category,
       name: p.name,
       price: p.price,
+      original_price: p.original_price || null,      // NUEVO
+      discount_percent: p.discount_percent || 0,     // NUEVO
       image: p.image_url || "",
       tag: p.tag || "",
       desc: p.description || "",
-     sizes: p.sizes && p.sizes.length > 0 ? p.sizes : ["Única"],
+      sizes: p.sizes && p.sizes.length > 0 ? p.sizes : ["Única"],
       stock: p.stock || {},
     }));
   } catch (err) {
@@ -154,7 +149,7 @@ async function fetchProductsFromSupabase() {
 }
 
 // ---------------------------------------------------------------
-// Render del catálogo (CON dataset + botón favorito)
+// Render del catálogo (CON descuentos)
 // ---------------------------------------------------------------
 async function renderCatalog() {
   const grids = {
@@ -171,19 +166,45 @@ async function renderCatalog() {
 
     const card = document.createElement("article");
     card.className = "product-card reveal";
-    // Data attributes para búsqueda
     card.dataset.productName = normalizeText(product.name);
     card.dataset.productCategory = normalizeText(product.category);
     card.dataset.productTag = normalizeText(product.tag);
     card.dataset.productPrice = product.price;
     card.dataset.productId = product.id;
     
-    // El botón de favorito se agrega al HTML de la tarjeta
     const isFav = userFavorites.has(product.id);
+    
+    // Determinar si hay descuento
+    const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
+    
+    // Construir el HTML del precio según si hay descuento o no
+    let priceHtml = "";
+    if (hasDiscount) {
+      priceHtml = `
+        <div class="product-price-wrap">
+          <span class="product-price-original">${formatPrice(product.original_price)}</span>
+          <span class="product-price-discounted">${formatPrice(product.price)}</span>
+        </div>
+      `;
+    } else {
+      priceHtml = `<p class="product-price">${formatPrice(product.price)}</p>`;
+    }
+    
+    // Construir el badge de descuento si aplica
+    let discountBadgeHtml = "";
+    if (hasDiscount) {
+      discountBadgeHtml = `
+        <span class="discount-badge">
+          <span class="discount-badge-percent">-${product.discount_percent}%</span>
+          <span class="discount-badge-label">OFERTA</span>
+        </span>
+      `;
+    }
     
     card.innerHTML = `
       <div class="product-image">
         ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ""}
+        ${discountBadgeHtml}
         <button type="button" class="favorite-btn ${isFav ? 'is-favorite' : ''}" data-favorite-btn="${product.id}" aria-label="Añadir a favoritos" title="Añadir a favoritos">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -194,18 +215,15 @@ async function renderCatalog() {
       <div class="product-info">
         <span class="product-category">${categoryLabel(product.category)}</span>
         <h3 class="product-name">${product.name}</h3>
-        <p class="product-price">${formatPrice(product.price)}</p>
+        ${priceHtml}
       </div>
     `;
     
-    // Click en la tarjeta abre el modal (excepto en el botón de favorito)
     card.addEventListener("click", (e) => {
-      // Si se hizo clic en el botón de favorito, NO abrir el modal
       if (e.target.closest(".favorite-btn")) return;
       openProductModal(product);
     });
     
-    // Click en el botón de favorito
     const favBtn = card.querySelector(".favorite-btn");
     if (favBtn) {
       favBtn.addEventListener("click", (e) => {
@@ -238,7 +256,7 @@ function getTotalStock(product) {
 }
 
 // ---------------------------------------------------------------
-// Modal de producto CON SELECTOR DE CANTIDAD Y STOCK
+// Modal de producto (CON descuentos)
 // ---------------------------------------------------------------
 let currentProduct = null;
 let currentSize = null;
@@ -255,7 +273,30 @@ function openProductModal(product) {
   document.getElementById("modalImg").alt = product.name;
   document.getElementById("modalCategory").textContent = categoryLabel(product.category);
   document.getElementById("modalName").textContent = product.name;
-  document.getElementById("modalPrice").textContent = formatPrice(product.price);
+  
+  // ============ MOSTRAR PRECIO CON DESCUENTO EN MODAL ============
+  const modalPriceEl = document.getElementById("modalPrice");
+  const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
+  
+  if (hasDiscount) {
+    const savings = product.original_price - product.price;
+    modalPriceEl.innerHTML = `
+      <div class="modal-price-wrap">
+        <span class="modal-price-original">${formatPrice(product.original_price)}</span>
+        <span class="modal-price-discounted">${formatPrice(product.price)}</span>
+        <span class="modal-discount-badge">-${product.discount_percent}%</span>
+      </div>
+      <div class="modal-savings-msg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Ahorras ${formatPrice(savings)} con esta oferta
+      </div>
+    `;
+  } else {
+    modalPriceEl.innerHTML = formatPrice(product.price);
+  }
+  
   document.getElementById("modalDesc").textContent = product.desc;
 
   const sizesWrap = document.getElementById("modalSizes");
@@ -378,7 +419,7 @@ document.getElementById("modalClose").addEventListener("click", closeProductModa
 document.getElementById("productOverlay").addEventListener("click", closeProductModal);
 
 // ---------------------------------------------------------------
-// Render del carrito CON CONTROLES DE CANTIDAD
+// Render del carrito
 // ---------------------------------------------------------------
 function renderCart() {
   const itemsWrap = document.getElementById("cartItems");
@@ -469,7 +510,7 @@ function buildOrderMessage(orderNumber = null) {
   let msg = "Hola! Quiero hacer este pedido:\n\n";
   
   if (orderNumber) {
-        msg += `*Pedido #${orderNumber}*\n\n`;
+    msg += `*Pedido #${orderNumber}*\n\n`;
   }
   
   cart.forEach((item) => {
@@ -544,9 +585,7 @@ window.addEventListener("scroll", () => {
 // Inicialización
 // ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", async () => {
-  // Cargar favoritos del usuario ANTES de renderizar el catálogo
   await loadUserFavorites();
-  
   await renderCatalog();
   renderCart();
   updateWhatsappLinks();
@@ -587,7 +626,6 @@ function showToast(productName, quantity) {
   }, 3000);
 }
 
-// Toast personalizado (para compartir y favoritos)
 function showCustomToast(title, message) {
   const toast = document.getElementById("toast");
   const titleEl = toast?.querySelector(".toast-title");
@@ -745,7 +783,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================================================================
-// SISTEMA DE BÚSQUEDA + FILTRO DE PRECIO (Mejoras #2 y #3)
+// SISTEMA DE BÚSQUEDA + FILTRO DE PRECIO
 // ===================================================================
 
 function normalizeText(text) {
@@ -1095,30 +1133,8 @@ function resetAllProductVisibility() {
   if (noResultsMsg) noResultsMsg.style.display = "none";
 }
 
-// ---------------------------------------------------------------
-// BOTÓN VOLVER ARRIBA
-// ---------------------------------------------------------------
-const scrollTopBtn = document.getElementById("scrollTopBtn");
-
-if (scrollTopBtn) {
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 400) {
-      scrollTopBtn.classList.add("visible");
-    } else {
-      scrollTopBtn.classList.remove("visible");
-    }
-  });
-
-  scrollTopBtn.addEventListener("click", () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  });
-}
-
 // ===================================================================
-// SISTEMA DE COMPARTIR PRODUCTOS (Mejora #4)
+// SISTEMA DE COMPARTIR PRODUCTOS
 // ===================================================================
 
 const shareProductBtn = document.getElementById("shareProductBtn");
@@ -1155,11 +1171,18 @@ document.addEventListener("click", (e) => {
 
 function buildShareMessage(product) {
   const productUrl = generateProductUrl(product);
+  const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
+  
+  let priceText = `Precio: ${formatPrice(product.price)}`;
+  if (hasDiscount) {
+    priceText = `Precio: ~${formatPrice(product.original_price)}~ *${formatPrice(product.price)}* (${product.discount_percent}% OFF)`;
+  }
+  
   return `Mira este producto de MAISON:
 
 *${product.name}*
 Categoría: ${categoryLabel(product.category)}
-Precio: ${formatPrice(product.price)}
+${priceText}
 
 Ver más aquí: ${productUrl}
 
@@ -1267,17 +1290,15 @@ function checkProductInUrl() {
 window.addEventListener("load", checkProductInUrl);
 
 // ===================================================================
-// SISTEMA DE FAVORITOS (Mejora #5)
+// SISTEMA DE FAVORITOS
 // ===================================================================
 
-// Cargar los favoritos del usuario desde Supabase
 async function loadUserFavorites() {
   try {
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData?.user;
     
     if (!user) {
-      // Usuario no logueado, no hay favoritos
       userFavorites = new Set();
       return;
     }
@@ -1292,7 +1313,6 @@ async function loadUserFavorites() {
       return;
     }
     
-    // Guardar los IDs en un Set para búsqueda rápida
     userFavorites = new Set((data || []).map(f => f.product_id));
     console.log(`Favoritos cargados: ${userFavorites.size}`);
     
@@ -1301,17 +1321,13 @@ async function loadUserFavorites() {
   }
 }
 
-// Toggle: agregar o quitar de favoritos
 async function toggleFavorite(product) {
   try {
-    // Verificar si el usuario está logueado
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData?.user;
     
     if (!user) {
-      // Usuario NO logueado, mostrar mensaje
       showCustomToast("Inicia sesión", "Necesitas una cuenta para guardar favoritos");
-      // Abrir el modal de cuenta
       setTimeout(() => {
         const accountToggle = document.getElementById("accountToggle");
         if (accountToggle) accountToggle.click();
@@ -1323,7 +1339,6 @@ async function toggleFavorite(product) {
     const btn = document.querySelector(`[data-favorite-btn="${product.id}"]`);
     
     if (isFav) {
-      // ELIMINAR de favoritos
       const { error } = await supabaseClient
         .from("favorites")
         .delete()
@@ -1334,7 +1349,6 @@ async function toggleFavorite(product) {
       
       userFavorites.delete(product.id);
       
-      // Actualizar UI
       if (btn) {
         btn.classList.add("removing");
         setTimeout(() => {
@@ -1348,7 +1362,6 @@ async function toggleFavorite(product) {
       showCustomToast("Quitado de favoritos", product.name);
       
     } else {
-      // AGREGAR a favoritos
       const { error } = await supabaseClient
         .from("favorites")
         .insert({
@@ -1360,7 +1373,6 @@ async function toggleFavorite(product) {
       
       userFavorites.add(product.id);
       
-      // Actualizar UI
       if (btn) {
         btn.classList.add("is-favorite");
         const svg = btn.querySelector("svg");
@@ -1370,7 +1382,6 @@ async function toggleFavorite(product) {
       showCustomToast("Agregado a favoritos", product.name);
     }
     
-    // Actualizar la sección de favoritos en el perfil si está visible
     renderFavoritesSection();
     
   } catch (err) {
@@ -1379,14 +1390,12 @@ async function toggleFavorite(product) {
   }
 }
 
-// Renderizar la sección de favoritos en el perfil
 async function renderFavoritesSection() {
   const favoritesGrid = document.getElementById("favoritesGrid");
   const favoritesCount = document.getElementById("favoritesCount");
   
   if (!favoritesGrid || !favoritesCount) return;
   
-  // Verificar si el usuario está logueado
   const { data: authData } = await supabaseClient.auth.getUser();
   const user = authData?.user;
   
@@ -1403,7 +1412,6 @@ async function renderFavoritesSection() {
     return;
   }
   
-  // Obtener favoritos completos con info de productos
   const { data, error } = await supabaseClient
     .from("favorites")
     .select(`
@@ -1414,6 +1422,8 @@ async function renderFavoritesSection() {
         category,
         name,
         price,
+        original_price,
+        discount_percent,
         image_url,
         tag,
         description,
@@ -1430,7 +1440,6 @@ async function renderFavoritesSection() {
     return;
   }
   
-  // Filtrar solo productos activos
   const validFavorites = (data || []).filter(f => f.products && f.products.active);
   
   favoritesCount.textContent = validFavorites.length;
@@ -1457,6 +1466,8 @@ async function renderFavoritesSection() {
       category: p.category,
       name: p.name,
       price: p.price,
+      original_price: p.original_price || null,
+      discount_percent: p.discount_percent || 0,
       image: p.image_url || "",
       tag: p.tag || "",
       desc: p.description || "",
@@ -1480,10 +1491,8 @@ async function renderFavoritesSection() {
       </div>
     `;
     
-    // Click en la tarjeta abre el modal del producto
     item.addEventListener("click", (e) => {
       if (e.target.closest("[data-remove-fav]")) return;
-      // Cerrar modal de cuenta primero
       const accountOverlay = document.getElementById("accountOverlay");
       const accountModal = document.getElementById("accountModal");
       if (accountOverlay) accountOverlay.classList.remove("active");
@@ -1495,7 +1504,6 @@ async function renderFavoritesSection() {
       }, 300);
     });
     
-    // Click en X quita de favoritos
     const removeBtn = item.querySelector("[data-remove-fav]");
     if (removeBtn) {
       removeBtn.addEventListener("click", async (e) => {
@@ -1508,12 +1516,10 @@ async function renderFavoritesSection() {
   });
 }
 
-// Hacer las funciones accesibles globalmente para auth.js
 window.loadUserFavorites = loadUserFavorites;
 window.renderFavoritesSection = renderFavoritesSection;
 window.userFavorites = userFavorites;
 
-// Actualizar corazones en el catálogo cuando cambia el estado de login
 window.updateAllFavoriteButtons = function() {
   document.querySelectorAll("[data-favorite-btn]").forEach((btn) => {
     const productId = btn.dataset.favoriteBtn;
