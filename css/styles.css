@@ -18,6 +18,7 @@
   --color-white: #ffffff;
   --color-danger: #b84a3f;
   --color-success: #4a8a5c;
+  --color-heart: #e63946;
   --font-serif: 'Cormorant Garamond', serif;
   --font-sans: 'Jost', sans-serif;
   --transition: all .35s cubic-bezier(.4, 0, .2, 1);
@@ -867,13 +868,15 @@ body.search-open .catalog:first-of-type {
   gap: 30px;
 }
 
-.product-item {
+.product-item,
+.product-card {
   cursor: pointer;
   transition: var(--transition);
   position: relative;
 }
 
-.product-item-img-wrap {
+.product-item-img-wrap,
+.product-image {
   overflow: hidden;
   aspect-ratio: 3/4;
   background: var(--color-cream);
@@ -881,16 +884,19 @@ body.search-open .catalog:first-of-type {
   position: relative;
 }
 
-.product-item-img {
+.product-item-img,
+.product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform .8s cubic-bezier(.16,1,.3,1);
 }
 
-.product-item:hover .product-item-img { transform: scale(1.06); }
+.product-item:hover .product-item-img,
+.product-card:hover .product-image img { transform: scale(1.06); }
 
-.product-item-tag {
+.product-item-tag,
+.product-tag {
   position: absolute;
   top: 14px;
   left: 14px;
@@ -903,7 +909,8 @@ body.search-open .catalog:first-of-type {
   z-index: 2;
 }
 
-.product-item-cat {
+.product-item-cat,
+.product-category {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -911,7 +918,8 @@ body.search-open .catalog:first-of-type {
   margin-bottom: 6px;
 }
 
-.product-item-name {
+.product-item-name,
+.product-name {
   font-family: var(--font-serif);
   font-size: 22px;
   color: inherit;
@@ -919,11 +927,234 @@ body.search-open .catalog:first-of-type {
   font-weight: 500;
 }
 
-.product-item-price {
+.product-item-price,
+.product-price {
   font-size: 14px;
   color: inherit;
   opacity: .8;
   letter-spacing: 1px;
+}
+
+/* ============================================
+   BOTÓN CORAZÓN (FAVORITOS) — Mejora #5
+   ============================================ */
+.favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all .3s cubic-bezier(.16, 1, .3, 1);
+  color: var(--color-ink-soft);
+}
+
+.favorite-btn:hover {
+  background: var(--color-white);
+  transform: scale(1.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  color: var(--color-heart);
+}
+
+.favorite-btn:active {
+  transform: scale(0.95);
+}
+
+/* Corazón cuando está marcado como favorito */
+.favorite-btn.is-favorite {
+  background: var(--color-white);
+  color: var(--color-heart);
+  animation: heartBeat .5s ease;
+}
+
+.favorite-btn.is-favorite svg {
+  fill: var(--color-heart);
+  stroke: var(--color-heart);
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.3); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  60% { transform: scale(1); }
+}
+
+/* Cuando se quita de favoritos */
+.favorite-btn.removing {
+  animation: heartRemove .4s ease;
+}
+
+@keyframes heartRemove {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.7) rotate(-10deg); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================
+   SECCIÓN DE FAVORITOS EN EL PERFIL — Mejora #5
+   ============================================ */
+.favorites-section {
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid var(--color-border);
+}
+
+.favorites-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.favorites-header .section-eyebrow {
+  margin-bottom: 0;
+}
+
+.favorites-count {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-ink);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+/* Producto en la lista de favoritos */
+.favorite-item {
+  position: relative;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-white);
+  transition: all .3s ease;
+  border: 1px solid var(--color-border);
+  animation: fadeInUp .4s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.favorite-item:hover {
+  border-color: var(--color-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.favorite-item-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  background: var(--color-cream);
+}
+
+.favorite-item-info {
+  padding: 8px 10px;
+}
+
+.favorite-item-name {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-ink);
+  line-height: 1.2;
+  margin-bottom: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 500;
+}
+
+.favorite-item-price {
+  font-size: 11px;
+  color: var(--color-gold-dark);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Botón X pequeño para quitar de favoritos */
+.favorite-item-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: var(--color-danger);
+  opacity: 0;
+  transition: all .3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-item:hover .favorite-item-remove {
+  opacity: 1;
+}
+
+.favorite-item-remove:hover {
+  background: var(--color-danger);
+  color: var(--color-white);
+  transform: scale(1.1);
+}
+
+/* Mensaje cuando no hay favoritos */
+.favorites-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-ink-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: rgba(232, 220, 200, 0.3);
+  border-radius: 6px;
+  border: 1px dashed var(--color-border);
+}
+
+.favorites-empty svg {
+  color: var(--color-gold);
+  opacity: 0.4;
+  margin-bottom: 4px;
+}
+
+.favorites-empty span {
+  font-size: 13px;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.favorites-empty small {
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  line-height: 1.4;
+  max-width: 220px;
 }
 
 /* ============================================
@@ -1345,14 +1576,13 @@ body.search-open .catalog:first-of-type {
 }
 
 /* ============================================
-   COMPARTIR PRODUCTO (Mejora #4)
+   COMPARTIR PRODUCTO
    ============================================ */
 .share-product-wrap {
   position: relative;
   margin-top: 12px;
 }
 
-/* Botón "Compartir producto" */
 .btn-share-product {
   width: 100%;
   display: flex;
@@ -1389,7 +1619,6 @@ body.search-open .catalog:first-of-type {
   color: var(--color-gold);
 }
 
-/* Menú de opciones para compartir */
 .share-menu {
   position: absolute;
   bottom: calc(100% + 12px);
@@ -1413,7 +1642,6 @@ body.search-open .catalog:first-of-type {
   transform: translateY(0);
 }
 
-/* Flecha decorativa apuntando al botón */
 .share-menu-arrow {
   position: absolute;
   bottom: -6px;
@@ -1426,7 +1654,6 @@ body.search-open .catalog:first-of-type {
   border-bottom: 1px solid var(--color-border);
 }
 
-/* Cada opción de compartir */
 .share-option {
   width: 100%;
   display: flex;
@@ -1454,7 +1681,6 @@ body.search-open .catalog:first-of-type {
   background: rgba(168, 130, 75, 0.1);
 }
 
-/* Ícono circular con color de cada red social */
 .share-option-icon {
   width: 40px;
   height: 40px;
@@ -1471,7 +1697,6 @@ body.search-open .catalog:first-of-type {
   transform: scale(1.1);
 }
 
-/* Colores específicos de cada red */
 .share-option-icon.whatsapp {
   background: linear-gradient(135deg, #25d366, #128c7e);
   box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3);
@@ -1493,7 +1718,6 @@ body.search-open .catalog:first-of-type {
   color: var(--color-ink);
 }
 
-/* Texto de la opción */
 .share-option-info {
   display: flex;
   flex-direction: column;
@@ -1514,7 +1738,6 @@ body.search-open .catalog:first-of-type {
   letter-spacing: 0.3px;
 }
 
-/* Overlay sutil para cerrar el menú al hacer clic fuera */
 .share-menu-backdrop {
   position: fixed;
   inset: 0;
@@ -1775,10 +1998,24 @@ body.search-open .catalog:first-of-type {
   .price-quick-ranges { padding-top: 10px; }
   .quick-ranges-label { width: 100%; margin-bottom: 6px; }
   
-  /* Compartir producto responsive */
   .share-menu { left: -10px; right: -10px; }
   .share-option { padding: 12px 15px; }
   .share-option-icon { width: 36px; height: 36px; }
+  
+  /* Favoritos responsive */
+  .favorites-grid { 
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
+    gap: 10px;
+  }
+  .favorite-item-info { padding: 6px 8px; }
+  .favorite-item-name { font-size: 12px; }
+  .favorite-btn { 
+    width: 36px; 
+    height: 36px; 
+    top: 10px; 
+    right: 10px;
+  }
+  .favorite-btn svg { width: 18px; height: 18px; }
 }
 
 @media (max-width: 500px) {
