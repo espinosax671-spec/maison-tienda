@@ -82,7 +82,6 @@
     </button>
   </div>
 
-  <!-- FILTRO DE PRECIO -->
   <div class="price-filter-wrap">
     <div class="price-filter-inner">
       <div class="price-filter-header">
@@ -100,13 +99,7 @@
           <span class="price-mini-label">Mínimo</span>
           <div class="price-mini-wrap">
             <span class="price-mini-currency">$</span>
-            <input 
-              type="text" 
-              id="priceMinInput" 
-              placeholder="0" 
-              inputmode="numeric" 
-              autocomplete="off"
-            >
+            <input type="text" id="priceMinInput" placeholder="0" inputmode="numeric" autocomplete="off">
           </div>
         </div>
 
@@ -116,13 +109,7 @@
           <span class="price-mini-label">Máximo</span>
           <div class="price-mini-wrap">
             <span class="price-mini-currency">$</span>
-            <input 
-              type="text" 
-              id="priceMaxInput" 
-              placeholder="Sin límite" 
-              inputmode="numeric" 
-              autocomplete="off"
-            >
+            <input type="text" id="priceMaxInput" placeholder="Sin límite" inputmode="numeric" autocomplete="off">
           </div>
         </div>
 
@@ -280,7 +267,7 @@
   </div>
 </aside>
 
-<!-- ============ MODAL PRODUCTO (con botón compartir NUEVO) ============ -->
+<!-- ============ MODAL PRODUCTO ============ -->
 <div class="product-overlay" id="productOverlay"></div>
 <div class="product-modal" id="productModal">
   <button class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
@@ -301,7 +288,7 @@
 
       <button class="btn btn-primary btn-full" id="modalAddBtn">Añadir a la selección</button>
 
-      <!-- ============ NUEVO: BOTÓN COMPARTIR PRODUCTO ============ -->
+      <!-- BOTÓN COMPARTIR PRODUCTO -->
       <div class="share-product-wrap">
         <button type="button" class="btn-share-product" id="shareProductBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -314,7 +301,6 @@
           <span>Compartir producto</span>
         </button>
 
-        <!-- Menú de opciones para compartir -->
         <div class="share-menu" id="shareMenu">
           <div class="share-menu-arrow"></div>
           
@@ -368,7 +354,6 @@
           </button>
         </div>
       </div>
-      <!-- FIN BOTÓN COMPARTIR -->
 
     </div>
   </div>
@@ -409,6 +394,7 @@
     </button>
   </div>
 
+  <!-- VISTA: LOGIN -->
   <div class="account-view active" id="viewLogin">
     <span class="section-eyebrow" id="loginEyebrow">Acceso Cliente</span>
     <h3 class="account-title">Bienvenido de vuelta</h3>
@@ -459,6 +445,7 @@
     <p class="account-switch">¿Aún no tienes cuenta? <button type="button" class="link-btn" id="goToRegister">Crear cuenta</button></p>
   </div>
 
+  <!-- VISTA: REGISTRO -->
   <div class="account-view" id="viewRegister">
     <span class="section-eyebrow" id="registerEyebrow">Crear cuenta Cliente</span>
     <h3 class="account-title">Únete a MAISON</h3>
@@ -525,6 +512,7 @@
     <p class="account-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" id="goToLogin">Inicia sesión</button></p>
   </div>
 
+  <!-- VISTA: VENDEDOR REGISTRADO -->
   <div class="account-view" id="viewVendor">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -545,150 +533,6 @@
     <p class="account-hint" style="text-align:center; margin-top:1rem;">Serás redirigido automáticamente en unos segundos.</p>
   </div>
 
+  <!-- VISTA: CONFIRMA CORREO -->
   <div class="account-view" id="viewConfirm">
-    <div class="success-icon">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-        <polyline points="22,6 12,13 2,6"/>
-      </svg>
-    </div>
-    <span class="section-eyebrow">Casi listo</span>
-    <h3 class="account-title">Confirma tu correo</h3>
-    <p class="account-text">Te enviamos un enlace de confirmación. Ábrelo desde tu correo y luego vuelve a iniciar sesión aquí.</p>
-    <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
-  </div>
-
-  <div class="account-view" id="viewProfile">
-    <span class="section-eyebrow">Tu cuenta</span>
-    <h3 class="account-title" id="profileGreeting">Hola</h3>
-    <p class="account-subtitle">Mantén tus datos actualizados para agilizar tus pedidos.</p>
     
-    <form id="profileForm" class="account-form">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </span>
-        <input type="text" id="profileName" required placeholder="Nombre completo">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-          </svg>
-        </span>
-        <input type="tel" id="profilePhone" placeholder="WhatsApp (ej: 3001234567)">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </span>
-        <input type="text" id="profileAddress" placeholder="Dirección de entrega">
-      </div>
-
-      <p class="account-error" id="profileError"></p>
-      <p class="account-success" id="profileSuccess"></p>
-      <button type="submit" class="btn btn-primary btn-full btn-auth" id="profileSaveBtn">
-        <span>Guardar datos</span>
-      </button>
-    </form>
-    <button type="button" class="btn btn-ghost btn-full logout-btn" id="logoutBtn">Cerrar sesión</button>
-  </div>
-</div>
-
-<script>
-const ICON_EYE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
-const ICON_EYE_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".toggle-password").forEach((btn) => {
-    btn.innerHTML = ICON_EYE;
-    btn.addEventListener("click", () => {
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      const isHidden = input.type === "password";
-      input.type = isHidden ? "text" : "password";
-      btn.innerHTML = isHidden ? ICON_EYE_OFF : ICON_EYE;
-    });
-  });
-});
-</script>
-<script src="js/products.js"></script>
-<script src="js/supabase-client.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/app.js"></script>
-
-<!-- ============ NOTIFICACIÓN TOAST ============ -->
-<div class="toast" id="toast">
-  <div class="toast-icon">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  </div>
-  <div class="toast-content">
-    <span class="toast-title">Añadido al carrito</span>
-    <span class="toast-message" id="toastMessage"></span>
-  </div>
-</div>
-
-<!-- ============ BOTÓN VOLVER ARRIBA ============ -->
-<button 
-  id="scrollTopBtn" 
-  onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-  aria-label="Volver arriba"
-  title="Volver arriba"
-  style="
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 55px;
-    height: 55px;
-    border: none;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #d4a869, #8f6b3f);
-    color: #1a1410;
-    cursor: pointer;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    box-shadow: 0 6px 20px rgba(143, 107, 63, 0.4);
-    transition: all 0.3s ease;
-    font-family: inherit;
-  "
-  onmouseover="this.style.transform='translateY(-4px) scale(1.08)'; this.style.boxShadow='0 12px 30px rgba(143, 107, 63, 0.5)'; this.style.background='linear-gradient(135deg, #8f6b3f, #d4a869)'; this.style.color='#ffffff';"
-  onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 6px 20px rgba(143, 107, 63, 0.4)'; this.style.background='linear-gradient(135deg, #d4a869, #8f6b3f)'; this.style.color='#1a1410';">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="19" x2="12" y2="5"/>
-    <polyline points="5 12 12 5 19 12"/>
-  </svg>
-</button>
-
-<script>
-  (function() {
-    var scrollBtn = document.getElementById("scrollTopBtn");
-    if (!scrollBtn) return;
-    
-    function toggleScrollBtn() {
-      if (window.pageYOffset > 400 || document.documentElement.scrollTop > 400) {
-        scrollBtn.style.display = "flex";
-      } else {
-        scrollBtn.style.display = "none";
-      }
-    }
-    
-    window.addEventListener("scroll", toggleScrollBtn);
-    window.addEventListener("load", toggleScrollBtn);
-    toggleScrollBtn();
-  })();
-</script>
-
-</body>
-</html>
