@@ -14,6 +14,13 @@ let selectedImageFile = null;
 let currentStockProduct = null;
 let currentStockData = {};
 
+// ============ VARIABLES DEL SISTEMA DE NOTIFICACIONES (Mejora #7) ============
+let notificationsEnabled = true;         // ¿Están activas las notificaciones?
+let notificationsMuted = false;          // ¿Silenciado por el vendedor?
+let notificationCheckInterval = null;    // Timer para chequear pedidos nuevos
+const NOTIFICATION_CHECK_INTERVAL = 30000; // Cada 30 segundos
+const LAST_ORDER_KEY = "maison_last_order_id"; // localStorage key
+
 // ---------------------------------------------------------------
 // Elementos
 // ---------------------------------------------------------------
@@ -93,6 +100,9 @@ async function checkStaffAndEnter(user) {
     profile.full_name || user.user_metadata?.full_name || user.email;
 
   await loadProducts();
+  
+  // ============ INICIAR SISTEMA DE NOTIFICACIONES ============
+  initNotificationSystem();
 }
 
 async function denyAccess(mensaje) {
@@ -109,6 +119,7 @@ document.getElementById("logoutBtn").addEventListener("click", doLogout);
 document.getElementById("noAccessLogout").addEventListener("click", doLogout);
 
 async function doLogout() {
+  stopNotificationCheck(); // Detener notificaciones
   await supabaseClient.auth.signOut();
   adminUser = null;
   adminApp.style.display = "none";
@@ -158,7 +169,7 @@ async function loadProducts() {
 }
 
 // ---------------------------------------------------------------
-// Renderizar tabla de productos (CON stock y descuento)
+// Renderizar tabla de productos
 // ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
@@ -176,7 +187,6 @@ function renderProductTable() {
     const totalStock = getTotalStock(p.stock);
     const stockClass = totalStock === 0 ? 'out' : totalStock < 5 ? 'low' : '';
     
-    // Determinar si el producto tiene descuento activo
     const hasDiscount = p.discount_percent && p.discount_percent > 0 && p.original_price;
     
     let priceHtml = '';
@@ -275,17 +285,13 @@ function openProductForm(productId) {
   document.getElementById("imagePreview").style.display = "none";
   selectedImageFile = null;
 
-  // Resetear hint del precio
   const priceHint = document.getElementById("priceHint");
   if (priceHint) {
     priceHint.textContent = "Ingresa el precio sin puntos ni comas";
     priceHint.classList.remove("active");
   }
 
-  // Resetear stock inicial a 5 por defecto
   document.getElementById("productInitialStock").value = "5";
-  
-  // Resetear descuento a 0
   document.getElementById("productDiscount").value = "0";
   updateDiscountPreview();
 
@@ -296,12 +302,10 @@ function openProductForm(productId) {
     document.getElementById("productCategory").value = p.category;
     document.getElementById("productName").value = p.name;
     
-    // Al editar: si tiene descuento, mostramos el precio ORIGINAL (no el ya descontado)
     const hasDiscount = p.discount_percent && p.discount_percent > 0 && p.original_price;
     const priceToShow = hasDiscount ? p.original_price : p.price;
     document.getElementById("productPrice").value = formatPriceInput(priceToShow);
     
-    // Cargar el descuento
     document.getElementById("productDiscount").value = p.discount_percent || 0;
     
     document.getElementById("productTag").value = p.tag || "";
@@ -309,7 +313,6 @@ function openProductForm(productId) {
     document.getElementById("productSizes").value = (p.sizes || []).join(", ");
     document.getElementById("productActive").checked = p.active;
     
-    // Al editar, ocultamos el campo de "Stock inicial" porque ya tiene stock
     const stockInitialLabel = document.getElementById("productInitialStock").closest("label");
     if (stockInitialLabel) stockInitialLabel.style.display = "none";
     
@@ -318,20 +321,17 @@ function openProductForm(productId) {
       document.getElementById("imagePreview").style.display = "block";
     }
     
-    // Actualizar el hint del precio con el valor cargado
     if (priceHint && priceToShow > 0) {
       priceHint.textContent = `Precio: $${formatPriceInput(priceToShow)} COP`;
       priceHint.classList.add("active");
     }
     
-    // Actualizar preview del descuento
     updateDiscountPreview();
   } else {
     document.getElementById("formTitle").textContent = "Nuevo producto";
     document.getElementById("productId").value = "";
     document.getElementById("productActive").checked = true;
     
-    // Al crear un producto nuevo, mostramos el campo de "Stock inicial"
     const stockInitialLabel = document.getElementById("productInitialStock").closest("label");
     if (stockInitialLabel) stockInitialLabel.style.display = "flex";
   }
@@ -347,7 +347,6 @@ function closeProductForm() {
   document.body.style.overflow = "";
 }
 
-// Vista previa de imagen
 document.getElementById("productImageFile").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -361,7 +360,7 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
 });
 
 // ---------------------------------------------------------------
-// Guardar producto (CON DESCUENTO)
+// Guardar producto
 // ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -388,7 +387,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
       imageUrl = await uploadProductImage(selectedImageFile);
     }
     
-    // ============ CALCULAR PRECIO CON DESCUENTO ============
     const priceInput = parsePriceInput(document.getElementById("productPrice").value);
     const discountInput = parseInt(document.getElementById("productDiscount").value, 10) || 0;
     
@@ -397,7 +395,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     let discountPercent = 0;
     
     if (discountInput > 0 && discountInput <= 99) {
-      // HAY descuento
       originalPrice = priceInput;
       finalPrice = Math.round(priceInput * (1 - discountInput / 100));
       discountPercent = discountInput;
@@ -406,9 +403,9 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     const payload = {
       category: document.getElementById("productCategory").value,
       name: document.getElementById("productName").value.trim(),
-      price: finalPrice,                    // Precio final (con descuento aplicado si hay)
-      original_price: originalPrice,        // Precio original (null si no hay descuento)
-      discount_percent: discountPercent,    // Porcentaje de descuento (0 si no hay)
+      price: finalPrice,
+      original_price: originalPrice,
+      discount_percent: discountPercent,
       tag: document.getElementById("productTag").value.trim(),
       description: document.getElementById("productDesc").value.trim(),
       sizes,
@@ -418,11 +415,9 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     };
 
     if (id) {
-      // EDITAR
       const { error } = await supabaseClient.from("products").update(payload).eq("id", id);
       if (error) throw error;
     } else {
-      // NUEVO — llenamos el stock automáticamente
       const initialStock = parseInt(document.getElementById("productInitialStock").value, 10) || 0;
       
       const stockObject = {};
@@ -432,9 +427,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
       
       payload.created_by = adminUser.id;
       payload.stock = stockObject;
-      
-      console.log(`Creando producto con precio final: $${finalPrice}${discountPercent > 0 ? ` (descuento ${discountPercent}%)` : ''}`);
-      console.log("Stock generado:", stockObject);
       
       const { error } = await supabaseClient.from("products").insert(payload);
       if (error) throw error;
@@ -452,7 +444,7 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------
-// Subir imagen a Supabase Storage (bucket: product_images)
+// Subir imagen
 // ---------------------------------------------------------------
 async function uploadProductImage(file) {
   try {
@@ -462,8 +454,6 @@ async function uploadProductImage(file) {
 
     const ext = file.name.split(".").pop().toLowerCase();
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-
-    console.log("Subiendo imagen:", fileName);
 
     const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from("product_images")
@@ -478,8 +468,6 @@ async function uploadProductImage(file) {
       throw new Error(`Error al subir imagen: ${uploadError.message}`);
     }
 
-    console.log("Imagen subida:", uploadData);
-
     const { data: urlData } = supabaseClient.storage
       .from("product_images")
       .getPublicUrl(fileName);
@@ -488,7 +476,6 @@ async function uploadProductImage(file) {
       throw new Error("No se pudo obtener la URL de la imagen.");
     }
 
-    console.log("URL pública:", urlData.publicUrl);
     return urlData.publicUrl;
 
   } catch (err) {
@@ -537,6 +524,7 @@ document.addEventListener("keydown", (e) => {
     closeProductForm();
     closeDeleteConfirm();
     closeStockModal();
+    hideOrderNotificationToast();
   }
 });
 
@@ -755,9 +743,8 @@ function getTotalStock(stock) {
 }
 
 // ===================================================================
-// SISTEMA DE TABS (Productos / Pedidos)
+// SISTEMA DE TABS
 // ===================================================================
-
 let currentTab = "productos";
 let allOrders = [];
 let currentOrderFilter = "pendiente";
@@ -785,6 +772,9 @@ function switchTab(tabName) {
   
   if (tabName === "pedidos") {
     loadOrders();
+    // Quitar la alerta de pedidos nuevos cuando el vendedor entra al tab
+    const badge = document.getElementById("pendingOrdersBadge");
+    if (badge) badge.classList.remove("new-order-alert");
   }
 }
 
@@ -793,9 +783,8 @@ function capitalize(str) {
 }
 
 // ===================================================================
-// CARGAR PEDIDOS DESDE SUPABASE
+// CARGAR PEDIDOS
 // ===================================================================
-
 async function loadOrders() {
   const list = document.getElementById("ordersList");
   list.innerHTML = `<p class="loading-msg">Cargando pedidos...</p>`;
@@ -840,7 +829,7 @@ function updateOrderCounts() {
   }
 }
 
-function renderOrders() {
+function renderOrders(highlightOrderId = null) {
   const list = document.getElementById("ordersList");
   const filtered = currentOrderFilter === "todos"
     ? allOrders
@@ -860,13 +849,22 @@ function renderOrders() {
   
   list.innerHTML = "";
   filtered.forEach((order) => {
-    list.appendChild(createOrderCard(order));
+    const card = createOrderCard(order);
+    // Destacar el pedido nuevo si aplica
+    if (highlightOrderId && order.id === highlightOrderId) {
+      card.classList.add("new-order");
+      setTimeout(() => {
+        card.classList.remove("new-order");
+      }, 3000);
+    }
+    list.appendChild(card);
   });
 }
 
 function createOrderCard(order) {
   const card = document.createElement("div");
   card.className = `order-card ${order.status}`;
+  card.dataset.orderId = order.id;
   
   const date = new Date(order.created_at);
   const dateStr = date.toLocaleString("es-CO", {
@@ -1130,14 +1128,11 @@ async function decrementStock(productId, size, qty) {
     .eq("id", productId);
   
   if (updateError) throw updateError;
-  
-  console.log(`Stock descontado: ${productId} - ${size}: ${currentQty} -> ${newQty}`);
 }
 
 // ===================================================================
-// FORMATO DE PRECIO COLOMBIANO
+// FORMATO DE PRECIO
 // ===================================================================
-
 function formatPriceInput(value) {
   if (!value && value !== 0) return "";
   const numericValue = value.toString().replace(/\D/g, "");
@@ -1151,9 +1146,6 @@ function parsePriceInput(formattedValue) {
   return parseInt(digitsOnly, 10) || 0;
 }
 
-// ===================================================================
-// FUNCIÓN: ACTUALIZAR PREVIEW DEL DESCUENTO
-// ===================================================================
 function updateDiscountPreview() {
   const priceInput = document.getElementById("productPrice");
   const discountInput = document.getElementById("productDiscount");
@@ -1165,7 +1157,6 @@ function updateDiscountPreview() {
   const discount = parseInt(discountInput.value, 10) || 0;
   
   if (discount > 0 && discount <= 99 && price > 0) {
-    // Calcular precio con descuento
     const newPrice = Math.round(price * (1 - discount / 100));
     const savings = price - newPrice;
     
@@ -1184,7 +1175,6 @@ function updateDiscountPreview() {
   }
 }
 
-// Inicializar el input de precio con formato automático
 document.addEventListener("DOMContentLoaded", () => {
   const priceInput = document.getElementById("productPrice");
   const priceHint = document.getElementById("priceHint");
@@ -1213,7 +1203,6 @@ document.addEventListener("DOMContentLoaded", () => {
       priceHint.classList.remove("active");
     }
     
-    // Actualizar preview del descuento cuando cambie el precio
     updateDiscountPreview();
   });
   
@@ -1221,10 +1210,8 @@ document.addEventListener("DOMContentLoaded", () => {
     e.target.value = formatPriceInput(e.target.value);
   });
   
-  // Listener del descuento
   if (discountInput) {
     discountInput.addEventListener("input", (e) => {
-      // Limitar a 0-99
       let val = parseInt(e.target.value, 10);
       if (isNaN(val)) val = 0;
       if (val < 0) val = 0;
@@ -1235,3 +1222,438 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// ===================================================================
+// SISTEMA DE NOTIFICACIONES DE PEDIDOS NUEVOS (Mejora #7)
+// ===================================================================
+
+// ---------------------------------------------------------------
+// Inicializar sistema de notificaciones
+// ---------------------------------------------------------------
+function initNotificationSystem() {
+  console.log("Inicializando sistema de notificaciones...");
+  
+  // Cargar estado del silenciador desde localStorage
+  const savedMuteState = localStorage.getItem("maison_notifications_muted");
+  notificationsMuted = savedMuteState === "true";
+  updateNotifToggleBtn();
+  
+  // Configurar el botón de silenciar
+  const notifToggleBtn = document.getElementById("notifToggleBtn");
+  if (notifToggleBtn) {
+    notifToggleBtn.addEventListener("click", toggleNotificationsMute);
+  }
+  
+  // Configurar botones del banner de permisos
+  setupNotificationBanner();
+  
+  // Verificar si necesitamos pedir permiso
+  checkNotificationPermission();
+  
+  // Iniciar el chequeo periódico
+  startNotificationCheck();
+}
+
+// ---------------------------------------------------------------
+// Verificar y solicitar permisos de notificación
+// ---------------------------------------------------------------
+function checkNotificationPermission() {
+  if (!("Notification" in window)) {
+    console.log("Este navegador no soporta notificaciones");
+    return;
+  }
+  
+  // Si el usuario ya respondió (default/granted/denied), no molestar
+  if (Notification.permission === "granted") {
+    console.log("Permiso de notificaciones concedido");
+    return;
+  }
+  
+  if (Notification.permission === "denied") {
+    console.log("Permisos de notificaciones bloqueados por el usuario");
+    return;
+  }
+  
+  // Si ya vio el banner recientemente, no mostrarlo
+  const bannerLastShown = localStorage.getItem("maison_notif_banner_shown");
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  
+  if (bannerLastShown && (now - parseInt(bannerLastShown, 10)) < oneDayMs) {
+    return;
+  }
+  
+  // Mostrar banner de permisos
+  setTimeout(() => {
+    const banner = document.getElementById("notifPermissionBanner");
+    if (banner) banner.classList.add("show");
+  }, 2000);
+}
+
+// ---------------------------------------------------------------
+// Configurar botones del banner de permisos
+// ---------------------------------------------------------------
+function setupNotificationBanner() {
+  const banner = document.getElementById("notifPermissionBanner");
+  const allowBtn = document.getElementById("notifAllowBtn");
+  const laterBtn = document.getElementById("notifLaterBtn");
+  const closeBtn = document.getElementById("notifBannerClose");
+  
+  if (allowBtn) {
+    allowBtn.addEventListener("click", async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          console.log("Permisos concedidos");
+          // Notificación de bienvenida
+          setTimeout(() => {
+            showBrowserNotification(
+              "MAISON — Notificaciones activadas",
+              "Te avisaremos cuando lleguen pedidos nuevos."
+            );
+          }, 500);
+        }
+      } catch (err) {
+        console.error("Error al solicitar permisos:", err);
+      }
+      banner.classList.remove("show");
+      localStorage.setItem("maison_notif_banner_shown", Date.now().toString());
+    });
+  }
+  
+  if (laterBtn) {
+    laterBtn.addEventListener("click", () => {
+      banner.classList.remove("show");
+      localStorage.setItem("maison_notif_banner_shown", Date.now().toString());
+    });
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      banner.classList.remove("show");
+      localStorage.setItem("maison_notif_banner_shown", Date.now().toString());
+    });
+  }
+}
+
+// ---------------------------------------------------------------
+// Toggle: silenciar/activar notificaciones
+// ---------------------------------------------------------------
+function toggleNotificationsMute() {
+  notificationsMuted = !notificationsMuted;
+  localStorage.setItem("maison_notifications_muted", notificationsMuted.toString());
+  updateNotifToggleBtn();
+  
+  // Feedback visual
+  const btn = document.getElementById("notifToggleBtn");
+  if (btn) {
+    btn.style.transform = "scale(0.9)";
+    setTimeout(() => {
+      btn.style.transform = "";
+    }, 200);
+  }
+  
+  console.log(`Notificaciones ${notificationsMuted ? "silenciadas" : "activadas"}`);
+}
+
+function updateNotifToggleBtn() {
+  const btn = document.getElementById("notifToggleBtn");
+  const iconOn = btn?.querySelector(".notif-icon-on");
+  const iconOff = btn?.querySelector(".notif-icon-off");
+  
+  if (!btn) return;
+  
+  if (notificationsMuted) {
+    btn.classList.add("muted");
+    btn.title = "Notificaciones silenciadas";
+    if (iconOn) iconOn.style.display = "none";
+    if (iconOff) iconOff.style.display = "block";
+  } else {
+    btn.classList.remove("muted");
+    btn.title = "Notificaciones activadas";
+    if (iconOn) iconOn.style.display = "block";
+    if (iconOff) iconOff.style.display = "none";
+  }
+}
+
+// ---------------------------------------------------------------
+// Iniciar chequeo periódico de pedidos nuevos
+// ---------------------------------------------------------------
+function startNotificationCheck() {
+  // Guardar el ID del último pedido conocido al iniciar
+  saveLastKnownOrderId();
+  
+  // Chequear cada 30 segundos
+  if (notificationCheckInterval) clearInterval(notificationCheckInterval);
+  
+  notificationCheckInterval = setInterval(checkForNewOrders, NOTIFICATION_CHECK_INTERVAL);
+  console.log("Chequeo de pedidos nuevos iniciado (cada 30s)");
+}
+
+function stopNotificationCheck() {
+  if (notificationCheckInterval) {
+    clearInterval(notificationCheckInterval);
+    notificationCheckInterval = null;
+  }
+}
+
+// ---------------------------------------------------------------
+// Guardar el ID del último pedido conocido
+// ---------------------------------------------------------------
+async function saveLastKnownOrderId() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .select("id, created_at")
+      .eq("seller_id", adminUser.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    
+    if (error) throw error;
+    
+    if (data && data.length > 0) {
+      localStorage.setItem(LAST_ORDER_KEY, data[0].created_at);
+    } else {
+      localStorage.setItem(LAST_ORDER_KEY, new Date().toISOString());
+    }
+  } catch (err) {
+    console.error("Error guardando último pedido:", err);
+  }
+}
+
+// ---------------------------------------------------------------
+// Chequear si hay pedidos nuevos
+// ---------------------------------------------------------------
+async function checkForNewOrders() {
+  if (!adminUser) return;
+  
+  try {
+    const lastKnownDate = localStorage.getItem(LAST_ORDER_KEY) || new Date().toISOString();
+    
+    // Buscar pedidos más nuevos que el último conocido
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .select("*")
+      .eq("seller_id", adminUser.id)
+      .gt("created_at", lastKnownDate)
+      .order("created_at", { ascending: false });
+    
+    if (error) throw error;
+    
+    if (data && data.length > 0) {
+      console.log(`${data.length} pedido(s) nuevo(s) detectado(s)`);
+      
+      // Notificar sobre el pedido más reciente
+      const newestOrder = data[0];
+      handleNewOrderNotification(newestOrder, data.length);
+      
+      // Actualizar el último pedido conocido
+      localStorage.setItem(LAST_ORDER_KEY, newestOrder.created_at);
+      
+      // Si estamos en el tab de pedidos, recargar
+      if (currentTab === "pedidos") {
+        await loadOrders();
+      } else {
+        // Solo actualizar contadores del badge
+        await updatePendingBadge();
+      }
+    }
+  } catch (err) {
+    console.error("Error chequeando pedidos nuevos:", err);
+  }
+}
+
+// ---------------------------------------------------------------
+// Actualizar solo el badge del tab (sin cargar toda la lista)
+// ---------------------------------------------------------------
+async function updatePendingBadge() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .select("status")
+      .eq("seller_id", adminUser.id)
+      .eq("status", "pendiente");
+    
+    if (error) throw error;
+    
+    const badge = document.getElementById("pendingOrdersBadge");
+    if (badge) {
+      const count = data.length;
+      badge.textContent = count;
+      if (count > 0) {
+        badge.style.display = "inline-block";
+        badge.classList.add("new-order-alert");
+      } else {
+        badge.style.display = "none";
+        badge.classList.remove("new-order-alert");
+      }
+    }
+  } catch (err) {
+    console.error("Error actualizando badge:", err);
+  }
+}
+
+// ---------------------------------------------------------------
+// Manejar notificación de pedido nuevo
+// ---------------------------------------------------------------
+function handleNewOrderNotification(order, totalNewCount) {
+  if (notificationsMuted) {
+    console.log("Notificaciones silenciadas, no se muestra");
+    return;
+  }
+  
+  // 1. Sonido de campanita
+  playNotificationSound();
+  
+  // 2. Notificación del navegador
+  const customerName = order.customer_name || "Cliente";
+  showBrowserNotification(
+    `Nuevo pedido #${order.order_number}`,
+    `${customerName} · ${formatPrice(order.total)}`,
+    order.id
+  );
+  
+  // 3. Toast dorado en el panel
+  showOrderNotificationToast(order);
+  
+  // 4. Actualizar badge del tab con alerta
+  const badge = document.getElementById("pendingOrdersBadge");
+  if (badge) {
+    badge.classList.add("new-order-alert");
+  }
+}
+
+// ---------------------------------------------------------------
+// Reproducir sonido de campanita (Web Audio API)
+// ---------------------------------------------------------------
+function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    
+    const ctx = new AudioContext();
+    
+    // 3 tonos: Do, Mi, Sol (acorde elegante)
+    const frequencies = [880, 1108, 1318];
+    
+    frequencies.forEach((freq, i) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = "sine";
+      
+      // Fade in y out suave para sonar elegante
+      const startTime = ctx.currentTime + (i * 0.15);
+      const duration = 0.3;
+      
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    });
+    
+    console.log("Sonido de notificación reproducido");
+  } catch (err) {
+    console.error("Error reproduciendo sonido:", err);
+  }
+}
+
+// ---------------------------------------------------------------
+// Notificación del navegador
+// ---------------------------------------------------------------
+function showBrowserNotification(title, body, orderId = null) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  
+  try {
+    const notification = new Notification(title, {
+      body: body,
+      icon: "https://akkuzsztdcseybbxhedb.supabase.co/storage/v1/object/public/product_images/logo-maison.png", // Cambia esto por tu logo
+      badge: "https://akkuzsztdcseybbxhedb.supabase.co/storage/v1/object/public/product_images/logo-maison.png",
+      tag: `order-${orderId}`, // Evita duplicados
+      requireInteraction: false, // Se cierra sola después de unos segundos
+      silent: false
+    });
+    
+    // Click en la notificación → ir al pedido
+    notification.onclick = function() {
+      window.focus();
+      if (orderId) {
+        switchTab("pedidos");
+        setTimeout(() => {
+          const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
+          if (orderCard) {
+            orderCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            orderCard.classList.add("new-order");
+            setTimeout(() => orderCard.classList.remove("new-order"), 3000);
+          }
+        }, 500);
+      }
+      notification.close();
+    };
+    
+    // Auto-cerrar después de 8 segundos
+    setTimeout(() => notification.close(), 8000);
+    
+  } catch (err) {
+    console.error("Error mostrando notificación:", err);
+  }
+}
+
+// ---------------------------------------------------------------
+// Toast de notificación en el panel
+// ---------------------------------------------------------------
+let orderToastTimeout = null;
+
+function showOrderNotificationToast(order) {
+  const toast = document.getElementById("orderNotificationToast");
+  if (!toast) return;
+  
+  // Llenar datos
+  document.getElementById("onotifNumber").textContent = `#${order.order_number}`;
+  document.getElementById("onotifCustomer").textContent = order.customer_name || "Cliente sin datos";
+  document.getElementById("onotifTotal").textContent = formatPrice(order.total);
+  document.getElementById("onotifTime").textContent = "Ahora";
+  
+  // Configurar botón "Ver pedido"
+  const viewBtn = document.getElementById("onotifView");
+  if (viewBtn) {
+    viewBtn.onclick = () => {
+      switchTab("pedidos");
+      setTimeout(() => {
+        const orderCard = document.querySelector(`[data-order-id="${order.id}"]`);
+        if (orderCard) {
+          orderCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          orderCard.classList.add("new-order");
+          setTimeout(() => orderCard.classList.remove("new-order"), 3000);
+        }
+      }, 400);
+      hideOrderNotificationToast();
+    };
+  }
+  
+  // Configurar botón cerrar
+  const closeBtn = document.getElementById("onotifClose");
+  if (closeBtn) {
+    closeBtn.onclick = hideOrderNotificationToast;
+  }
+  
+  // Mostrar toast
+  toast.classList.add("show");
+  
+  // Auto-cerrar después de 8 segundos
+  if (orderToastTimeout) clearTimeout(orderToastTimeout);
+  orderToastTimeout = setTimeout(hideOrderNotificationToast, 8000);
+}
+
+function hideOrderNotificationToast() {
+  const toast = document.getElementById("orderNotificationToast");
+  if (toast) toast.classList.remove("show");
+  if (orderToastTimeout) clearTimeout(orderToastTimeout);
+}
