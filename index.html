@@ -12,55 +12,7 @@
 
 <link rel="stylesheet" href="css/styles.css">
 
-<!-- SDK de Supabase (Auth + Base de datos) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-
-<!-- ============ BOTÓN VOLVER ARRIBA — CSS EN EL HEAD ============ -->
-<style>
-#scrollTopBtnFixed {
-  position: fixed !important;
-  bottom: 30px !important;
-  right: 30px !important;
-  width: 55px !important;
-  height: 55px !important;
-  border: none !important;
-  border-radius: 50% !important;
-  background: linear-gradient(135deg, #d4a869, #8f6b3f) !important;
-  color: #1a1410 !important;
-  cursor: pointer !important;
-  display: none !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 999999 !important;
-  box-shadow: 0 6px 20px rgba(143, 107, 63, 0.4) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
-  font-family: inherit !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  outline: none !important;
-}
-
-#scrollTopBtnFixed.show {
-  display: flex !important;
-}
-
-#scrollTopBtnFixed:hover {
-  transform: translateY(-4px) scale(1.08) !important;
-  box-shadow: 0 12px 30px rgba(143, 107, 63, 0.5) !important;
-  background: linear-gradient(135deg, #8f6b3f, #d4a869) !important;
-  color: #ffffff !important;
-}
-
-@media (max-width: 768px) {
-  #scrollTopBtnFixed {
-    bottom: 20px !important;
-    right: 20px !important;
-    width: 48px !important;
-    height: 48px !important;
-  }
-}
-</style>
-
 </head>
 <body>
 
@@ -104,40 +56,6 @@
     </button>
   </div>
 </header>
-
-<!-- ============ BOTÓN VOLVER ARRIBA — INMEDIATAMENTE DESPUÉS DEL HEADER ============ -->
-<button id="scrollTopBtnFixed" aria-label="Volver arriba" title="Volver arriba">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="19" x2="12" y2="5"/>
-    <polyline points="5 12 12 5 19 12"/>
-  </svg>
-</button>
-
-<script>
-// Script inmediato para el botón volver arriba
-(function() {
-  var btn = document.getElementById("scrollTopBtnFixed");
-  if (!btn) return;
-  
-  btn.onclick = function() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  
-  function checkScroll() {
-    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    if (y > 300) {
-      btn.classList.add("show");
-    } else {
-      btn.classList.remove("show");
-    }
-  }
-  
-  window.addEventListener("scroll", checkScroll, { passive: true });
-  window.addEventListener("load", checkScroll);
-  window.addEventListener("resize", checkScroll);
-  checkScroll();
-})();
-</script>
 
 <!-- ============ BARRA DE BÚSQUEDA + FILTRO DE PRECIO ============ -->
 <div class="search-bar" id="searchBar">
@@ -474,6 +392,7 @@
     </button>
   </div>
 
+  <!-- VISTA: LOGIN -->
   <div class="account-view active" id="viewLogin">
     <span class="section-eyebrow" id="loginEyebrow">Acceso Cliente</span>
     <h3 class="account-title">Bienvenido de vuelta</h3>
@@ -524,6 +443,7 @@
     <p class="account-switch">¿Aún no tienes cuenta? <button type="button" class="link-btn" id="goToRegister">Crear cuenta</button></p>
   </div>
 
+  <!-- VISTA: REGISTRO -->
   <div class="account-view" id="viewRegister">
     <span class="section-eyebrow" id="registerEyebrow">Crear cuenta Cliente</span>
     <h3 class="account-title">Únete a MAISON</h3>
@@ -590,6 +510,7 @@
     <p class="account-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" id="goToLogin">Inicia sesión</button></p>
   </div>
 
+  <!-- VISTA: VENDEDOR REGISTRADO -->
   <div class="account-view" id="viewVendor">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -610,6 +531,7 @@
     <p class="account-hint" style="text-align:center; margin-top:1rem;">Serás redirigido automáticamente en unos segundos.</p>
   </div>
 
+  <!-- VISTA: CONFIRMA CORREO -->
   <div class="account-view" id="viewConfirm">
     <div class="success-icon">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -623,6 +545,7 @@
     <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
   </div>
 
+  <!-- VISTA: PERFIL (con Favoritos + Historial de Pedidos) -->
   <div class="account-view" id="viewProfile">
     <span class="section-eyebrow">Tu cuenta</span>
     <h3 class="account-title" id="profileGreeting">Hola</h3>
@@ -665,6 +588,7 @@
       </button>
     </form>
 
+    <!-- SECCIÓN DE FAVORITOS -->
     <div class="favorites-section">
       <div class="favorites-header">
         <span class="section-eyebrow">Mis Favoritos</span>
@@ -681,6 +605,44 @@
         </p>
       </div>
     </div>
+
+    <!-- ============ NUEVO: SECCIÓN MIS PEDIDOS (Mejora #8) ============ -->
+    <div class="orders-history-section">
+      <div class="orders-history-header">
+        <span class="section-eyebrow">Mis Pedidos</span>
+        <span class="orders-history-count" id="ordersHistoryCount">0</span>
+      </div>
+      
+      <!-- Filtros por estado -->
+      <div class="orders-history-filters" id="ordersHistoryFilters">
+        <button type="button" class="order-history-filter active" data-history-filter="todos">
+          Todos
+        </button>
+        <button type="button" class="order-history-filter" data-history-filter="pendiente">
+          Pendientes
+        </button>
+        <button type="button" class="order-history-filter" data-history-filter="confirmado">
+          Confirmados
+        </button>
+        <button type="button" class="order-history-filter" data-history-filter="entregado">
+          Entregados
+        </button>
+      </div>
+      
+      <!-- Lista de pedidos -->
+      <div class="orders-history-list" id="ordersHistoryList">
+        <p class="orders-history-empty" id="ordersHistoryEmpty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span>Aún no has hecho pedidos</span>
+          <small>Cuando compres, tus pedidos aparecerán aquí</small>
+        </p>
+      </div>
+    </div>
+    <!-- FIN SECCIÓN MIS PEDIDOS -->
 
     <button type="button" class="btn btn-ghost btn-full logout-btn" id="logoutBtn">Cerrar sesión</button>
   </div>
@@ -703,7 +665,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
-
 <script src="js/products.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
@@ -721,6 +682,84 @@ document.addEventListener("DOMContentLoaded", () => {
     <span class="toast-message" id="toastMessage"></span>
   </div>
 </div>
+
+<!-- ============ BOTÓN VOLVER ARRIBA ============ -->
+<button id="scrollTopBtnFixed" aria-label="Volver arriba" title="Volver arriba">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="5 12 12 5 19 12"/>
+  </svg>
+</button>
+
+<style>
+#scrollTopBtnFixed {
+  position: fixed !important;
+  bottom: 30px !important;
+  right: 30px !important;
+  width: 55px !important;
+  height: 55px !important;
+  border: none !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #d4a869, #8f6b3f) !important;
+  color: #1a1410 !important;
+  cursor: pointer !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  box-shadow: 0 6px 20px rgba(143, 107, 63, 0.4) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+  font-family: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+}
+
+#scrollTopBtnFixed.show {
+  display: flex !important;
+}
+
+#scrollTopBtnFixed:hover {
+  transform: translateY(-4px) scale(1.08) !important;
+  box-shadow: 0 12px 30px rgba(143, 107, 63, 0.5) !important;
+  background: linear-gradient(135deg, #8f6b3f, #d4a869) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  #scrollTopBtnFixed {
+    bottom: 20px !important;
+    right: 20px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+}
+</style>
+
+<script>
+(function() {
+  var btn = document.getElementById("scrollTopBtnFixed");
+  if (!btn) return;
+  
+  btn.onclick = function() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  
+  function checkScroll() {
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (y > 300) {
+      btn.classList.add("show");
+    } else {
+      btn.classList.remove("show");
+    }
+  }
+  
+  window.addEventListener("scroll", checkScroll, { passive: true });
+  window.addEventListener("load", checkScroll);
+  window.addEventListener("resize", checkScroll);
+  checkScroll();
+})();
+</script>
 
 </body>
 </html>
