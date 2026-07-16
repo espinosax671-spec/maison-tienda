@@ -1,22 +1,15 @@
 /* ===================================================================
    AUTENTICACIÓN — Registro, Login, Perfil, Sesión
    Con roles: comprador (tienda) y vendedor (panel admin)
-   Integrado con sistema de FAVORITOS (Mejora #5)
-   Integrado con HISTORIAL DE PEDIDOS (Mejora #8)
+   Integrado con: Favoritos, Historial de pedidos, Pestañas del perfil
 =================================================================== */
 
 let currentUser = null;
 let currentRole = null;
 let selectedRole = 'comprador';
 
-// ---------------------------------------------------------------
-// TODO EL CÓDIGO SE EJECUTA CUANDO EL DOM ESTÁ LISTO
-// ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------------
-  // Elementos del modal de cuenta
-  // ---------------------------------------------------------------
   const accountOverlay = document.getElementById("accountOverlay");
   const accountModal = document.getElementById("accountModal");
   const accountToggle = document.getElementById("accountToggle");
@@ -98,15 +91,24 @@ window.addEventListener("DOMContentLoaded", () => {
       toggleRoleTabs(false);
       showAccountView(currentRole === "vendedor" ? "vendor" : "profile");
       
-      // Al abrir el perfil de cliente, cargar favoritos e historial
       if (currentRole !== "vendedor") {
+        // Verificar si el perfil tiene datos para mostrar vista correcta
+        if (typeof window.checkProfileHasData === "function") {
+          window.checkProfileHasData();
+        }
+        
+        // Cargar favoritos
         if (typeof window.renderFavoritesSection === "function") {
           window.renderFavoritesSection();
         }
-        // ============ NUEVO: Cargar historial de pedidos ============
+        
+        // Cargar historial de pedidos
         if (typeof window.renderOrdersHistory === "function") {
           window.renderOrdersHistory();
         }
+        
+        // Actualizar contadores de las pestañas
+        updateTabCounters();
       }
     } else {
       toggleRoleTabs(true);
@@ -247,7 +249,6 @@ window.addEventListener("DOMContentLoaded", () => {
     currentUser = null;
     currentRole = null;
     
-    // Limpiar favoritos al cerrar sesión
     if (typeof window.userFavorites !== "undefined") {
       window.userFavorites = new Set();
     }
@@ -260,7 +261,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------------
-  // PERFIL
+  // PERFIL — Guardar datos (con cambio a vista de resumen)
   // ---------------------------------------------------------------
   document.getElementById("profileForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -297,10 +298,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     successEl.textContent = "Datos guardados correctamente";
     document.getElementById("profileGreeting").textContent = `Hola, ${name.split(" ")[0]}`;
+    
+    // Después de guardar, mostrar la vista de resumen
+    setTimeout(() => {
+      successEl.textContent = "";
+      if (typeof window.showProfileForm === "function") {
+        window.showProfileForm(false);
+      }
+    }, 1500);
   });
 
   // ---------------------------------------------------------------
-  // RECUPERAR CONTRASEÑA (desde la tienda)
+  // RECUPERAR CONTRASEÑA
   // ---------------------------------------------------------------
   const forgotLinkTienda = document.getElementById("forgotPasswordLinkTienda");
   if (forgotLinkTienda) {
@@ -352,7 +361,7 @@ window.addEventListener("DOMContentLoaded", () => {
     } else {
       showAccountView("profile");
       
-      // Cargar favoritos del usuario recién logueado
+      // Cargar favoritos
       if (typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
@@ -365,10 +374,62 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
       
-      // ============ NUEVO: Cargar historial de pedidos ============
+      // Cargar historial de pedidos
       if (typeof window.renderOrdersHistory === "function") {
         window.renderOrdersHistory();
       }
+      
+      // Verificar si el perfil tiene datos
+      if (typeof window.checkProfileHasData === "function") {
+        setTimeout(() => {
+          window.checkProfileHasData();
+        }, 300);
+      }
+      
+      // Actualizar contadores de las pestañas
+      setTimeout(() => {
+        updateTabCounters();
+      }, 500);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Actualizar contadores de favoritos y pedidos en las pestañas
+  // ---------------------------------------------------------------
+  async function updateTabCounters() {
+    try {
+      const { data: authData } = await supabaseClient.auth.getUser();
+      const user = authData?.user;
+      if (!user) return;
+      
+      // Contar favoritos
+      let favCount = 0;
+      if (typeof window.userFavorites !== "undefined") {
+        favCount = window.userFavorites.size || 0;
+      }
+      
+      // Contar pedidos
+      let ordersCount = 0;
+      try {
+        const { data: ordersData, error } = await supabaseClient
+          .from("orders")
+          .select("id")
+          .eq("customer_id", user.id);
+        
+        if (!error && ordersData) {
+          ordersCount = ordersData.length;
+        }
+      } catch (err) {
+        console.error("Error contando pedidos:", err);
+      }
+      
+      // Actualizar contadores en las pestañas
+      if (typeof window.updateProfileTabCounts === "function") {
+        window.updateProfileTabCounts(favCount, ordersCount);
+      }
+      
+    } catch (err) {
+      console.error("Error actualizando contadores:", err);
     }
   }
 
@@ -422,7 +483,6 @@ window.addEventListener("DOMContentLoaded", () => {
       currentRole = profile?.role || currentUser.user_metadata?.role || "comprador";
       await loadProfileIntoForm();
       
-      // Cargar favoritos al iniciar si hay sesión activa
       if (currentRole !== "vendedor" && typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
