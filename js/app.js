@@ -1848,6 +1848,134 @@ document.addEventListener("DOMContentLoaded", () => {
 // Exportar la función globalmente para que auth.js pueda llamarla
 window.renderOrdersHistory = renderOrdersHistory;
 
+// ===================================================================
+// SISTEMA DE PESTAÑAS DEL PERFIL (Mi Perfil / Favoritos / Pedidos)
+// ===================================================================
+
+let currentProfileTab = "perfil";
+
+// Configurar las pestañas del perfil
+document.addEventListener("DOMContentLoaded", () => {
+  const profileTabs = document.querySelectorAll(".profile-tab");
+  
+  profileTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const tabName = tab.dataset.profileTab;
+      switchProfileTab(tabName);
+    });
+  });
+  
+  // Botón "Editar datos" del perfil
+  const editProfileBtn = document.getElementById("editProfileBtn");
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener("click", () => {
+      showProfileForm(true);
+    });
+  }
+  
+  // Botón "Cancelar" edición
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", () => {
+      showProfileForm(false);
+    });
+  }
+});
+
+function switchProfileTab(tabName) {
+  currentProfileTab = tabName;
+  
+  // Actualizar botones de pestañas
+  document.querySelectorAll(".profile-tab").forEach((t) => {
+    t.classList.toggle("active", t.dataset.profileTab === tabName);
+  });
+  
+  // Mostrar contenido de la pestaña activa
+  document.querySelectorAll(".profile-tab-content").forEach((c) => {
+    c.classList.remove("active");
+  });
+  
+  const capitalized = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  const targetContent = document.getElementById(`profileContent${capitalized}`);
+  if (targetContent) targetContent.classList.add("active");
+  
+  // Cargar datos de la pestaña según corresponda
+  if (tabName === "favoritos" && typeof window.renderFavoritesSection === "function") {
+    window.renderFavoritesSection();
+  }
+  if (tabName === "pedidos" && typeof window.renderOrdersHistory === "function") {
+    window.renderOrdersHistory();
+  }
+}
+
+// Mostrar/ocultar formulario vs vista de datos guardados
+function showProfileForm(showForm) {
+  const formView = document.getElementById("profileFormView");
+  const infoView = document.getElementById("profileInfoView");
+  const cancelBtn = document.getElementById("cancelEditBtn");
+  
+  if (showForm) {
+    if (formView) formView.style.display = "block";
+    if (infoView) infoView.style.display = "none";
+    if (cancelBtn) cancelBtn.style.display = "inline-flex";
+  } else {
+    if (formView) formView.style.display = "none";
+    if (infoView) infoView.style.display = "block";
+    if (cancelBtn) cancelBtn.style.display = "none";
+    updateProfileInfoView();
+  }
+}
+
+// Actualizar la vista de datos guardados con los valores del formulario
+function updateProfileInfoView() {
+  const nameEl = document.getElementById("displayName");
+  const phoneEl = document.getElementById("displayPhone");
+  const addressEl = document.getElementById("displayAddress");
+  
+  const nameInput = document.getElementById("profileName");
+  const phoneInput = document.getElementById("profilePhone");
+  const addressInput = document.getElementById("profileAddress");
+  
+  if (nameEl && nameInput) nameEl.textContent = nameInput.value || "-";
+  if (phoneEl && phoneInput) phoneEl.textContent = phoneInput.value || "-";
+  if (addressEl && addressInput) addressEl.textContent = addressInput.value || "-";
+}
+
+// Determinar si el perfil ya tiene datos guardados
+function checkProfileHasData() {
+  const name = document.getElementById("profileName")?.value?.trim();
+  const phone = document.getElementById("profilePhone")?.value?.trim();
+  
+  // Si tiene al menos nombre y teléfono, mostrar vista de resumen
+  if (name && phone) {
+    showProfileForm(false);
+    updateProfileInfoView();
+  } else {
+    showProfileForm(true);
+  }
+}
+
+// Actualizar contadores en las pestañas (favoritos y pedidos)
+function updateProfileTabCounts(favCount, ordersCount) {
+  const favCountEl = document.getElementById("profileTabFavoritesCount");
+  const ordCountEl = document.getElementById("profileTabOrdersCount");
+  
+  if (favCountEl) {
+    favCountEl.textContent = favCount || "0";
+    favCountEl.setAttribute("data-count", favCount || "0");
+  }
+  if (ordCountEl) {
+    ordCountEl.textContent = ordersCount || "0";
+    ordCountEl.setAttribute("data-count", ordersCount || "0");
+  }
+}
+
+// Exportar funciones para auth.js
+window.switchProfileTab = switchProfileTab;
+window.checkProfileHasData = checkProfileHasData;
+window.updateProfileTabCounts = updateProfileTabCounts;
+window.showProfileForm = showProfileForm;
+window.updateProfileInfoView = updateProfileInfoView;
 // ---------------------------------------------------------------
 // BOTÓN VOLVER ARRIBA (se maneja en el HTML con estilos inline)
 // ---------------------------------------------------------------
