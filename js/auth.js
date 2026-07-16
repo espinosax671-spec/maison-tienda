@@ -2,6 +2,7 @@
    AUTENTICACIÓN — Registro, Login, Perfil, Sesión
    Con roles: comprador (tienda) y vendedor (panel admin)
    Integrado con sistema de FAVORITOS (Mejora #5)
+   Integrado con HISTORIAL DE PEDIDOS (Mejora #8)
 =================================================================== */
 
 let currentUser = null;
@@ -97,9 +98,15 @@ window.addEventListener("DOMContentLoaded", () => {
       toggleRoleTabs(false);
       showAccountView(currentRole === "vendedor" ? "vendor" : "profile");
       
-      // Al abrir el perfil, cargar los favoritos
-      if (currentRole !== "vendedor" && typeof window.renderFavoritesSection === "function") {
-        window.renderFavoritesSection();
+      // Al abrir el perfil de cliente, cargar favoritos e historial
+      if (currentRole !== "vendedor") {
+        if (typeof window.renderFavoritesSection === "function") {
+          window.renderFavoritesSection();
+        }
+        // ============ NUEVO: Cargar historial de pedidos ============
+        if (typeof window.renderOrdersHistory === "function") {
+          window.renderOrdersHistory();
+        }
       }
     } else {
       toggleRoleTabs(true);
@@ -244,7 +251,6 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof window.userFavorites !== "undefined") {
       window.userFavorites = new Set();
     }
-    // Actualizar corazones en el catálogo (todos vacíos)
     if (typeof window.updateAllFavoriteButtons === "function") {
       window.updateAllFavoriteButtons();
     }
@@ -350,15 +356,18 @@ window.addEventListener("DOMContentLoaded", () => {
       if (typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
-        // Actualizar los corazones en el catálogo
         if (typeof window.updateAllFavoriteButtons === "function") {
           window.updateAllFavoriteButtons();
         }
         
-        // Mostrar la sección de favoritos en el perfil
         if (typeof window.renderFavoritesSection === "function") {
           window.renderFavoritesSection();
         }
+      }
+      
+      // ============ NUEVO: Cargar historial de pedidos ============
+      if (typeof window.renderOrdersHistory === "function") {
+        window.renderOrdersHistory();
       }
     }
   }
@@ -417,7 +426,6 @@ window.addEventListener("DOMContentLoaded", () => {
       if (currentRole !== "vendedor" && typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
-        // Actualizar corazones en el catálogo
         setTimeout(() => {
           if (typeof window.updateAllFavoriteButtons === "function") {
             window.updateAllFavoriteButtons();
@@ -437,7 +445,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ---------------------------------------------------------------
-// Traducción de errores (fuera del DOM porque no necesita elementos)
+// Traducción de errores
 // ---------------------------------------------------------------
 function traduceErrorAuth(message) {
   const map = {
