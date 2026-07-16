@@ -937,7 +937,7 @@ body.search-open .catalog:first-of-type {
 }
 
 /* ============================================
-   PRECIO CON DESCUENTO EN CATÁLOGO (Mejora #6)
+   PRECIO CON DESCUENTO EN CATÁLOGO
    ============================================ */
 .product-price-wrap {
   display: flex;
@@ -971,7 +971,7 @@ body.search-open .catalog:first-of-type {
 }
 
 /* ============================================
-   BADGE DE DESCUENTO EN ESQUINA (Mejora #6)
+   BADGE DE DESCUENTO EN ESQUINA
    ============================================ */
 .discount-badge {
   position: absolute;
@@ -1013,14 +1013,13 @@ body.search-open .catalog:first-of-type {
   opacity: 0.95;
 }
 
-/* Cuando hay etiqueta normal Y descuento, poner la etiqueta abajo */
 .product-image .product-tag ~ .discount-badge,
 .product-item-img-wrap .product-item-tag ~ .discount-badge {
   top: 50px;
 }
 
 /* ============================================
-   MODAL: PRECIO CON DESCUENTO (Mejora #6)
+   MODAL: PRECIO CON DESCUENTO
    ============================================ */
 .modal-price-wrap {
   display: flex;
@@ -1880,6 +1879,390 @@ body.search-open .catalog:first-of-type {
 }
 
 /* ============================================
+   HISTORIAL DE PEDIDOS DEL CLIENTE (Mejora #8)
+   ============================================ */
+.orders-history-section {
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid var(--color-border);
+}
+
+.orders-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.orders-history-header .section-eyebrow {
+  margin-bottom: 0;
+}
+
+.orders-history-count {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-ink);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Filtros por estado */
+.orders-history-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding: 6px;
+  background: rgba(232, 220, 200, 0.5);
+  border-radius: 6px;
+}
+
+.order-history-filter {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--color-ink-soft);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .3s ease;
+}
+
+.order-history-filter:hover {
+  color: var(--color-gold-dark);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.order-history-filter.active {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+/* Lista de pedidos */
+.orders-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Tarjeta de pedido individual */
+.order-history-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 16px;
+  transition: all .3s ease;
+  animation: fadeInUp .4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.order-history-card:hover {
+  border-color: var(--color-gold);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Franja izquierda según estado */
+.order-history-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-gold);
+}
+
+.order-history-card.pendiente::before { background: var(--color-gold); }
+.order-history-card.confirmado::before { background: #4caf50; }
+.order-history-card.entregado::before { background: #2196f3; }
+.order-history-card.cancelado::before { background: #999; }
+
+.order-history-card.cancelado {
+  opacity: 0.7;
+}
+
+/* Header del pedido */
+.order-history-header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.order-history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-history-number {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--color-ink);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.order-history-date {
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.3px;
+}
+
+.order-history-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.order-history-status.pendiente {
+  background: #fdf6e8;
+  color: var(--color-gold-dark);
+  border: 1px solid var(--color-gold-light);
+}
+
+.order-history-status.confirmado {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.order-history-status.entregado {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.order-history-status.cancelado {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+/* Items del pedido */
+.order-history-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(232, 220, 200, 0.3);
+  border-radius: 4px;
+}
+
+.order-history-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.order-history-item-img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 3px;
+  background: var(--color-cream);
+}
+
+.order-history-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.order-history-item-name {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-ink);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-history-item-meta {
+  font-size: 10px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.3px;
+}
+
+.order-history-item-price {
+  font-size: 12px;
+  color: var(--color-gold-dark);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Total del pedido */
+.order-history-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.order-history-total-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.order-history-total-value {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-gold-light);
+}
+
+/* Botones de acciones */
+.order-history-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.order-history-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.order-history-btn-whatsapp {
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: var(--color-white);
+  box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
+}
+
+.order-history-btn-whatsapp:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+}
+
+.order-history-btn-reorder {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-ink);
+  box-shadow: 0 2px 6px rgba(143, 107, 63, 0.25);
+}
+
+.order-history-btn-reorder:hover {
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-light));
+  color: var(--color-white);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(143, 107, 63, 0.4);
+}
+
+/* Mensaje vacío */
+.orders-history-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-ink-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: rgba(232, 220, 200, 0.3);
+  border-radius: 6px;
+  border: 1px dashed var(--color-border);
+}
+
+.orders-history-empty svg {
+  color: var(--color-gold);
+  opacity: 0.4;
+  margin-bottom: 4px;
+}
+
+.orders-history-empty span {
+  font-size: 13px;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.orders-history-empty small {
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  line-height: 1.4;
+  max-width: 240px;
+}
+
+/* Loading */
+.orders-history-loading {
+  text-align: center;
+  padding: 30px;
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .orders-history-filters {
+    padding: 4px;
+  }
+  
+  .order-history-filter {
+    font-size: 10px;
+    padding: 6px 8px;
+    min-width: 65px;
+  }
+  
+  .order-history-card {
+    padding: 12px;
+  }
+  
+  .order-history-actions {
+    flex-direction: column;
+  }
+  
+  .order-history-btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
    TALLAS
    ============================================ */
 .size-options {
@@ -2142,7 +2525,6 @@ body.search-open .catalog:first-of-type {
   }
   .favorite-btn svg { width: 18px; height: 18px; }
   
-  /* Descuento responsive */
   .discount-badge {
     padding: 4px 10px;
     font-size: 10px;
