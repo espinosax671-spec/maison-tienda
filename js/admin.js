@@ -776,6 +776,189 @@ function switchTab(tabName) {
     const badge = document.getElementById("pendingOrdersBadge");
     if (badge) badge.classList.remove("new-order-alert");
   }
+
+  if (tabName === "estadisticas") {
+    loadStatistics();
+  }
+}
+
+document.getElementById("refreshStatsBtn").addEventListener("click", () => {
+  loadStatistics();
+});
+
+// ===================================================================
+// ESTADÍSTICAS — Dashboard
+// ===================================================================
+async function loadStatistics() {
+  const salesChartEl = document.getElementById("salesChart");
+  const topProductsEl = document.getElementById("topProducts");
+  const statusDistEl = document.getElementById("statusDistribution");
+
+  salesChartEl.innerHTML = `<p class="loading-msg">Cargando gráfico...</p>`;
+  topProductsEl.innerHTML = `<p class="loading-msg">Cargando productos...</p>`;
+  statusDistEl.innerHTML = `<p class="loading-msg">Cargando distribución...</p>`;
+
+  // Traemos TODOS los pedidos del vendedor (una sola consulta, reutilizada
+  // para las 4 tarjetas + gráfico + top productos + distribución de estados)
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("*")
+    .eq("seller_id", adminUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error cargando estadísticas:", error);
+    salesChartEl.innerHTML = `<p class="empty-msg">No se pudieron cargar las estadísticas.</p>`;
+    topProductsEl.innerHTML = "";
+    statusDistEl.innerHTML = "";
+    return;
+  }
+
+  const orders = data || [];
+
+  renderStatCards(orders);
+  renderSalesChart(orders);
+  renderTopProducts(orders);
+  renderStatusDistribution(orders);
+}
+
+function renderStatCards(orders) {
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+
+  // "Ventas del mes" e "Ingresos del mes" no cuentan pedidos cancelados
+  const ordersThisMonth = orders.filter((o) => {
+    const d = new Date(o.created_at);
+    return (
+      d.getMonth() === thisMonth &&
+      d.getFullYear() === thisYear &&
+      o.status !== "cancelado"
+    );
+  });
+
+  const ingresosMes = ordersThisMonth.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const ventasMes = ordersThisMonth.length;
+  const pedidosTotales = orders.length;
+  const ticketPromedio = ventasMes > 0 ? ingresosMes / ventasMes : 0;
+
+  document.getElementById("statVentasMes").textContent = ventasMes;
+  document.getElementById("statPedidosTotales").textContent = pedidosTotales;
+  document.getElementById("statIngresosMes").textContent = formatPrice(ingresosMes);
+  document.getElementById("statTicketPromedio").textContent = formatPrice(ticketPromedio);
+}
+
+function renderSalesChart(orders) {
+  const salesChartEl = document.getElementById("salesChart");
+  const days = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Construimos los últimos 30 días (de más antiguo a más reciente)
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push({ date: d, total: 0 });
+  }
+
+  orders.forEach((o) => {
+    if (o.status === "cancelado") return;
+    const d = new Date(o.created_at);
+    d.setHours(0, 0, 0, 0);
+    const dayEntry = days.find((day) => day.date.getTime() === d.getTime());
+    if (dayEntry) dayEntry.total += Number(o.total) || 0;
+  });
+
+  const maxTotal = Math.max(...days.map((d) => d.total), 1);
+
+  salesChartEl.innerHTML = "";
+  days.forEach((day) => {
+    const heightPct = Math.max((day.total / maxTotal) * 100, day.total > 0 ? 4 : 0);
+    const dateLabel = day.date.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+
+    const wrap = document.createElement("div");
+    wrap.className = "sales-bar-wrap";
+    wrap.innerHTML = `
+      <span class="sales-bar-tooltip">${dateLabel}: ${formatPrice(day.total)}</span>
+      <div class="sales-bar" style="height: ${heightPct}%;"></div>
+    `;
+    salesChartEl.appendChild(wrap);
+  });
+}
+
+function renderTopProducts(orders) {
+  const topProductsEl = document.getElementById("topProducts");
+  const productMap = {};
+
+  orders.forEach((o) => {
+    if (o.status === "cancelado") return;
+    (o.items || []).forEach((item) => {
+      const key = item.product_id || item.name;
+      if (!productMap[key]) {
+        productMap[key] = { name: item.name, qty: 0 };
+      }
+      productMap[key].qty += Number(item.qty) || 0;
+    });
+  });
+
+  const top5 = Object.values(productMap)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5);
+
+  if (top5.length === 0) {
+    topProductsEl.innerHTML = `<p class="empty-msg">Aún no hay productos vendidos.</p>`;
+    return;
+  }
+
+  const maxQty = top5[0].qty || 1;
+
+  topProductsEl.innerHTML = top5
+    .map((p, i) => `
+      <div class="top-product-row">
+        <span class="top-product-rank">${i + 1}.</span>
+        <div class="top-product-info">
+          <span class="top-product-name">${escapeHtml(p.name)}</span>
+          <div class="top-product-bar-track">
+            <div class="top-product-bar-fill" style="width: ${(p.qty / maxQty) * 100}%;"></div>
+          </div>
+        </div>
+        <span class="top-product-qty">${p.qty} uds</span>
+      </div>
+    `)
+    .join("");
+}
+
+function renderStatusDistribution(orders) {
+  const statusDistEl = document.getElementById("statusDistribution");
+  const statuses = ["pendiente", "confirmado", "entregado", "cancelado"];
+  const counts = { pendiente: 0, confirmado: 0, entregado: 0, cancelado: 0 };
+
+  orders.forEach((o) => {
+    if (counts[o.status] !== undefined) counts[o.status]++;
+  });
+
+  const total = orders.length;
+
+  if (total === 0) {
+    statusDistEl.innerHTML = `<p class="empty-msg">Aún no hay pedidos registrados.</p>`;
+    return;
+  }
+
+  statusDistEl.innerHTML = statuses
+    .map((status) => {
+      const pct = total > 0 ? Math.round((counts[status] / total) * 100) : 0;
+      return `
+        <div class="status-row">
+          <span class="status-dot ${status}"></span>
+          <span class="status-name">${statusLabel(status)}</span>
+          <div class="status-bar-track">
+            <div class="status-bar-fill ${status}" style="width: ${pct}%;"></div>
+          </div>
+          <span class="status-pct">${pct}%</span>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function capitalize(str) {
