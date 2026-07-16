@@ -114,7 +114,7 @@ function cartCount() {
 }
 
 // ---------------------------------------------------------------
-// Catálogo desde Supabase (con descuentos)
+// Catálogo desde Supabase
 // ---------------------------------------------------------------
 let STORE_PRODUCTS = [];
 
@@ -134,8 +134,8 @@ async function fetchProductsFromSupabase() {
       category: p.category,
       name: p.name,
       price: p.price,
-      original_price: p.original_price || null,      // NUEVO
-      discount_percent: p.discount_percent || 0,     // NUEVO
+      original_price: p.original_price || null,
+      discount_percent: p.discount_percent || 0,
       image: p.image_url || "",
       tag: p.tag || "",
       desc: p.description || "",
@@ -174,10 +174,8 @@ async function renderCatalog() {
     
     const isFav = userFavorites.has(product.id);
     
-    // Determinar si hay descuento
     const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
     
-    // Construir el HTML del precio según si hay descuento o no
     let priceHtml = "";
     if (hasDiscount) {
       priceHtml = `
@@ -190,7 +188,6 @@ async function renderCatalog() {
       priceHtml = `<p class="product-price">${formatPrice(product.price)}</p>`;
     }
     
-    // Construir el badge de descuento si aplica
     let discountBadgeHtml = "";
     if (hasDiscount) {
       discountBadgeHtml = `
@@ -256,7 +253,7 @@ function getTotalStock(product) {
 }
 
 // ---------------------------------------------------------------
-// Modal de producto (CON descuentos)
+// Modal de producto
 // ---------------------------------------------------------------
 let currentProduct = null;
 let currentSize = null;
@@ -274,7 +271,6 @@ function openProductModal(product) {
   document.getElementById("modalCategory").textContent = categoryLabel(product.category);
   document.getElementById("modalName").textContent = product.name;
   
-  // ============ MOSTRAR PRECIO CON DESCUENTO EN MODAL ============
   const modalPriceEl = document.getElementById("modalPrice");
   const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
   
@@ -760,6 +756,11 @@ async function handleCheckoutClick(e) {
       clearCart();
       closeCart();
       showToast("Pedido enviado", `#${order.order_number}`);
+      
+      // Recargar historial de pedidos si el usuario está en el perfil
+      if (typeof window.renderOrdersHistory === "function") {
+        setTimeout(() => window.renderOrdersHistory(), 1000);
+      }
     } else {
       alert("El pedido no se pudo guardar, pero se abrirá WhatsApp igual.");
     }
@@ -1536,3 +1537,317 @@ window.updateAllFavoriteButtons = function() {
     }
   });
 };
+
+// ===================================================================
+// SISTEMA DE HISTORIAL DE PEDIDOS (Mejora #8)
+// ===================================================================
+
+let userOrders = [];
+let currentOrdersFilter = "todos";
+
+// ---------------------------------------------------------------
+// Cargar y renderizar el historial de pedidos del cliente
+// ---------------------------------------------------------------
+async function renderOrdersHistory() {
+  const list = document.getElementById("ordersHistoryList");
+  const countBadge = document.getElementById("ordersHistoryCount");
+  
+  if (!list || !countBadge) return;
+  
+  // Mostrar loading
+  list.innerHTML = `<p class="orders-history-loading">Cargando tus pedidos...</p>`;
+  
+  try {
+    // Verificar que el usuario esté logueado
+    const { data: authData } = await supabaseClient.auth.getUser();
+    const user = authData?.user;
+    
+    if (!user) {
+      showEmptyOrdersMessage(list, "Inicia sesión para ver tus pedidos", "Cuando compres, tus pedidos aparecerán aquí");
+      countBadge.textContent = "0";
+      return;
+    }
+    
+    // Consultar pedidos del cliente
+    const { data, error } = await supabaseClient
+      .from("orders")
+      .select("*")
+      .eq("customer_id", user.id)
+      .order("created_at", { ascending: false });
+    
+    if (error) {
+      console.error("Error cargando historial:", error);
+      list.innerHTML = `<p class="orders-history-loading">No se pudieron cargar los pedidos.</p>`;
+      return;
+    }
+    
+    userOrders = data || [];
+    countBadge.textContent = userOrders.length;
+    
+    if (userOrders.length === 0) {
+      showEmptyOrdersMessage(list, "Aún no has hecho pedidos", "Cuando compres, tus pedidos aparecerán aquí");
+      return;
+    }
+    
+    // Renderizar pedidos
+    displayOrdersList(list);
+    
+  } catch (err) {
+    console.error("Error en renderOrdersHistory:", err);
+    list.innerHTML = `<p class="orders-history-loading">Error al cargar los pedidos.</p>`;
+  }
+}
+
+// ---------------------------------------------------------------
+// Mostrar mensaje cuando no hay pedidos
+// ---------------------------------------------------------------
+function showEmptyOrdersMessage(list, title, subtitle) {
+  list.innerHTML = `
+    <p class="orders-history-empty">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <span>${title}</span>
+      <small>${subtitle}</small>
+    </p>
+  `;
+}
+
+// ---------------------------------------------------------------
+// Mostrar la lista de pedidos filtrada
+// ---------------------------------------------------------------
+function displayOrdersList(list) {
+  // Filtrar según el estado seleccionado
+  const filteredOrders = currentOrdersFilter === "todos"
+    ? userOrders
+    : userOrders.filter(o => o.status === currentOrdersFilter);
+  
+  if (filteredOrders.length === 0) {
+    const filterLabels = {
+      pendiente: "pendientes",
+      confirmado: "confirmados",
+      entregado: "entregados",
+      cancelado: "cancelados"
+    };
+    showEmptyOrdersMessage(
+      list, 
+      `No tienes pedidos ${filterLabels[currentOrdersFilter] || ""}`,
+      "Prueba con otro filtro"
+    );
+    return;
+  }
+  
+  list.innerHTML = "";
+  filteredOrders.forEach((order) => {
+    list.appendChild(createOrderHistoryCard(order));
+  });
+}
+
+// ---------------------------------------------------------------
+// Crear tarjeta de pedido individual
+// ---------------------------------------------------------------
+function createOrderHistoryCard(order) {
+  const card = document.createElement("div");
+  card.className = `order-history-card ${order.status}`;
+  
+  const date = new Date(order.created_at);
+  const dateStr = date.toLocaleString("es-CO", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+  
+  const statusLabels = {
+    pendiente: "Pendiente",
+    confirmado: "Confirmado",
+    entregado: "Entregado",
+    cancelado: "Cancelado"
+  };
+  
+  // Items del pedido
+  let itemsHtml = `<div class="order-history-items">`;
+  (order.items || []).forEach((item) => {
+    itemsHtml += `
+      <div class="order-history-item">
+        <img src="${item.image || ''}" alt="${escapeHtml(item.name)}" class="order-history-item-img">
+        <div class="order-history-item-info">
+          <span class="order-history-item-name">${escapeHtml(item.name)}</span>
+          <span class="order-history-item-meta">Talla ${item.size} · Cantidad: ${item.qty}</span>
+        </div>
+        <span class="order-history-item-price">${formatPrice(item.subtotal)}</span>
+      </div>
+    `;
+  });
+  itemsHtml += `</div>`;
+  
+  // Botones de acción (solo si no está cancelado)
+  let actionsHtml = "";
+  if (order.status !== "cancelado") {
+    const whatsappMsg = `Hola! Tengo una consulta sobre mi pedido *#${order.order_number}*`;
+    const whatsappUrl = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(whatsappMsg)}`;
+    
+    actionsHtml = `
+      <div class="order-history-actions">
+        <a href="${whatsappUrl}" target="_blank" class="order-history-btn order-history-btn-whatsapp">
+          <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16.003 3C9.373 3 4 8.373 4 15.003c0 2.647.858 5.093 2.316 7.09L4 29l7.116-2.267a11.94 11.94 0 0 0 4.887 1.038h.001C22.634 27.771 28 22.399 28 15.77c0-3.187-1.241-6.183-3.495-8.437A11.925 11.925 0 0 0 16.003 3zm5.458 14.32c-.299-.15-1.769-.873-2.043-.973-.274-.1-.474-.15-.673.15-.199.299-.772.973-.947 1.173-.174.199-.349.224-.648.075-.299-.15-1.264-.466-2.408-1.486-.89-.794-1.491-1.774-1.666-2.073-.174-.299-.019-.461.131-.61.135-.134.299-.349.449-.524.15-.174.199-.299.299-.499.1-.199.05-.374-.025-.524-.075-.15-.673-1.623-.923-2.222-.243-.583-.489-.504-.673-.513-.174-.008-.374-.01-.573-.01a1.098 1.098 0 0 0-.798.374c-.274.299-1.047 1.023-1.047 2.496 0 1.473 1.072 2.895 1.222 3.095.15.199 2.109 3.222 5.115 4.518.716.309 1.274.494 1.71.632.719.229 1.373.196 1.89.119.577-.086 1.769-.723 2.019-1.421.249-.698.249-1.297.174-1.421-.075-.125-.274-.199-.573-.349z"/>
+          </svg>
+          <span>Contactar</span>
+        </a>
+        <button type="button" class="order-history-btn order-history-btn-reorder" data-reorder="${order.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          <span>Volver a pedir</span>
+        </button>
+      </div>
+    `;
+  }
+  
+  card.innerHTML = `
+    <div class="order-history-header-inner">
+      <div class="order-history-info">
+        <div class="order-history-number">#${order.order_number}</div>
+        <div class="order-history-date">${dateStr}</div>
+      </div>
+      <span class="order-history-status ${order.status}">${statusLabels[order.status] || order.status}</span>
+    </div>
+    
+    ${itemsHtml}
+    
+    <div class="order-history-total">
+      <span class="order-history-total-label">Total</span>
+      <span class="order-history-total-value">${formatPrice(order.total)}</span>
+    </div>
+    
+    ${actionsHtml}
+  `;
+  
+  // Listener del botón "Volver a pedir"
+  const reorderBtn = card.querySelector("[data-reorder]");
+  if (reorderBtn) {
+    reorderBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleReorder(order);
+    });
+  }
+  
+  return card;
+}
+
+// ---------------------------------------------------------------
+// Función helper para escapar HTML
+// ---------------------------------------------------------------
+function escapeHtml(str) {
+  if (!str) return "";
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---------------------------------------------------------------
+// Manejar "Volver a pedir" — agregar los items al carrito
+// ---------------------------------------------------------------
+async function handleReorder(order) {
+  if (!order || !order.items || order.items.length === 0) return;
+  
+  const confirmMsg = `¿Volver a pedir estos productos?\n\n${order.items.map(i => `- ${i.name} (Talla ${i.size}) x ${i.qty}`).join("\n")}\n\nTotal aproximado: ${formatPrice(order.total)}`;
+  
+  if (!confirm(confirmMsg)) return;
+  
+  let addedCount = 0;
+  let notAvailable = [];
+  
+  for (const item of order.items) {
+    // Buscar el producto en el catálogo actual
+    const product = STORE_PRODUCTS.find(p => p.id === item.product_id);
+    
+    if (!product) {
+      notAvailable.push(item.name);
+      continue;
+    }
+    
+    // Verificar stock de la talla
+    const stockQty = getStockForSize(product, item.size);
+    if (stockQty === 0 || stockQty === null) {
+      notAvailable.push(`${item.name} (Talla ${item.size})`);
+      continue;
+    }
+    
+    // Agregar al carrito
+    const key = getCartKey(product.id, item.size);
+    const existing = cart.find(c => c.key === key);
+    
+    if (existing) {
+      existing.qty += item.qty;
+    } else {
+      cart.push({
+        key,
+        id: product.id,
+        name: product.name,
+        price: product.price, // Usa el precio actual (por si cambió)
+        image: product.image,
+        size: item.size,
+        qty: item.qty
+      });
+    }
+    addedCount++;
+  }
+  
+  saveCartToStorage();
+  renderCart();
+  
+  // Cerrar modal de cuenta
+  const accountOverlay = document.getElementById("accountOverlay");
+  const accountModal = document.getElementById("accountModal");
+  if (accountOverlay) accountOverlay.classList.remove("active");
+  if (accountModal) accountModal.classList.remove("active");
+  document.body.style.overflow = "";
+  
+  // Mostrar mensaje según resultado
+  if (addedCount > 0 && notAvailable.length === 0) {
+    showCustomToast("Productos añadidos", `${addedCount} producto(s) al carrito`);
+    setTimeout(() => openCart(), 400);
+  } else if (addedCount > 0 && notAvailable.length > 0) {
+    alert(`Se agregaron ${addedCount} producto(s) al carrito.\n\nNo disponibles:\n- ${notAvailable.join("\n- ")}`);
+    setTimeout(() => openCart(), 400);
+  } else {
+    alert("Los productos ya no están disponibles.");
+  }
+}
+
+// ---------------------------------------------------------------
+// Configurar filtros de estado
+// ---------------------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  const filterButtons = document.querySelectorAll(".order-history-filter");
+  
+  filterButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      // Actualizar botón activo
+      filterButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      
+      // Actualizar filtro
+      currentOrdersFilter = btn.dataset.historyFilter;
+      
+      // Renderizar lista filtrada
+      const list = document.getElementById("ordersHistoryList");
+      if (list && userOrders.length > 0) {
+        displayOrdersList(list);
+      }
+    });
+  });
+});
+
+// Exportar la función globalmente para que auth.js pueda llamarla
+window.renderOrdersHistory = renderOrdersHistory;
+
+// ---------------------------------------------------------------
+// BOTÓN VOLVER ARRIBA (se maneja en el HTML con estilos inline)
+// ---------------------------------------------------------------
