@@ -86,6 +86,9 @@
         <span class="tab-label">Pedidos</span>
         <span class="tab-badge" id="pendingOrdersBadge" style="display:none;">0</span>
       </button>
+      <button type="button" class="admin-tab" data-tab="estadisticas">
+        <span class="tab-label">Estadísticas</span>
+      </button>
     </div>
 
     <!-- ============ VISTA: PRODUCTOS ============ -->
@@ -132,6 +135,54 @@
 
       <div class="orders-list" id="ordersList">
         <p class="loading-msg">Cargando pedidos...</p>
+      </div>
+    </div>
+
+    <!-- ============ VISTA: ESTADÍSTICAS ============ -->
+    <div class="admin-view" id="viewEstadisticas">
+      <div class="admin-toolbar">
+        <h1>Estadísticas</h1>
+        <button class="btn btn-ghost" id="refreshStatsBtn">Actualizar</button>
+      </div>
+
+      <div class="stats-cards">
+        <div class="stat-card">
+          <span class="stat-label">Ventas del mes</span>
+          <span class="stat-value" id="statVentasMes">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Pedidos totales</span>
+          <span class="stat-value" id="statPedidosTotales">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Ingresos del mes</span>
+          <span class="stat-value" id="statIngresosMes">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Ticket promedio</span>
+          <span class="stat-value" id="statTicketPromedio">—</span>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <h2 class="stats-section-title">Ventas últimos 30 días</h2>
+        <div class="sales-chart" id="salesChart">
+          <p class="loading-msg">Cargando gráfico...</p>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <h2 class="stats-section-title">Productos más vendidos</h2>
+        <div class="top-products" id="topProducts">
+          <p class="loading-msg">Cargando productos...</p>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <h2 class="stats-section-title">Estados de pedidos</h2>
+        <div class="status-distribution" id="statusDistribution">
+          <p class="loading-msg">Cargando distribución...</p>
+        </div>
       </div>
     </div>
 
