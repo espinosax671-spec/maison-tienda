@@ -545,55 +545,149 @@
     <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
   </div>
 
-  <!-- VISTA: PERFIL (con Favoritos + Historial de Pedidos) -->
+  <!-- ============ NUEVA VISTA: PERFIL CON PESTAÑAS ============ -->
   <div class="account-view" id="viewProfile">
-    <span class="section-eyebrow">Tu cuenta</span>
-    <h3 class="account-title" id="profileGreeting">Hola</h3>
-    <p class="account-subtitle">Mantén tus datos actualizados para agilizar tus pedidos.</p>
     
-    <form id="profileForm" class="account-form">
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </span>
-        <input type="text" id="profileName" required placeholder="Nombre completo">
-      </div>
+    <!-- Header del perfil -->
+    <div class="profile-header">
+      <span class="section-eyebrow">Tu cuenta</span>
+      <h3 class="account-title" id="profileGreeting">Hola</h3>
+    </div>
 
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-          </svg>
-        </span>
-        <input type="tel" id="profilePhone" placeholder="WhatsApp (ej: 3001234567)">
-      </div>
-
-      <div class="input-group">
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-        </span>
-        <input type="text" id="profileAddress" placeholder="Dirección de entrega">
-      </div>
-
-      <p class="account-error" id="profileError"></p>
-      <p class="account-success" id="profileSuccess"></p>
-      <button type="submit" class="btn btn-primary btn-full btn-auth" id="profileSaveBtn">
-        <span>Guardar datos</span>
+    <!-- Pestañas de navegación -->
+    <div class="profile-tabs" id="profileTabs">
+      <button type="button" class="profile-tab active" data-profile-tab="perfil">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Mi Perfil</span>
       </button>
-    </form>
+      <button type="button" class="profile-tab" data-profile-tab="favoritos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span>Favoritos</span>
+        <span class="profile-tab-count" id="profileTabFavoritesCount">0</span>
+      </button>
+      <button type="button" class="profile-tab" data-profile-tab="pedidos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span>Pedidos</span>
+        <span class="profile-tab-count" id="profileTabOrdersCount">0</span>
+      </button>
+    </div>
 
-    <!-- SECCIÓN DE FAVORITOS -->
-    <div class="favorites-section">
-      <div class="favorites-header">
-        <span class="section-eyebrow">Mis Favoritos</span>
-        <span class="favorites-count" id="favoritesCount">0</span>
+    <!-- ============ PESTAÑA: MI PERFIL ============ -->
+    <div class="profile-tab-content active" id="profileContentPerfil">
+      
+      <!-- Vista de datos guardados (cuando ya tiene datos) -->
+      <div class="profile-info-view" id="profileInfoView" style="display:none;">
+        <p class="account-subtitle">Estos son tus datos de contacto.</p>
+        
+        <div class="profile-info-card">
+          <div class="profile-info-item">
+            <span class="profile-info-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <div class="profile-info-content">
+              <span class="profile-info-label">Nombre</span>
+              <span class="profile-info-value" id="displayName">-</span>
+            </div>
+          </div>
+
+          <div class="profile-info-item">
+            <span class="profile-info-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </span>
+            <div class="profile-info-content">
+              <span class="profile-info-label">WhatsApp</span>
+              <span class="profile-info-value" id="displayPhone">-</span>
+            </div>
+          </div>
+
+          <div class="profile-info-item">
+            <span class="profile-info-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </span>
+            <div class="profile-info-content">
+              <span class="profile-info-label">Dirección de entrega</span>
+              <span class="profile-info-value" id="displayAddress">-</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full btn-auth" id="editProfileBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          <span>Editar datos</span>
+        </button>
       </div>
+
+      <!-- Vista de formulario (para editar o llenar por primera vez) -->
+      <div class="profile-form-view" id="profileFormView">
+        <p class="account-subtitle">Mantén tus datos actualizados para agilizar tus pedidos.</p>
+        
+        <form id="profileForm" class="account-form">
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <input type="text" id="profileName" required placeholder="Nombre completo">
+          </div>
+
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </span>
+            <input type="tel" id="profilePhone" placeholder="WhatsApp (ej: 3001234567)">
+          </div>
+
+          <div class="input-group">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </span>
+            <input type="text" id="profileAddress" placeholder="Dirección de entrega">
+          </div>
+
+          <p class="account-error" id="profileError"></p>
+          <p class="account-success" id="profileSuccess"></p>
+          
+          <div class="profile-form-actions">
+            <button type="button" class="btn btn-ghost" id="cancelEditBtn" style="display:none;">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-full btn-auth" id="profileSaveBtn">
+              <span>Guardar datos</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- ============ PESTAÑA: FAVORITOS ============ -->
+    <div class="profile-tab-content" id="profileContentFavoritos">
+      <p class="account-subtitle">Los productos que has guardado como favoritos.</p>
       
       <div class="favorites-grid" id="favoritesGrid">
         <p class="favorites-empty" id="favoritesEmpty">
@@ -604,14 +698,14 @@
           <small>Toca el corazón en cualquier producto para guardarlo aquí</small>
         </p>
       </div>
+      
+      <!-- Contador oculto para compatibilidad -->
+      <span id="favoritesCount" style="display:none;">0</span>
     </div>
 
-    <!-- ============ NUEVO: SECCIÓN MIS PEDIDOS (Mejora #8) ============ -->
-    <div class="orders-history-section">
-      <div class="orders-history-header">
-        <span class="section-eyebrow">Mis Pedidos</span>
-        <span class="orders-history-count" id="ordersHistoryCount">0</span>
-      </div>
+    <!-- ============ PESTAÑA: PEDIDOS ============ -->
+    <div class="profile-tab-content" id="profileContentPedidos">
+      <p class="account-subtitle">Aquí puedes ver el historial de todas tus compras.</p>
       
       <!-- Filtros por estado -->
       <div class="orders-history-filters" id="ordersHistoryFilters">
@@ -641,11 +735,15 @@
           <small>Cuando compres, tus pedidos aparecerán aquí</small>
         </p>
       </div>
+      
+      <!-- Contador oculto para compatibilidad -->
+      <span id="ordersHistoryCount" style="display:none;">0</span>
     </div>
-    <!-- FIN SECCIÓN MIS PEDIDOS -->
 
+    <!-- Botón de cerrar sesión (siempre visible) -->
     <button type="button" class="btn btn-ghost btn-full logout-btn" id="logoutBtn">Cerrar sesión</button>
   </div>
+
 </div>
 
 <script>
