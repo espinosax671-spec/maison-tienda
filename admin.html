@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAISON - Panel Admin</title>
+    <title>MAISON - Panel de Vendedor</title>
     <link rel="stylesheet" href="css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -31,11 +31,6 @@
                 <div id="loginError" class="login-error hidden"></div>
                 <button type="submit" class="btn-login">Ingresar</button>
             </form>
-
-            <!-- Enlace para volver a la tienda -->
-            <a href="index.html" class="back-to-store">
-                ← Volver a la tienda
-            </a>
         </div>
     </div>
 
@@ -51,10 +46,6 @@
                 <span class="admin-subtitle">Panel de Vendedor</span>
             </div>
             <div class="header-right">
-                <!-- Enlace a la tienda desde el panel -->
-                <a href="index.html" class="btn-store-link" title="Ver la tienda">
-                    🏬 Ver Tienda
-                </a>
                 <span id="userEmail" class="user-email"></span>
                 <button id="btnLogout" class="btn-logout">Cerrar Sesión</button>
             </div>
@@ -62,18 +53,8 @@
 
         <!-- NAVEGACIÓN DE PESTAÑAS -->
         <nav class="admin-nav">
-            <button class="nav-tab active" data-tab="productos">
-                <span class="tab-icon">📦</span>
-                Productos
-            </button>
-            <button class="nav-tab" data-tab="pedidos">
-                <span class="tab-icon">🛍️</span>
-                Pedidos
-            </button>
-            <button class="nav-tab" data-tab="estadisticas">
-                <span class="tab-icon">📊</span>
-                Estadísticas
-            </button>
+            <button class="nav-tab active" data-tab="productos">Productos</button>
+            <button class="nav-tab" data-tab="pedidos">Pedidos</button>
         </nav>
 
         <!-- ============================================
@@ -131,10 +112,10 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn-primary" id="btnSubmit">
-                            ✚ Agregar Producto
+                            Agregar Producto
                         </button>
                         <button type="button" class="btn-secondary hidden" id="btnCancel">
-                            ✕ Cancelar
+                            Cancelar
                         </button>
                     </div>
                 </form>
@@ -145,7 +126,7 @@
                 <div class="section-header">
                     <h2 class="section-title">Mis Productos</h2>
                     <div class="search-box">
-                        <input type="text" id="searchProducts" placeholder="🔍 Buscar producto...">
+                        <input type="text" id="searchProducts" placeholder="Buscar producto...">
                     </div>
                 </div>
 
@@ -182,100 +163,6 @@
             </section>
         </div>
 
-        <!-- ============================================
-             PESTAÑA: ESTADÍSTICAS
-        ============================================ -->
-        <div id="tab-estadisticas" class="tab-content hidden">
-
-            <!-- Mensaje de carga -->
-            <div id="statsLoading" class="stats-loading">
-                <div class="loading-spinner">Cargando estadísticas...</div>
-            </div>
-
-            <!-- Contenido de estadísticas -->
-            <div id="statsContent" class="hidden">
-
-                <!-- FILA 1: Tarjetas de métricas -->
-                <div class="stats-cards">
-                    <div class="stat-card">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-info">
-                            <span class="stat-label">Ingresos del Mes</span>
-                            <span class="stat-value" id="statIngresos">$0</span>
-                            <span class="stat-sub" id="statIngresosSub"></span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🛍️</div>
-                        <div class="stat-info">
-                            <span class="stat-label">Ventas del Mes</span>
-                            <span class="stat-value" id="statVentasMes">0</span>
-                            <span class="stat-sub">pedidos este mes</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📦</div>
-                        <div class="stat-info">
-                            <span class="stat-label">Total Pedidos</span>
-                            <span class="stat-value" id="statTotalPedidos">0</span>
-                            <span class="stat-sub">pedidos históricos</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🎯</div>
-                        <div class="stat-info">
-                            <span class="stat-label">Ticket Promedio</span>
-                            <span class="stat-value" id="statTicket">$0</span>
-                            <span class="stat-sub">por pedido</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- FILA 2: Gráfico de barras - últimos 30 días -->
-                <section class="section-card stats-section">
-                    <h2 class="section-title">📈 Ventas Últimos 30 Días</h2>
-                    <p class="stats-desc">Número de pedidos por día</p>
-                    <div class="bar-chart-container">
-                        <div id="barChart" class="bar-chart"></div>
-                        <div class="bar-chart-labels" id="barChartLabels"></div>
-                    </div>
-                    <div class="chart-legend">
-                        <span class="legend-item">
-                            <span class="legend-color" style="background: var(--gold)"></span>
-                            Pedidos por día
-                        </span>
-                    </div>
-                </section>
-
-                <!-- FILA 3: Dos columnas -->
-                <div class="stats-row-2">
-
-                    <!-- TOP 5 Productos -->
-                    <section class="section-card stats-section">
-                        <h2 class="section-title">🏆 Productos Más Vendidos</h2>
-                        <p class="stats-desc">Top 5 por unidades vendidas</p>
-                        <div id="topProductsList" class="top-products-list"></div>
-                    </section>
-
-                    <!-- Estados de pedidos -->
-                    <section class="section-card stats-section">
-                        <h2 class="section-title">📋 Estado de Pedidos</h2>
-                        <p class="stats-desc">Distribución por estado</p>
-                        <div id="estadosChart" class="estados-chart"></div>
-                    </section>
-
-                </div>
-
-                <!-- FILA 4: Tabla de pedidos recientes -->
-                <section class="section-card stats-section">
-                    <h2 class="section-title">🕒 Pedidos Recientes</h2>
-                    <p class="stats-desc">Últimos 5 pedidos recibidos</p>
-                    <div id="recentOrders" class="recent-orders-table"></div>
-                </section>
-
-            </div><!-- fin statsContent -->
-        </div><!-- fin tab-estadisticas -->
-
     </div><!-- fin adminPanel -->
 
     <!-- Modal de confirmación -->
@@ -293,9 +180,7 @@
     <!-- Toast de notificaciones -->
     <div id="toast" class="toast hidden"></div>
 
-    <!-- ============================================
-         SCRIPTS (orden importante)
-    ============================================ -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/admin.js"></script>
