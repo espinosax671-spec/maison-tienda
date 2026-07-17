@@ -5,14 +5,15 @@
 
 // ─── CONFIGURACIÓN SUPABASE ──────────────────
 // Reutilizamos el cliente definido en js/supabase-client.js
-const supabase = supabaseClient || window.supabaseClient;
+// Usamos "db" para evitar conflicto con la variable global window.supabase
+const db = supabaseClient;
 
 // ─── ESTADO GLOBAL ───────────────────────────
 let currentUser     = null;
 let editingProduct  = null;
 let allPedidos      = [];
 let allProductos    = [];
-let statsLoaded     = false;   // ← evitar recargar cada vez
+let statsLoaded     = false;
 
 /* ══════════════════════════════════════════════
    INICIALIZACIÓN
@@ -31,8 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
    AUTENTICACIÓN
 ══════════════════════════════════════════════ */
 function initAuth() {
-    // Escuchar cambios de sesión
-    supabase.auth.onAuthStateChange((event, session) => {
+    db.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
             currentUser = session.user;
             showPanel();
@@ -42,15 +42,13 @@ function initAuth() {
         }
     });
 
-    // Comprobar sesión existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    db.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
             currentUser = session.user;
             showPanel();
         }
     });
 
-    // Formulario de login
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email    = document.getElementById('loginEmail').value.trim();
@@ -62,7 +60,7 @@ function initAuth() {
         btnLogin.textContent = 'Ingresando...';
         btnLogin.disabled    = true;
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await db.auth.signInWithPassword({ email, password });
 
         if (error) {
             errorEl.textContent = 'Credenciales incorrectas. Verifica tu email y contraseña.';
@@ -72,9 +70,8 @@ function initAuth() {
         }
     });
 
-    // Logout
     document.getElementById('btnLogout').addEventListener('click', async () => {
-        await supabase.auth.signOut();
+        await db.auth.signOut();
     });
 }
 
@@ -103,15 +100,12 @@ function initNavTabs() {
         tab.addEventListener('click', () => {
             const target = tab.dataset.tab;
 
-            // Activar tab
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
 
-            // Mostrar contenido
             contents.forEach(c => c.classList.add('hidden'));
             document.getElementById(`tab-${target}`).classList.remove('hidden');
 
-            // Cargar estadísticas al entrar (solo una vez, o si forzamos reload)
             if (target === 'estadisticas' && !statsLoaded) {
                 loadStats();
             }
@@ -126,7 +120,7 @@ async function loadProducts() {
     const grid = document.getElementById('productsList');
     grid.innerHTML = '<div class="loading-spinner">Cargando productos...</div>';
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('productos')
         .select('*')
         .eq('vendedor_id', currentUser.id)
@@ -183,7 +177,6 @@ function getStockClass(stock) {
     return 'stock-ok';
 }
 
-/* Formulario de producto */
 function initProductForm() {
     const form    = document.getElementById('productForm');
     const btnCancel = document.getElementById('btnCancel');
@@ -205,14 +198,14 @@ function initProductForm() {
 
         let error;
         if (editingProduct) {
-            ({ error } = await supabase
+            ({ error } = await db
                 .from('productos')
                 .update(productData)
                 .eq('id', editingProduct)
                 .eq('vendedor_id', currentUser.id));
         } else {
             productData.vendedor_id = currentUser.id;
-            ({ error } = await supabase
+            ({ error } = await db
                 .from('productos')
                 .insert([productData]));
         }
@@ -223,7 +216,7 @@ function initProductForm() {
             showToast(editingProduct ? '✅ Producto actualizado.' : '✅ Producto agregado.', 'success');
             resetForm();
             loadProducts();
-            statsLoaded = false; // forzar recarga de estadísticas
+            statsLoaded = false;
         }
 
         btn.disabled = false;
@@ -251,7 +244,6 @@ function editProduct(id) {
 
     updateImagePreview(product.imagen_url);
 
-    // Scroll al formulario
     document.getElementById('productForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -282,7 +274,6 @@ function updateImagePreview(url) {
     }
 }
 
-/* Busqueda de productos */
 function initProductSearch() {
     document.getElementById('searchProducts').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
@@ -294,13 +285,12 @@ function initProductSearch() {
     });
 }
 
-/* Confirmar y eliminar producto */
 function confirmDelete(id, nombre) {
     showModal(
         '¿Eliminar producto?',
         `Vas a eliminar "${nombre}". Esta acción no se puede deshacer.`,
         async () => {
-            const { error } = await supabase
+            const { error } = await db
                 .from('productos')
                 .delete()
                 .eq('id', id)
@@ -324,8 +314,7 @@ async function loadPedidos() {
     const list = document.getElementById('pedidosList');
     list.innerHTML = '<div class="loading-spinner">Cargando pedidos...</div>';
 
-    // Obtener pedidos que contienen productos del vendedor
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await db
         .from('pedido_items')
         .select('pedido_id, cantidad, precio_unitario, productos(nombre, vendedor_id)')
         .eq('productos.vendedor_id', currentUser.id);
@@ -335,7 +324,6 @@ async function loadPedidos() {
         return;
     }
 
-    // Obtener IDs únicos de pedidos
     const pedidoIds = [...new Set(
         (items || [])
             .filter(item => item.productos?.vendedor_id === currentUser.id)
@@ -352,7 +340,7 @@ async function loadPedidos() {
         return;
     }
 
-    const { data: pedidos, error: pedidosError } = await supabase
+    const { data: pedidos, error: pedidosError } = await db
         .from('pedidos')
         .select('*')
         .in('id', pedidoIds)
@@ -363,7 +351,6 @@ async function loadPedidos() {
         return;
     }
 
-    // Enriquecer con items
     allPedidos = (pedidos || []).map(pedido => ({
         ...pedido,
         items: (items || []).filter(
@@ -432,7 +419,7 @@ async function updateEstado(pedidoId) {
     const select = document.getElementById(`estado-${pedidoId}`);
     const nuevoEstado = select.value;
 
-    const { error } = await supabase
+    const { error } = await db
         .from('pedidos')
         .update({ estado: nuevoEstado })
         .eq('id', pedidoId);
@@ -441,14 +428,12 @@ async function updateEstado(pedidoId) {
         showToast('Error al actualizar el estado.', 'error');
     } else {
         showToast(`✅ Estado actualizado a: ${nuevoEstado}`, 'success');
-        // Actualizar localmente
         const pedido = allPedidos.find(p => p.id === pedidoId);
         if (pedido) pedido.estado = nuevoEstado;
-        statsLoaded = false; // forzar recarga
+        statsLoaded = false;
     }
 }
 
-/* Filtros de pedidos */
 function initFilters() {
     document.getElementById('filterEstado').addEventListener('change', applyFilters);
     document.getElementById('filterFecha').addEventListener('change', applyFilters);
@@ -475,16 +460,14 @@ function applyFilters() {
 }
 
 /* ══════════════════════════════════════════════
-   ESTADÍSTICAS — LÓGICA PRINCIPAL
+   ESTADÍSTICAS
 ══════════════════════════════════════════════ */
 async function loadStats() {
-    // Mostrar estado de carga
     document.getElementById('statsLoading').classList.remove('hidden');
     document.getElementById('statsContent').classList.add('hidden');
 
     try {
-        // ── 1. Obtener TODOS los pedidos del vendedor (vía items)
-        const { data: items, error: itemsError } = await supabase
+        const { data: items, error: itemsError } = await db
             .from('pedido_items')
             .select(`
                 pedido_id,
@@ -496,22 +479,18 @@ async function loadStats() {
 
         if (itemsError) throw itemsError;
 
-        // Filtrar solo items del vendedor
         const myItems = (items || []).filter(
             item => item.productos?.vendedor_id === currentUser.id
         );
 
-        // IDs únicos de pedidos
         const pedidoIds = [...new Set(myItems.map(i => i.pedido_id))];
 
-        // Si no hay pedidos, mostrar vacío
         if (!pedidoIds.length) {
             renderStatsEmpty();
             return;
         }
 
-        // ── 2. Obtener datos de los pedidos
-        const { data: pedidos, error: pedidosError } = await supabase
+        const { data: pedidos, error: pedidosError } = await db
             .from('pedidos')
             .select('id, created_at, total, estado, cliente_nombre, cliente_email')
             .in('id', pedidoIds)
@@ -519,7 +498,6 @@ async function loadStats() {
 
         if (pedidosError) throw pedidosError;
 
-        // ── 3. Calcular métricas y renderizar
         calcularYRenderizar(pedidos || [], myItems);
         statsLoaded = true;
 
@@ -531,7 +509,6 @@ async function loadStats() {
 }
 
 function calcularYRenderizar(pedidos, items) {
-    /* ── MÉTRICAS GENERALES ── */
     const ahora     = new Date();
     const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
 
@@ -551,7 +528,6 @@ function calcularYRenderizar(pedidos, items) {
         ? ingresosTotal / totalPedidos
         : 0;
 
-    // Renderizar tarjetas
     document.getElementById('statIngresos').textContent    = formatPrice(ingresosMes);
     document.getElementById('statIngresosSub').textContent =
         `${formatPrice(ingresosTotal)} histórico`;
@@ -559,29 +535,19 @@ function calcularYRenderizar(pedidos, items) {
     document.getElementById('statTotalPedidos').textContent = totalPedidos;
     document.getElementById('statTicket').textContent      = formatPrice(ticketPromedio);
 
-    /* ── GRÁFICO DE BARRAS: últimos 30 días ── */
     renderBarChart(pedidos);
-
-    /* ── TOP 5 PRODUCTOS ── */
     renderTopProducts(items);
-
-    /* ── DISTRIBUCIÓN DE ESTADOS ── */
     renderEstadosChart(pedidos);
-
-    /* ── PEDIDOS RECIENTES ── */
     renderRecentOrders(pedidos.slice(0, 5));
 
-    // Mostrar contenido
     document.getElementById('statsLoading').classList.add('hidden');
     document.getElementById('statsContent').classList.remove('hidden');
 }
 
-/* ── Gráfico de barras: pedidos por día (últimos 30 días) ── */
 function renderBarChart(pedidos) {
     const barChart  = document.getElementById('barChart');
     const labelsEl  = document.getElementById('barChartLabels');
 
-    // Generar array de los últimos 30 días
     const dias = [];
     const ahora = new Date();
 
@@ -589,24 +555,21 @@ function renderBarChart(pedidos) {
         const d = new Date(ahora);
         d.setDate(d.getDate() - i);
         dias.push({
-            fecha: d.toISOString().split('T')[0],   // "2024-01-15"
-            label: `${d.getDate()}/${d.getMonth() + 1}`,  // "15/1"
+            fecha: d.toISOString().split('T')[0],
+            label: `${d.getDate()}/${d.getMonth() + 1}`,
             count: 0
         });
     }
 
-    // Contar pedidos por día
     pedidos.forEach(pedido => {
         const fechaPedido = new Date(pedido.created_at).toISOString().split('T')[0];
         const dia = dias.find(d => d.fecha === fechaPedido);
         if (dia) dia.count++;
     });
 
-    // Valor máximo para escalar
     const maxCount = Math.max(...dias.map(d => d.count), 1);
 
-    // Renderizar barras
-    barChart.innerHTML = dias.map((dia, index) => {
+    barChart.innerHTML = dias.map((dia) => {
         const heightPct = maxCount > 0 ? (dia.count / maxCount) * 100 : 0;
         const tooltip   = `${dia.label}: ${dia.count} pedido${dia.count !== 1 ? 's' : ''}`;
         return `
@@ -620,18 +583,15 @@ function renderBarChart(pedidos) {
         `;
     }).join('');
 
-    // Renderizar labels (mostrar cada 5 días para no aglomerar)
     labelsEl.innerHTML = dias.map((dia, index) => {
         const show = (index % 5 === 0) || index === 29;
         return `<span class="bar-label ${show ? '' : 'hidden-label'}">${show ? dia.label : ''}</span>`;
     }).join('');
 }
 
-/* ── Top 5 productos más vendidos ── */
 function renderTopProducts(items) {
     const container = document.getElementById('topProductsList');
 
-    // Agrupar por producto
     const productMap = {};
     items.forEach(item => {
         const pid  = item.productos?.id;
@@ -643,7 +603,6 @@ function renderTopProducts(items) {
         productMap[pid].total += item.cantidad || 1;
     });
 
-    // Ordenar y tomar top 5
     const top5 = Object.values(productMap)
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
@@ -684,7 +643,6 @@ function renderTopProducts(items) {
     }).join('');
 }
 
-/* ── Distribución de estados ── */
 function renderEstadosChart(pedidos) {
     const container = document.getElementById('estadosChart');
     const total     = pedidos.length;
@@ -698,7 +656,6 @@ function renderEstadosChart(pedidos) {
         return;
     }
 
-    // Contar por estado
     const estadoMap = {
         pendiente:  0,
         confirmado: 0,
@@ -714,7 +671,6 @@ function renderEstadosChart(pedidos) {
         }
     });
 
-    // Emojis por estado
     const emojis = {
         pendiente:  '⏳',
         confirmado: '✅',
@@ -747,7 +703,6 @@ function renderEstadosChart(pedidos) {
     }).join('');
 }
 
-/* ── Pedidos recientes ── */
 function renderRecentOrders(pedidos) {
     const container = document.getElementById('recentOrders');
 
@@ -790,12 +745,10 @@ function renderRecentOrders(pedidos) {
     `;
 }
 
-/* Estado vacío general */
 function renderStatsEmpty() {
     document.getElementById('statsLoading').classList.add('hidden');
     document.getElementById('statsContent').classList.remove('hidden');
 
-    // Limpiar métricas
     ['statIngresos','statVentasMes','statTotalPedidos','statTicket'].forEach(id => {
         document.getElementById(id).textContent = id.includes('stat') ? '0' : '$0';
     });
@@ -856,8 +809,6 @@ function showToast(message, type = 'success') {
 /* ══════════════════════════════════════════════
    UTILIDADES
 ══════════════════════════════════════════════ */
-
-/** Formatea precio en CLP */
 function formatPrice(amount) {
     if (!amount && amount !== 0) return '$0';
     return new Intl.NumberFormat('es-CL', {
@@ -868,7 +819,6 @@ function formatPrice(amount) {
     }).format(Math.round(amount));
 }
 
-/** Formatea fecha en formato legible */
 function formatDate(dateStr) {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('es-CL', {
@@ -878,18 +828,15 @@ function formatDate(dateStr) {
     });
 }
 
-/** Primera letra mayúscula */
 function capitalizeFirst(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-/** Escapar comillas para HTML */
 function escapeStr(str) {
     return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-/* ── Exponer funciones globales para onclick en HTML ── */
 window.editProduct    = editProduct;
 window.confirmDelete  = confirmDelete;
 window.updateEstado   = updateEstado;
