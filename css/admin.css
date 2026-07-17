@@ -15,6 +15,7 @@
   --color-border: rgba(168, 130, 75, 0.25);
   --color-white: #ffffff;
   --color-danger: #b84a3f;
+  --color-success: #4caf50;
   --font-serif: 'Cormorant Garamond', serif;
   --font-sans: 'Jost', sans-serif;
   --transition: all .3s cubic-bezier(.4, 0, .2, 1);
@@ -157,6 +158,13 @@ body {
   color: var(--color-ink-soft);
   text-align: center;
   line-height: 1.7;
+}
+
+.reset-success {
+  color: var(--color-success);
+  font-size: 13px;
+  min-height: 18px;
+  text-align: center;
 }
 
 /* ============================================
@@ -318,13 +326,12 @@ body {
    TABLA DE PRODUCTOS
    ============================================ */
 .product-table {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .loading-msg {
-  grid-column: 1 / -1;
   text-align: center;
   color: var(--color-ink-soft);
   padding: 60px 20px;
@@ -332,76 +339,112 @@ body {
   letter-spacing: 1px;
 }
 
-.product-card {
+.product-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto auto auto;
+  gap: 20px;
+  align-items: center;
   background: var(--color-white);
   padding: 16px;
+  border: 1px solid var(--color-border);
   transition: var(--transition);
-  position: relative;
-  border: 1px solid transparent;
 }
 
-.product-card:hover {
+.product-row:hover {
   border-color: var(--color-gold);
-  transform: translateY(-4px);
-  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-.product-card-img {
-  width: 100%;
-  aspect-ratio: 3/4;
+.product-row-img {
+  width: 100px;
+  height: 120px;
   object-fit: cover;
   background: var(--color-bg);
-  margin-bottom: 14px;
 }
 
-.product-card-cat {
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--color-gold);
-  margin-bottom: 6px;
+.product-row-info {
+  min-width: 0;
 }
 
-.product-card-name {
+.product-row-name {
   font-family: var(--font-serif);
   font-size: 20px;
   color: var(--color-ink);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
-.product-card-price {
-  font-size: 14px;
+.product-row-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
   color: var(--color-ink-soft);
-  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  flex-wrap: wrap;
 }
 
-.product-card-actions {
+.product-row-price {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--color-ink);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.status-pill.active {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.status-pill.inactive {
+  background: #ffebee;
+  color: var(--color-danger);
+  border: 1px solid #ef9a9a;
+}
+
+.product-row-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
-.product-card-actions button {
-  flex: 1;
-  padding: 10px;
-  font-size: 10px;
-  letter-spacing: 2px;
-}
-
-.product-card-badge {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  background: var(--color-ink);
-  color: var(--color-white);
-  padding: 4px 10px;
-  font-size: 9px;
-  letter-spacing: 2px;
+.icon-btn {
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  font-size: 11px;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  border-radius: 3px;
 }
-.product-card-badge.inactive { background: var(--color-danger); }
+
+.icon-btn:hover {
+  background: var(--color-gold);
+  color: var(--color-white);
+  border-color: var(--color-gold);
+}
+
+.icon-btn.danger:hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
 
 /* ============================================
-   MODALES (formulario producto + confirmación + stock)
+   MODALES
    ============================================ */
 .modal-overlay {
   position: fixed;
@@ -573,7 +616,7 @@ body {
 }
 
 /* ============================================
-   INPUT DE PRECIO CON SÍMBOLO $ Y FORMATO
+   INPUT DE PRECIO
    ============================================ */
 .price-input-wrap {
   position: relative;
@@ -631,7 +674,6 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* Ocultar flechas del input number en algunos navegadores (por si acaso) */
 .price-input-wrap input::-webkit-outer-spin-button,
 .price-input-wrap input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -658,14 +700,12 @@ body {
 }
 
 /* ============================================
-   GESTIÓN DE STOCK (versión unificada MAISON)
+   GESTIÓN DE STOCK
    ============================================ */
-
 .btn-stock {
-  padding: 10px;
-  flex: 1;
-  font-size: 10px;
-  letter-spacing: 2px;
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   background: var(--color-gold);
   color: var(--color-white);
@@ -674,6 +714,7 @@ body {
   transition: var(--transition);
   font-family: inherit;
   font-weight: 500;
+  border-radius: 3px;
 }
 
 .btn-stock:hover {
@@ -690,7 +731,6 @@ body {
   font-size: 11px;
   color: var(--color-ink-soft);
   letter-spacing: 0.5px;
-  margin-left: 8px;
 }
 
 .stock-badge.low {
@@ -795,9 +835,7 @@ body {
   border-color: var(--color-gold);
 }
 
-.stock-btn:active {
-  transform: scale(0.95);
-}
+.stock-btn:active { transform: scale(0.95); }
 
 .stock-input {
   width: 60px;
@@ -819,7 +857,7 @@ body {
   box-shadow: 0 0 0 2px rgba(168, 130, 75, 0.15);
 }
 
-.stock-total {
+.stock-total-info {
   padding: 14px;
   background: #f9f5ef;
   border: 1px solid var(--color-border);
@@ -840,71 +878,8 @@ body {
   margin: 0 6px;
 }
 
-.stock-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-  justify-content: flex-end;
-}
-
-.stock-actions button {
-  padding: 12px 24px;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-family: inherit;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition);
-  border-radius: 3px;
-}
-
-#cancelStockBtn {
-  background: transparent;
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
-}
-
-#cancelStockBtn:hover {
-  background: var(--color-ink);
-  color: var(--color-bg);
-}
-
-#saveStockBtn {
-  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
-  color: var(--color-ink);
-}
-
-#saveStockBtn:hover {
-  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-light));
-  color: var(--color-white);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(143, 107, 63, 0.35);
-}
-
-#saveStockBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
 /* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 768px) {
-  .admin-header { padding: 15px 20px; }
-  .admin-main   { padding: 30px 20px; }
-  .admin-toolbar h1 { font-size: 32px; }
-  .gate-box { padding: 45px 30px; }
-  .gate-logo { font-size: 34px; letter-spacing: 6px; }
-  .product-form-modal, .confirm-modal, .form-modal { padding: 30px 22px; }
-  .form-actions, .stock-actions { flex-direction: column-reverse; }
-  .form-actions .btn, .stock-actions button { width: 100%; }
-}
-
-/* ============================================
-   TABS DE NAVEGACIÓN (Productos / Pedidos)
+   TABS DE NAVEGACIÓN
    ============================================ */
 .admin-tabs {
   display: flex;
@@ -934,18 +909,11 @@ body {
   margin-bottom: -1px;
 }
 
-.admin-tab:hover {
-  color: var(--color-gold);
-}
+.admin-tab:hover { color: var(--color-gold); }
 
 .admin-tab.active {
   color: var(--color-ink);
   border-bottom-color: var(--color-gold);
-}
-
-.tab-icon {
-  font-size: 18px;
-  letter-spacing: 0;
 }
 
 .tab-badge {
@@ -971,9 +939,7 @@ body {
   animation: fadeIn .3s ease-in;
 }
 
-.admin-view.active {
-  display: block;
-}
+.admin-view.active { display: block; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -1028,22 +994,10 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
-.order-card.pendiente {
-  border-left: 4px solid var(--color-gold);
-}
-
-.order-card.confirmado {
-  border-left: 4px solid #4caf50;
-}
-
-.order-card.entregado {
-  border-left: 4px solid #2196f3;
-}
-
-.order-card.cancelado {
-  border-left: 4px solid #999;
-  opacity: 0.7;
-}
+.order-card.pendiente { border-left: 4px solid var(--color-gold); }
+.order-card.confirmado { border-left: 4px solid #4caf50; }
+.order-card.entregado { border-left: 4px solid #2196f3; }
+.order-card.cancelado { border-left: 4px solid #999; opacity: 0.7; }
 
 .order-header {
   display: flex;
@@ -1213,22 +1167,9 @@ body {
   color: var(--color-gold-light);
 }
 
-/* Notas de admin */
-.order-notes {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: #fdf6e8;
-  border-left: 3px solid var(--color-gold);
-  font-size: 12px;
-  color: var(--color-ink-soft);
-  font-style: italic;
-}
-
 /* ============================================
-   BOTONES DE ACCIÓN DE PEDIDOS — Versión premium
+   BOTONES DE ACCIÓN DE PEDIDOS
    ============================================ */
-
-/* Contenedor de acciones alineado */
 .order-actions {
   display: flex;
   gap: 10px;
@@ -1238,7 +1179,6 @@ body {
   padding-top: 4px;
 }
 
-/* Botón base para todas las acciones */
 .btn-action {
   display: inline-flex;
   align-items: center;
@@ -1261,16 +1201,9 @@ body {
   line-height: 1;
 }
 
-.btn-action svg {
-  flex-shrink: 0;
-  transition: transform .3s ease;
-}
+.btn-action svg { flex-shrink: 0; transition: transform .3s ease; }
+.btn-action span { display: inline-block; }
 
-.btn-action span {
-  display: inline-block;
-}
-
-/* Efecto shimmer sutil */
 .btn-action::before {
   content: "";
   position: absolute;
@@ -1283,11 +1216,8 @@ body {
   pointer-events: none;
 }
 
-.btn-action:hover::before {
-  left: 100%;
-}
+.btn-action:hover::before { left: 100%; }
 
-/* ---------- WHATSAPP (solo logo, circular) ---------- */
 .btn-whatsapp {
   width: 42px;
   height: 42px;
@@ -1304,16 +1234,9 @@ body {
   box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45);
 }
 
-.btn-whatsapp:active {
-  transform: translateY(0) scale(1);
-}
+.btn-whatsapp:active { transform: translateY(0) scale(1); }
+.btn-whatsapp svg { width: 22px; height: 22px; }
 
-.btn-whatsapp svg {
-  width: 22px;
-  height: 22px;
-}
-
-/* ---------- CANCELAR ---------- */
 .btn-cancel {
   background: transparent;
   color: var(--color-danger);
@@ -1327,15 +1250,9 @@ body {
   box-shadow: 0 6px 15px rgba(184, 74, 63, 0.3);
 }
 
-.btn-cancel:hover svg {
-  transform: rotate(90deg);
-}
+.btn-cancel:hover svg { transform: rotate(90deg); }
+.btn-cancel:active { transform: translateY(0); }
 
-.btn-cancel:active {
-  transform: translateY(0);
-}
-
-/* ---------- CONFIRMAR (estilo dorado MAISON) ---------- */
 .btn-confirm {
   background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
   color: var(--color-ink);
@@ -1349,15 +1266,9 @@ body {
   box-shadow: 0 8px 20px rgba(143, 107, 63, 0.4);
 }
 
-.btn-confirm:hover svg {
-  transform: scale(1.15);
-}
+.btn-confirm:hover svg { transform: scale(1.15); }
+.btn-confirm:active { transform: translateY(0); }
 
-.btn-confirm:active {
-  transform: translateY(0);
-}
-
-/* ---------- MARCAR ENTREGADO ---------- */
 .btn-deliver {
   background: linear-gradient(135deg, #3ba3f5, #1976d2);
   color: #ffffff;
@@ -1370,16 +1281,413 @@ body {
   box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
 }
 
-.btn-deliver:hover svg {
-  transform: translateY(-2px);
+.btn-deliver:hover svg { transform: translateY(-2px); }
+.btn-deliver:active { transform: translateY(0); }
+
+/* ============================================
+   PASSWORD TOGGLE
+   ============================================ */
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.btn-deliver:active {
-  transform: translateY(0);
+.password-wrap input {
+  width: 100%;
+  padding-right: 2.5rem;
+  box-sizing: border-box;
 }
 
-/* Responsive: botones adaptables en móviles */
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.6;
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
+}
+
+.toggle-password:hover { opacity: 1; }
+
+/* ============================================
+   NUEVO: BOTÓN DE NOTIFICACIONES (CAMPANITA)
+   ============================================ */
+.notif-toggle-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: var(--transition);
+  border-radius: 50%;
+  padding: 0;
+}
+
+.notif-toggle-btn:hover {
+  background: var(--color-gold);
+  color: var(--color-white);
+  border-color: var(--color-gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(168, 130, 75, 0.3);
+}
+
+.notif-toggle-btn.muted {
+  color: var(--color-ink-soft);
+  opacity: 0.7;
+}
+
+.notif-toggle-btn.has-new::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-danger);
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* ============================================
+   NUEVO: BANNER DE PERMISO DE NOTIFICACIONES
+   ============================================ */
+.notif-permission-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 500px;
+  width: calc(100% - 40px);
+  z-index: 200;
+  background: var(--color-white);
+  border: 1px solid var(--color-gold);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.18);
+  animation: bannerSlideIn 0.4s cubic-bezier(.16, 1, .3, 1);
+}
+
+@keyframes bannerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.notif-banner-content {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 20px;
+  position: relative;
+}
+
+.notif-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notif-banner-text {
+  min-width: 0;
+}
+
+.notif-banner-text strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 4px;
+}
+
+.notif-banner-text p {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+}
+
+.notif-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  margin-top: 8px;
+}
+
+.btn-notif-later,
+.btn-notif-allow {
+  padding: 9px 18px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-notif-later {
+  background: transparent;
+  color: var(--color-ink-soft);
+  border: 1px solid var(--color-border);
+}
+
+.btn-notif-later:hover {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.btn-notif-allow {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-ink);
+  box-shadow: 0 3px 8px rgba(143, 107, 63, 0.25);
+}
+
+.btn-notif-allow:hover {
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-light));
+  color: var(--color-white);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(143, 107, 63, 0.4);
+}
+
+.notif-banner-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--color-ink-soft);
+  padding: 0;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.notif-banner-close:hover {
+  color: var(--color-danger);
+  transform: rotate(90deg);
+}
+
+/* ============================================
+   NUEVO: TOAST DE NOTIFICACIÓN DE PEDIDO
+   ============================================ */
+.order-notification-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 340px;
+  max-width: calc(100vw - 40px);
+  background: var(--color-white);
+  border: 1px solid var(--color-gold);
+  border-left: 4px solid var(--color-gold);
+  border-radius: 8px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  padding: 18px;
+  display: none;
+  grid-template-columns: 42px 1fr auto;
+  gap: 14px;
+  z-index: 250;
+  animation: toastSlideIn 0.5s cubic-bezier(.16, 1, .3, 1);
+}
+
+.order-notification-toast.show {
+  display: grid;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(400px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(400px);
+  }
+}
+
+.order-notification-toast.hiding {
+  animation: toastSlideOut 0.4s cubic-bezier(.4, 0, 1, 1) forwards;
+}
+
+.onotif-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.onotif-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.onotif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.onotif-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.onotif-time {
+  font-size: 10px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.onotif-number {
+  font-size: 12px;
+  color: var(--color-gold-dark);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.onotif-customer {
+  font-size: 13px;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.onotif-total {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-top: 4px;
+}
+
+.onotif-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-ink-soft);
+  padding: 0;
+  line-height: 1;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.onotif-close:hover {
+  background: var(--color-bg);
+  color: var(--color-danger);
+}
+
+.onotif-view {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  padding: 9px 16px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: var(--transition);
+}
+
+.onotif-view:hover {
+  background: var(--color-gold);
+  color: var(--color-white);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 768px) {
+  .admin-header { padding: 15px 20px; }
+  .admin-main   { padding: 30px 20px; }
+  .admin-toolbar h1 { font-size: 32px; }
+  .gate-box { padding: 45px 30px; }
+  .gate-logo { font-size: 34px; letter-spacing: 6px; }
+  .product-form-modal, .confirm-modal, .form-modal { padding: 30px 22px; }
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; }
+  
   .admin-tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -1419,12 +1727,52 @@ body {
     flex: 0 0 42px;
     width: 42px;
   }
+
+  .product-row {
+    grid-template-columns: 80px 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .product-row-img {
+    width: 80px;
+    height: 100px;
+    grid-row: 1 / 4;
+  }
+
+  .product-row-price,
+  .status-pill,
+  .product-row-actions {
+    grid-column: 2;
+  }
+
+  .order-notification-toast {
+    right: 15px;
+    bottom: 15px;
+    width: calc(100vw - 30px);
+    max-width: 380px;
+  }
+
+  .notif-permission-banner {
+    top: 10px;
+    width: calc(100% - 20px);
+  }
+
+  .notif-banner-content {
+    grid-template-columns: auto 1fr;
+  }
+
+  .notif-banner-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-notif-later,
+  .btn-notif-allow {
+    width: 100%;
+  }
 }
 
 @media (max-width: 400px) {
-  .btn-action span {
-    display: none;
-  }
+  .btn-action span { display: none; }
   
   .btn-action {
     width: 42px;
@@ -1439,35 +1787,4 @@ body {
   .btn-deliver {
     border-radius: 50%;
   }
-}
-
-/* ============================================
-   BOTON MOSTRAR/OCULTAR CONTRASEÑA
-   ============================================ */
-.password-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.password-wrap input {
-  width: 100%;
-  padding-right: 2.5rem;
-  box-sizing: border-box;
-}
-.toggle-password {
-  position: absolute;
-  right: 0.75rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  line-height: 1;
-  padding: 0;
-  opacity: 0.6;
-  color: var(--color-ink-soft);
-  display: flex;
-  align-items: center;
-}
-.toggle-password:hover {
-  opacity: 1;
 }
