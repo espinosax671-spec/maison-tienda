@@ -14,6 +14,13 @@ let selectedImageFile = null;
 let currentStockProduct = null;
 let currentStockData = {};
 
+// ============ NUEVO: Variables del sistema de notificaciones ============
+let notificationsMuted = false;
+let notificationSound = null;
+let orderSubscription = null;
+let lastNotifiedOrderId = null;
+let pendingNotificationOrder = null;
+
 // ---------------------------------------------------------------
 // Elementos
 // ---------------------------------------------------------------
@@ -93,6 +100,9 @@ async function checkStaffAndEnter(user) {
     profile.full_name || user.user_metadata?.full_name || user.email;
 
   await loadProducts();
+  
+  // ============ NUEVO: Inicializar sistema de notificaciones ============
+  initNotificationSystem();
 }
 
 async function denyAccess(mensaje) {
@@ -109,6 +119,12 @@ document.getElementById("logoutBtn").addEventListener("click", doLogout);
 document.getElementById("noAccessLogout").addEventListener("click", doLogout);
 
 async function doLogout() {
+  // Limpiar subscripción de notificaciones
+  if (orderSubscription) {
+    await supabaseClient.removeChannel(orderSubscription);
+    orderSubscription = null;
+  }
+  
   await supabaseClient.auth.signOut();
   adminUser = null;
   adminApp.style.display = "none";
@@ -176,7 +192,6 @@ function renderProductTable() {
     const totalStock = getTotalStock(p.stock);
     const stockClass = totalStock === 0 ? 'out' : totalStock < 5 ? 'low' : '';
     
-    // Determinar si el producto tiene descuento activo
     const hasDiscount = p.discount_percent && p.discount_percent > 0 && p.original_price;
     
     let priceHtml = '';
@@ -275,17 +290,13 @@ function openProductForm(productId) {
   document.getElementById("imagePreview").style.display = "none";
   selectedImageFile = null;
 
-  // Resetear hint del precio
   const priceHint = document.getElementById("priceHint");
   if (priceHint) {
     priceHint.textContent = "Ingresa el precio sin puntos ni comas";
     priceHint.classList.remove("active");
   }
 
-  // Resetear stock inicial a 5 por defecto
   document.getElementById("productInitialStock").value = "5";
-  
-  // Resetear descuento a 0
   document.getElementById("productDiscount").value = "0";
   updateDiscountPreview();
 
@@ -296,20 +307,16 @@ function openProductForm(productId) {
     document.getElementById("productCategory").value = p.category;
     document.getElementById("productName").value = p.name;
     
-    // Al editar: si tiene descuento, mostramos el precio ORIGINAL (no el ya descontado)
     const hasDiscount = p.discount_percent && p.discount_percent > 0 && p.original_price;
     const priceToShow = hasDiscount ? p.original_price : p.price;
     document.getElementById("productPrice").value = formatPriceInput(priceToShow);
     
-    // Cargar el descuento
     document.getElementById("productDiscount").value = p.discount_percent || 0;
-    
     document.getElementById("productTag").value = p.tag || "";
     document.getElementById("productDesc").value = p.description || "";
     document.getElementById("productSizes").value = (p.sizes || []).join(", ");
     document.getElementById("productActive").checked = p.active;
     
-    // Al editar, ocultamos el campo de "Stock inicial" porque ya tiene stock
     const stockInitialLabel = document.getElementById("productInitialStock").closest("label");
     if (stockInitialLabel) stockInitialLabel.style.display = "none";
     
@@ -318,20 +325,17 @@ function openProductForm(productId) {
       document.getElementById("imagePreview").style.display = "block";
     }
     
-    // Actualizar el hint del precio con el valor cargado
     if (priceHint && priceToShow > 0) {
       priceHint.textContent = `Precio: $${formatPriceInput(priceToShow)} COP`;
       priceHint.classList.add("active");
     }
     
-    // Actualizar preview del descuento
     updateDiscountPreview();
   } else {
     document.getElementById("formTitle").textContent = "Nuevo producto";
     document.getElementById("productId").value = "";
     document.getElementById("productActive").checked = true;
     
-    // Al crear un producto nuevo, mostramos el campo de "Stock inicial"
     const stockInitialLabel = document.getElementById("productInitialStock").closest("label");
     if (stockInitialLabel) stockInitialLabel.style.display = "flex";
   }
@@ -347,7 +351,6 @@ function closeProductForm() {
   document.body.style.overflow = "";
 }
 
-// Vista previa de imagen
 document.getElementById("productImageFile").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -361,7 +364,7 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
 });
 
 // ---------------------------------------------------------------
-// Guardar producto (CON DESCUENTO)
+// Guardar producto
 // ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -388,7 +391,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
       imageUrl = await uploadProductImage(selectedImageFile);
     }
     
-    // ============ CALCULAR PRECIO CON DESCUENTO ============
     const priceInput = parsePriceInput(document.getElementById("productPrice").value);
     const discountInput = parseInt(document.getElementById("productDiscount").value, 10) || 0;
     
@@ -397,7 +399,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     let discountPercent = 0;
     
     if (discountInput > 0 && discountInput <= 99) {
-      // HAY descuento
       originalPrice = priceInput;
       finalPrice = Math.round(priceInput * (1 - discountInput / 100));
       discountPercent = discountInput;
@@ -406,9 +407,9 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     const payload = {
       category: document.getElementById("productCategory").value,
       name: document.getElementById("productName").value.trim(),
-      price: finalPrice,                    // Precio final (con descuento aplicado si hay)
-      original_price: originalPrice,        // Precio original (null si no hay descuento)
-      discount_percent: discountPercent,    // Porcentaje de descuento (0 si no hay)
+      price: finalPrice,
+      original_price: originalPrice,
+      discount_percent: discountPercent,
       tag: document.getElementById("productTag").value.trim(),
       description: document.getElementById("productDesc").value.trim(),
       sizes,
@@ -418,11 +419,9 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     };
 
     if (id) {
-      // EDITAR
       const { error } = await supabaseClient.from("products").update(payload).eq("id", id);
       if (error) throw error;
     } else {
-      // NUEVO — llenamos el stock automáticamente
       const initialStock = parseInt(document.getElementById("productInitialStock").value, 10) || 0;
       
       const stockObject = {};
@@ -432,9 +431,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
       
       payload.created_by = adminUser.id;
       payload.stock = stockObject;
-      
-      console.log(`Creando producto con precio final: $${finalPrice}${discountPercent > 0 ? ` (descuento ${discountPercent}%)` : ''}`);
-      console.log("Stock generado:", stockObject);
       
       const { error } = await supabaseClient.from("products").insert(payload);
       if (error) throw error;
@@ -452,7 +448,7 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------
-// Subir imagen a Supabase Storage (bucket: product_images)
+// Subir imagen
 // ---------------------------------------------------------------
 async function uploadProductImage(file) {
   try {
@@ -463,8 +459,6 @@ async function uploadProductImage(file) {
     const ext = file.name.split(".").pop().toLowerCase();
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
 
-    console.log("Subiendo imagen:", fileName);
-
     const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from("product_images")
       .upload(fileName, file, {
@@ -474,11 +468,8 @@ async function uploadProductImage(file) {
       });
 
     if (uploadError) {
-      console.error("Error al subir imagen:", uploadError);
       throw new Error(`Error al subir imagen: ${uploadError.message}`);
     }
-
-    console.log("Imagen subida:", uploadData);
 
     const { data: urlData } = supabaseClient.storage
       .from("product_images")
@@ -488,7 +479,6 @@ async function uploadProductImage(file) {
       throw new Error("No se pudo obtener la URL de la imagen.");
     }
 
-    console.log("URL pública:", urlData.publicUrl);
     return urlData.publicUrl;
 
   } catch (err) {
@@ -537,6 +527,7 @@ document.addEventListener("keydown", (e) => {
     closeProductForm();
     closeDeleteConfirm();
     closeStockModal();
+    hideOrderNotificationToast();
   }
 });
 
@@ -867,6 +858,7 @@ function renderOrders() {
 function createOrderCard(order) {
   const card = document.createElement("div");
   card.className = `order-card ${order.status}`;
+  card.dataset.orderId = order.id;
   
   const date = new Date(order.created_at);
   const dateStr = date.toLocaleString("es-CO", {
@@ -1130,8 +1122,6 @@ async function decrementStock(productId, size, qty) {
     .eq("id", productId);
   
   if (updateError) throw updateError;
-  
-  console.log(`Stock descontado: ${productId} - ${size}: ${currentQty} -> ${newQty}`);
 }
 
 // ===================================================================
@@ -1151,9 +1141,6 @@ function parsePriceInput(formattedValue) {
   return parseInt(digitsOnly, 10) || 0;
 }
 
-// ===================================================================
-// FUNCIÓN: ACTUALIZAR PREVIEW DEL DESCUENTO
-// ===================================================================
 function updateDiscountPreview() {
   const priceInput = document.getElementById("productPrice");
   const discountInput = document.getElementById("productDiscount");
@@ -1165,7 +1152,6 @@ function updateDiscountPreview() {
   const discount = parseInt(discountInput.value, 10) || 0;
   
   if (discount > 0 && discount <= 99 && price > 0) {
-    // Calcular precio con descuento
     const newPrice = Math.round(price * (1 - discount / 100));
     const savings = price - newPrice;
     
@@ -1184,7 +1170,6 @@ function updateDiscountPreview() {
   }
 }
 
-// Inicializar el input de precio con formato automático
 document.addEventListener("DOMContentLoaded", () => {
   const priceInput = document.getElementById("productPrice");
   const priceHint = document.getElementById("priceHint");
@@ -1213,7 +1198,6 @@ document.addEventListener("DOMContentLoaded", () => {
       priceHint.classList.remove("active");
     }
     
-    // Actualizar preview del descuento cuando cambie el precio
     updateDiscountPreview();
   });
   
@@ -1221,10 +1205,8 @@ document.addEventListener("DOMContentLoaded", () => {
     e.target.value = formatPriceInput(e.target.value);
   });
   
-  // Listener del descuento
   if (discountInput) {
     discountInput.addEventListener("input", (e) => {
-      // Limitar a 0-99
       let val = parseInt(e.target.value, 10);
       if (isNaN(val)) val = 0;
       if (val < 0) val = 0;
@@ -1235,3 +1217,344 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// ===================================================================
+// ============ NUEVO: SISTEMA DE NOTIFICACIONES ============
+// ===================================================================
+
+/**
+ * Inicializa el sistema de notificaciones al ingresar al panel
+ */
+function initNotificationSystem() {
+  // Cargar estado de silencio desde localStorage
+  notificationsMuted = localStorage.getItem("maison_notif_muted") === "true";
+  updateNotificationButtonUI();
+  
+  // Crear el sonido de notificación
+  initNotificationSound();
+  
+  // Suscribirse a nuevos pedidos en tiempo real
+  subscribeToNewOrders();
+  
+  // Configurar los listeners de la UI
+  setupNotificationUIListeners();
+  
+  // Verificar si debemos mostrar el banner de permisos
+  checkNotificationPermission();
+}
+
+/**
+ * Crea el objeto de sonido (usa un sonido base64 corto)
+ */
+function initNotificationSound() {
+  try {
+    // Sonido corto de "ding" en base64
+    notificationSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmU=");
+    notificationSound.volume = 0.5;
+  } catch (err) {
+    console.warn("No se pudo inicializar el sonido de notificación:", err);
+  }
+}
+
+/**
+ * Configura los listeners de los botones de notificación
+ */
+function setupNotificationUIListeners() {
+  // Botón de silenciar/activar campanita
+  const notifBtn = document.getElementById("notifToggleBtn");
+  if (notifBtn) {
+    notifBtn.addEventListener("click", toggleNotificationsMute);
+  }
+  
+  // Banner de permisos
+  const allowBtn = document.getElementById("notifAllowBtn");
+  const laterBtn = document.getElementById("notifLaterBtn");
+  const closeBtn = document.getElementById("notifBannerClose");
+  
+  if (allowBtn) allowBtn.addEventListener("click", requestNotificationPermission);
+  if (laterBtn) laterBtn.addEventListener("click", dismissNotificationBanner);
+  if (closeBtn) closeBtn.addEventListener("click", dismissNotificationBanner);
+  
+  // Toast de notificación de pedido
+  const toastClose = document.getElementById("onotifClose");
+  const toastView = document.getElementById("onotifView");
+  
+  if (toastClose) toastClose.addEventListener("click", hideOrderNotificationToast);
+  if (toastView) toastView.addEventListener("click", handleViewOrderFromNotification);
+}
+
+/**
+ * Verifica el estado del permiso de notificaciones y muestra banner si es necesario
+ */
+function checkNotificationPermission() {
+  if (!("Notification" in window)) {
+    console.log("Este navegador no soporta notificaciones");
+    return;
+  }
+  
+  // Si el usuario ya decidió (allowed o denied), no mostramos el banner
+  if (Notification.permission !== "default") return;
+  
+  // Si el usuario cerró el banner previamente, respetarlo
+  if (localStorage.getItem("maison_notif_banner_dismissed") === "true") return;
+  
+  // Mostrar banner después de 2 segundos
+  setTimeout(() => {
+    const banner = document.getElementById("notifPermissionBanner");
+    if (banner) banner.style.display = "block";
+  }, 2000);
+}
+
+/**
+ * Solicita permiso al navegador para enviar notificaciones
+ */
+async function requestNotificationPermission() {
+  const banner = document.getElementById("notifPermissionBanner");
+  
+  try {
+    const permission = await Notification.requestPermission();
+    
+    if (permission === "granted") {
+      // Enviar notificación de prueba
+      new Notification("MAISON - Notificaciones activadas", {
+        body: "Recibirás alertas cuando lleguen nuevos pedidos",
+        icon: "/favicon.ico"
+      });
+    }
+  } catch (err) {
+    console.error("Error al solicitar permiso:", err);
+  }
+  
+  if (banner) banner.style.display = "none";
+  localStorage.setItem("maison_notif_banner_dismissed", "true");
+}
+
+/**
+ * Oculta el banner de permisos
+ */
+function dismissNotificationBanner() {
+  const banner = document.getElementById("notifPermissionBanner");
+  if (banner) banner.style.display = "none";
+  localStorage.setItem("maison_notif_banner_dismissed", "true");
+}
+
+/**
+ * Alternar silencio de notificaciones
+ */
+function toggleNotificationsMute() {
+  notificationsMuted = !notificationsMuted;
+  localStorage.setItem("maison_notif_muted", notificationsMuted.toString());
+  updateNotificationButtonUI();
+}
+
+/**
+ * Actualiza el ícono del botón de campanita
+ */
+function updateNotificationButtonUI() {
+  const btn = document.getElementById("notifToggleBtn");
+  if (!btn) return;
+  
+  const iconOn = btn.querySelector(".notif-icon-on");
+  const iconOff = btn.querySelector(".notif-icon-off");
+  
+  if (notificationsMuted) {
+    btn.classList.add("muted");
+    btn.title = "Notificaciones silenciadas (clic para activar)";
+    if (iconOn) iconOn.style.display = "none";
+    if (iconOff) iconOff.style.display = "block";
+  } else {
+    btn.classList.remove("muted");
+    btn.title = "Notificaciones activadas (clic para silenciar)";
+    if (iconOn) iconOn.style.display = "block";
+    if (iconOff) iconOff.style.display = "none";
+  }
+}
+
+/**
+ * Suscribirse a nuevos pedidos en tiempo real vía Supabase Realtime
+ */
+function subscribeToNewOrders() {
+  if (!adminUser) return;
+  
+  // Limpiar subscripción anterior si existe
+  if (orderSubscription) {
+    supabaseClient.removeChannel(orderSubscription);
+  }
+  
+  orderSubscription = supabaseClient
+    .channel("new-orders-channel")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "orders",
+        filter: `seller_id=eq.${adminUser.id}`
+      },
+      (payload) => {
+        console.log("Nuevo pedido recibido:", payload.new);
+        handleNewOrderReceived(payload.new);
+      }
+    )
+    .subscribe((status) => {
+      console.log("Estado de suscripción:", status);
+    });
+}
+
+/**
+ * Maneja la recepción de un nuevo pedido
+ */
+function handleNewOrderReceived(order) {
+  // Evitar notificar el mismo pedido 2 veces
+  if (lastNotifiedOrderId === order.id) return;
+  lastNotifiedOrderId = order.id;
+  
+  // Actualizar la lista de pedidos si estamos en esa vista
+  if (currentTab === "pedidos") {
+    loadOrders();
+  } else {
+    // Actualizar contador aunque no estemos en la vista
+    allOrders.unshift(order);
+    updateOrderCounts();
+  }
+  
+  // Si están silenciadas, no notificar
+  if (notificationsMuted) return;
+  
+  // Guardar el pedido para el botón "Ver"
+  pendingNotificationOrder = order;
+  
+  // 1. Mostrar toast en pantalla
+  showOrderNotificationToast(order);
+  
+  // 2. Reproducir sonido
+  playNotificationSound();
+  
+  // 3. Notificación del navegador (si está permitido)
+  showBrowserNotification(order);
+  
+  // 4. Marcar la campanita como con nueva actividad
+  const notifBtn = document.getElementById("notifToggleBtn");
+  if (notifBtn) {
+    notifBtn.classList.add("has-new");
+    setTimeout(() => notifBtn.classList.remove("has-new"), 5000);
+  }
+}
+
+/**
+ * Muestra el toast de notificación de pedido en pantalla
+ */
+function showOrderNotificationToast(order) {
+  const toast = document.getElementById("orderNotificationToast");
+  if (!toast) return;
+  
+  const customerText = order.customer_name || order.customer_email || "Cliente invitado";
+  
+  document.getElementById("onotifNumber").textContent = `#${order.order_number}`;
+  document.getElementById("onotifCustomer").textContent = customerText;
+  document.getElementById("onotifTotal").textContent = formatPrice(order.total);
+  document.getElementById("onotifTime").textContent = "Ahora";
+  
+  toast.classList.remove("hiding");
+  toast.classList.add("show");
+  
+  // Auto-ocultar después de 8 segundos
+  setTimeout(() => {
+    if (toast.classList.contains("show")) {
+      hideOrderNotificationToast();
+    }
+  }, 8000);
+}
+
+/**
+ * Oculta el toast con animación
+ */
+function hideOrderNotificationToast() {
+  const toast = document.getElementById("orderNotificationToast");
+  if (!toast) return;
+  
+  toast.classList.add("hiding");
+  setTimeout(() => {
+    toast.classList.remove("show", "hiding");
+  }, 400);
+}
+
+/**
+ * Al hacer clic en "Ver pedido" desde el toast
+ */
+function handleViewOrderFromNotification() {
+  hideOrderNotificationToast();
+  
+  // Cambiar a la pestaña de pedidos
+  switchTab("pedidos");
+  
+  // Cambiar el filtro a "pendiente" para verlo
+  document.querySelectorAll("[data-order-filter]").forEach((c) => c.classList.remove("active"));
+  const pendingChip = document.querySelector("[data-order-filter='pendiente']");
+  if (pendingChip) pendingChip.classList.add("active");
+  currentOrderFilter = "pendiente";
+  
+  // Hacer scroll al pedido específico después de un momento
+  setTimeout(() => {
+    if (pendingNotificationOrder) {
+      const orderCard = document.querySelector(`[data-order-id="${pendingNotificationOrder.id}"]`);
+      if (orderCard) {
+        orderCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        orderCard.style.animation = "none";
+        setTimeout(() => {
+          orderCard.style.animation = "pulse 1s ease-in-out 2";
+        }, 100);
+      }
+    }
+  }, 500);
+}
+
+/**
+ * Reproduce el sonido de notificación
+ */
+function playNotificationSound() {
+  if (!notificationSound || notificationsMuted) return;
+  
+  try {
+    notificationSound.currentTime = 0;
+    const playPromise = notificationSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.log("No se pudo reproducir sonido (probablemente falta interacción del usuario):", err);
+      });
+    }
+  } catch (err) {
+    console.warn("Error reproduciendo sonido:", err);
+  }
+}
+
+/**
+ * Muestra notificación del navegador (fuera del sitio)
+ */
+function showBrowserNotification(order) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  
+  try {
+    const customerText = order.customer_name || order.customer_email || "Cliente invitado";
+    const notification = new Notification("Nuevo pedido en MAISON", {
+      body: `#${order.order_number} - ${customerText}\nTotal: ${formatPrice(order.total)}`,
+      icon: "/favicon.ico",
+      badge: "/favicon.ico",
+      tag: `order-${order.id}`,
+      requireInteraction: false
+    });
+    
+    notification.onclick = () => {
+      window.focus();
+      handleViewOrderFromNotification();
+      notification.close();
+    };
+    
+    // Auto-cerrar después de 10 segundos
+    setTimeout(() => notification.close(), 10000);
+    
+  } catch (err) {
+    console.warn("Error mostrando notificación:", err);
+  }
+}
