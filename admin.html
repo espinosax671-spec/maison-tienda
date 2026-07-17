@@ -31,6 +31,11 @@
                 <div id="loginError" class="login-error hidden"></div>
                 <button type="submit" class="btn-login">Ingresar</button>
             </form>
+
+            <!-- Enlace para volver a la tienda -->
+            <a href="index.html" class="back-to-store">
+                ← Volver a la tienda
+            </a>
         </div>
     </div>
 
@@ -46,6 +51,10 @@
                 <span class="admin-subtitle">Panel de Vendedor</span>
             </div>
             <div class="header-right">
+                <!-- Enlace a la tienda desde el panel -->
+                <a href="index.html" class="btn-store-link" title="Ver la tienda">
+                    🏬 Ver Tienda
+                </a>
                 <span id="userEmail" class="user-email"></span>
                 <button id="btnLogout" class="btn-logout">Cerrar Sesión</button>
             </div>
@@ -174,7 +183,7 @@
         </div>
 
         <!-- ============================================
-             PESTAÑA: ESTADÍSTICAS ← NUEVA
+             PESTAÑA: ESTADÍSTICAS
         ============================================ -->
         <div id="tab-estadisticas" class="tab-content hidden">
 
@@ -227,12 +236,8 @@
                     <h2 class="section-title">📈 Ventas Últimos 30 Días</h2>
                     <p class="stats-desc">Número de pedidos por día</p>
                     <div class="bar-chart-container">
-                        <div id="barChart" class="bar-chart">
-                            <!-- Se genera con JS -->
-                        </div>
-                        <div class="bar-chart-labels" id="barChartLabels">
-                            <!-- Labels de fechas -->
-                        </div>
+                        <div id="barChart" class="bar-chart"></div>
+                        <div class="bar-chart-labels" id="barChartLabels"></div>
                     </div>
                     <div class="chart-legend">
                         <span class="legend-item">
@@ -249,18 +254,14 @@
                     <section class="section-card stats-section">
                         <h2 class="section-title">🏆 Productos Más Vendidos</h2>
                         <p class="stats-desc">Top 5 por unidades vendidas</p>
-                        <div id="topProductsList" class="top-products-list">
-                            <!-- Se genera con JS -->
-                        </div>
+                        <div id="topProductsList" class="top-products-list"></div>
                     </section>
 
                     <!-- Estados de pedidos -->
                     <section class="section-card stats-section">
                         <h2 class="section-title">📋 Estado de Pedidos</h2>
                         <p class="stats-desc">Distribución por estado</p>
-                        <div id="estadosChart" class="estados-chart">
-                            <!-- Se genera con JS -->
-                        </div>
+                        <div id="estadosChart" class="estados-chart"></div>
                     </section>
 
                 </div>
@@ -269,9 +270,7 @@
                 <section class="section-card stats-section">
                     <h2 class="section-title">🕒 Pedidos Recientes</h2>
                     <p class="stats-desc">Últimos 5 pedidos recibidos</p>
-                    <div id="recentOrders" class="recent-orders-table">
-                        <!-- Se genera con JS -->
-                    </div>
+                    <div id="recentOrders" class="recent-orders-table"></div>
                 </section>
 
             </div><!-- fin statsContent -->
