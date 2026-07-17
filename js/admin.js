@@ -1,19 +1,16 @@
 /* ============================================
-   MAISON - ADMIN JS COMPLETO
-   Versión con Dashboard de Estadísticas
+   MAISON - PANEL DE VENDEDOR
+   Funciones: Login, Productos (CRUD), Pedidos
 ============================================ */
 
-// ─── CONFIGURACIÓN SUPABASE ──────────────────
-// Reutilizamos el cliente definido en js/supabase-client.js
-// Usamos "db" para evitar conflicto con la variable global window.supabase
+// Cliente Supabase (viene de supabase-client.js)
 const db = supabaseClient;
 
-// ─── ESTADO GLOBAL ───────────────────────────
-let currentUser     = null;
-let editingProduct  = null;
-let allPedidos      = [];
-let allProductos    = [];
-let statsLoaded     = false;
+// Estado global
+let currentUser    = null;
+let editingProduct = null;
+let allPedidos     = [];
+let allProductos   = [];
 
 /* ══════════════════════════════════════════════
    INICIALIZACIÓN
@@ -32,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
    AUTENTICACIÓN
 ══════════════════════════════════════════════ */
 function initAuth() {
+    // Escuchar cambios de sesión
     db.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
             currentUser = session.user;
@@ -42,6 +40,7 @@ function initAuth() {
         }
     });
 
+    // Comprobar sesión existente
     db.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
             currentUser = session.user;
@@ -49,6 +48,7 @@ function initAuth() {
         }
     });
 
+    // Formulario de login
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email    = document.getElementById('loginEmail').value.trim();
@@ -70,6 +70,7 @@ function initAuth() {
         }
     });
 
+    // Logout
     document.getElementById('btnLogout').addEventListener('click', async () => {
         await db.auth.signOut();
     });
@@ -86,14 +87,13 @@ function showPanel() {
 function showLogin() {
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('adminPanel').classList.add('hidden');
-    statsLoaded = false;
 }
 
 /* ══════════════════════════════════════════════
    NAVEGACIÓN DE PESTAÑAS
 ══════════════════════════════════════════════ */
 function initNavTabs() {
-    const tabs    = document.querySelectorAll('.nav-tab');
+    const tabs = document.querySelectorAll('.nav-tab');
     const contents = document.querySelectorAll('.tab-content');
 
     tabs.forEach(tab => {
@@ -105,16 +105,12 @@ function initNavTabs() {
 
             contents.forEach(c => c.classList.add('hidden'));
             document.getElementById(`tab-${target}`).classList.remove('hidden');
-
-            if (target === 'estadisticas' && !statsLoaded) {
-                loadStats();
-            }
         });
     });
 }
 
 /* ══════════════════════════════════════════════
-   PRODUCTOS — CRUD
+   PRODUCTOS - CRUD
 ══════════════════════════════════════════════ */
 async function loadProducts() {
     const grid = document.getElementById('productsList');
@@ -141,8 +137,7 @@ function renderProducts(products) {
     if (!products.length) {
         grid.innerHTML = `
             <div class="empty-state" style="grid-column:1/-1">
-                <span class="empty-state-icon">📦</span>
-                <p>No tienes productos aún. ¡Agrega el primero!</p>
+                <p>No tienes productos aún. Agrega el primero.</p>
             </div>`;
         return;
     }
@@ -151,7 +146,7 @@ function renderProducts(products) {
         <div class="product-card">
             ${p.imagen_url
                 ? `<img class="product-card-img" src="${p.imagen_url}" alt="${p.nombre}" onerror="this.style.display='none'">`
-                : `<div class="product-card-img-placeholder">👗</div>`
+                : `<div class="product-card-img-placeholder">Sin imagen</div>`
             }
             <div class="product-card-body">
                 <div class="product-card-name" title="${p.nombre}">${p.nombre}</div>
@@ -163,8 +158,8 @@ function renderProducts(products) {
                     </span>
                 </div>
                 <div class="product-card-actions">
-                    <button class="btn-edit" onclick="editProduct('${p.id}')">✏️ Editar</button>
-                    <button class="btn-delete" onclick="confirmDelete('${p.id}', '${escapeStr(p.nombre)}')">🗑️ Eliminar</button>
+                    <button class="btn-edit" onclick="editProduct('${p.id}')">Editar</button>
+                    <button class="btn-delete" onclick="confirmDelete('${p.id}', '${escapeStr(p.nombre)}')">Eliminar</button>
                 </div>
             </div>
         </div>
@@ -177,15 +172,16 @@ function getStockClass(stock) {
     return 'stock-ok';
 }
 
+/* Formulario de producto */
 function initProductForm() {
-    const form    = document.getElementById('productForm');
+    const form = document.getElementById('productForm');
     const btnCancel = document.getElementById('btnCancel');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
-        btn.textContent = editingProduct ? '⏳ Guardando...' : '⏳ Agregando...';
+        btn.textContent = editingProduct ? 'Guardando...' : 'Agregando...';
 
         const productData = {
             nombre:      document.getElementById('productName').value.trim(),
@@ -212,15 +208,15 @@ function initProductForm() {
 
         if (error) {
             showToast('Error al guardar el producto.', 'error');
+            console.error(error);
         } else {
-            showToast(editingProduct ? '✅ Producto actualizado.' : '✅ Producto agregado.', 'success');
+            showToast(editingProduct ? 'Producto actualizado correctamente.' : 'Producto agregado correctamente.', 'success');
             resetForm();
             loadProducts();
-            statsLoaded = false;
         }
 
         btn.disabled = false;
-        btn.textContent = editingProduct ? '💾 Guardar Cambios' : '✚ Agregar Producto';
+        btn.textContent = editingProduct ? 'Guardar Cambios' : 'Agregar Producto';
     });
 
     btnCancel.addEventListener('click', resetForm);
@@ -231,8 +227,8 @@ function editProduct(id) {
     if (!product) return;
 
     editingProduct = id;
-    document.getElementById('formTitle').textContent    = 'Editar Producto';
-    document.getElementById('btnSubmit').textContent    = '💾 Guardar Cambios';
+    document.getElementById('formTitle').textContent = 'Editar Producto';
+    document.getElementById('btnSubmit').textContent = 'Guardar Cambios';
     document.getElementById('btnCancel').classList.remove('hidden');
 
     document.getElementById('productName').value        = product.nombre || '';
@@ -244,6 +240,7 @@ function editProduct(id) {
 
     updateImagePreview(product.imagen_url);
 
+    // Scroll al formulario
     document.getElementById('productForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -251,11 +248,12 @@ function resetForm() {
     editingProduct = null;
     document.getElementById('productForm').reset();
     document.getElementById('formTitle').textContent = 'Agregar Nuevo Producto';
-    document.getElementById('btnSubmit').textContent = '✚ Agregar Producto';
+    document.getElementById('btnSubmit').textContent = 'Agregar Producto';
     document.getElementById('btnCancel').classList.add('hidden');
     document.getElementById('imagePreview').classList.add('hidden');
 }
 
+/* Preview de imagen */
 function initImagePreview() {
     document.getElementById('productImage').addEventListener('input', (e) => {
         updateImagePreview(e.target.value.trim());
@@ -263,8 +261,8 @@ function initImagePreview() {
 }
 
 function updateImagePreview(url) {
-    const preview  = document.getElementById('imagePreview');
-    const imgEl    = document.getElementById('previewImg');
+    const preview = document.getElementById('imagePreview');
+    const imgEl = document.getElementById('previewImg');
     if (url) {
         imgEl.src = url;
         preview.classList.remove('hidden');
@@ -274,6 +272,7 @@ function updateImagePreview(url) {
     }
 }
 
+/* Búsqueda de productos */
 function initProductSearch() {
     document.getElementById('searchProducts').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
@@ -285,6 +284,7 @@ function initProductSearch() {
     });
 }
 
+/* Confirmar y eliminar producto */
 function confirmDelete(id, nombre) {
     showModal(
         '¿Eliminar producto?',
@@ -299,9 +299,8 @@ function confirmDelete(id, nombre) {
             if (error) {
                 showToast('Error al eliminar el producto.', 'error');
             } else {
-                showToast('🗑️ Producto eliminado.', 'success');
+                showToast('Producto eliminado correctamente.', 'success');
                 loadProducts();
-                statsLoaded = false;
             }
         }
     );
@@ -314,6 +313,7 @@ async function loadPedidos() {
     const list = document.getElementById('pedidosList');
     list.innerHTML = '<div class="loading-spinner">Cargando pedidos...</div>';
 
+    // Obtener items de pedidos que contienen productos del vendedor
     const { data: items, error: itemsError } = await db
         .from('pedido_items')
         .select('pedido_id, cantidad, precio_unitario, productos(nombre, vendedor_id)')
@@ -321,9 +321,11 @@ async function loadPedidos() {
 
     if (itemsError) {
         list.innerHTML = '<div class="loading-spinner">Error al cargar pedidos.</div>';
+        console.error(itemsError);
         return;
     }
 
+    // IDs únicos de pedidos
     const pedidoIds = [...new Set(
         (items || [])
             .filter(item => item.productos?.vendedor_id === currentUser.id)
@@ -331,15 +333,12 @@ async function loadPedidos() {
     )];
 
     if (!pedidoIds.length) {
-        list.innerHTML = `
-            <div class="empty-state">
-                <span class="empty-state-icon">🛍️</span>
-                <p>Aún no tienes pedidos.</p>
-            </div>`;
+        list.innerHTML = `<div class="empty-state"><p>Aún no tienes pedidos.</p></div>`;
         allPedidos = [];
         return;
     }
 
+    // Obtener datos de los pedidos
     const { data: pedidos, error: pedidosError } = await db
         .from('pedidos')
         .select('*')
@@ -351,6 +350,7 @@ async function loadPedidos() {
         return;
     }
 
+    // Enriquecer con items
     allPedidos = (pedidos || []).map(pedido => ({
         ...pedido,
         items: (items || []).filter(
@@ -366,11 +366,7 @@ function renderPedidos(pedidos) {
     const list = document.getElementById('pedidosList');
 
     if (!pedidos.length) {
-        list.innerHTML = `
-            <div class="empty-state">
-                <span class="empty-state-icon">🛍️</span>
-                <p>No hay pedidos que coincidan.</p>
-            </div>`;
+        list.innerHTML = `<div class="empty-state"><p>No hay pedidos que coincidan.</p></div>`;
         return;
     }
 
@@ -383,7 +379,7 @@ function renderPedidos(pedidos) {
                 </span>
                 <span class="pedido-fecha">${formatDate(pedido.created_at)}</span>
                 <span class="pedido-total">${formatPrice(pedido.total)}</span>
-                <span class="estado-badge estado-${pedido.estado}">
+                <span class="estado-badge estado-${pedido.estado || 'pendiente'}">
                     ${pedido.estado || 'pendiente'}
                 </span>
             </div>
@@ -405,8 +401,7 @@ function renderPedidos(pedidos) {
                             </option>
                         `).join('')}
                     </select>
-                    <button class="btn-update-estado"
-                        onclick="updateEstado('${pedido.id}')">
+                    <button class="btn-update-estado" onclick="updateEstado('${pedido.id}')">
                         Actualizar
                     </button>
                 </div>
@@ -427,13 +422,14 @@ async function updateEstado(pedidoId) {
     if (error) {
         showToast('Error al actualizar el estado.', 'error');
     } else {
-        showToast(`✅ Estado actualizado a: ${nuevoEstado}`, 'success');
+        showToast(`Estado actualizado a: ${nuevoEstado}`, 'success');
+        // Actualizar localmente
         const pedido = allPedidos.find(p => p.id === pedidoId);
         if (pedido) pedido.estado = nuevoEstado;
-        statsLoaded = false;
     }
 }
 
+/* Filtros de pedidos */
 function initFilters() {
     document.getElementById('filterEstado').addEventListener('change', applyFilters);
     document.getElementById('filterFecha').addEventListener('change', applyFilters);
@@ -457,309 +453,6 @@ function applyFilters() {
     }
 
     renderPedidos(filtered);
-}
-
-/* ══════════════════════════════════════════════
-   ESTADÍSTICAS
-══════════════════════════════════════════════ */
-async function loadStats() {
-    document.getElementById('statsLoading').classList.remove('hidden');
-    document.getElementById('statsContent').classList.add('hidden');
-
-    try {
-        const { data: items, error: itemsError } = await db
-            .from('pedido_items')
-            .select(`
-                pedido_id,
-                cantidad,
-                precio_unitario,
-                productos(id, nombre, vendedor_id)
-            `)
-            .eq('productos.vendedor_id', currentUser.id);
-
-        if (itemsError) throw itemsError;
-
-        const myItems = (items || []).filter(
-            item => item.productos?.vendedor_id === currentUser.id
-        );
-
-        const pedidoIds = [...new Set(myItems.map(i => i.pedido_id))];
-
-        if (!pedidoIds.length) {
-            renderStatsEmpty();
-            return;
-        }
-
-        const { data: pedidos, error: pedidosError } = await db
-            .from('pedidos')
-            .select('id, created_at, total, estado, cliente_nombre, cliente_email')
-            .in('id', pedidoIds)
-            .order('created_at', { ascending: false });
-
-        if (pedidosError) throw pedidosError;
-
-        calcularYRenderizar(pedidos || [], myItems);
-        statsLoaded = true;
-
-    } catch (err) {
-        console.error('Error cargando estadísticas:', err);
-        document.getElementById('statsLoading').innerHTML =
-            '<div class="loading-spinner">❌ Error al cargar estadísticas. Recarga la página.</div>';
-    }
-}
-
-function calcularYRenderizar(pedidos, items) {
-    const ahora     = new Date();
-    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-
-    const pedidosMes = pedidos.filter(p => new Date(p.created_at) >= inicioMes);
-
-    const ingresosMes = pedidosMes
-        .filter(p => p.estado !== 'cancelado')
-        .reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
-
-    const totalPedidos = pedidos.length;
-
-    const ingresosTotal = pedidos
-        .filter(p => p.estado !== 'cancelado')
-        .reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
-
-    const ticketPromedio = totalPedidos > 0
-        ? ingresosTotal / totalPedidos
-        : 0;
-
-    document.getElementById('statIngresos').textContent    = formatPrice(ingresosMes);
-    document.getElementById('statIngresosSub').textContent =
-        `${formatPrice(ingresosTotal)} histórico`;
-    document.getElementById('statVentasMes').textContent   = pedidosMes.length;
-    document.getElementById('statTotalPedidos').textContent = totalPedidos;
-    document.getElementById('statTicket').textContent      = formatPrice(ticketPromedio);
-
-    renderBarChart(pedidos);
-    renderTopProducts(items);
-    renderEstadosChart(pedidos);
-    renderRecentOrders(pedidos.slice(0, 5));
-
-    document.getElementById('statsLoading').classList.add('hidden');
-    document.getElementById('statsContent').classList.remove('hidden');
-}
-
-function renderBarChart(pedidos) {
-    const barChart  = document.getElementById('barChart');
-    const labelsEl  = document.getElementById('barChartLabels');
-
-    const dias = [];
-    const ahora = new Date();
-
-    for (let i = 29; i >= 0; i--) {
-        const d = new Date(ahora);
-        d.setDate(d.getDate() - i);
-        dias.push({
-            fecha: d.toISOString().split('T')[0],
-            label: `${d.getDate()}/${d.getMonth() + 1}`,
-            count: 0
-        });
-    }
-
-    pedidos.forEach(pedido => {
-        const fechaPedido = new Date(pedido.created_at).toISOString().split('T')[0];
-        const dia = dias.find(d => d.fecha === fechaPedido);
-        if (dia) dia.count++;
-    });
-
-    const maxCount = Math.max(...dias.map(d => d.count), 1);
-
-    barChart.innerHTML = dias.map((dia) => {
-        const heightPct = maxCount > 0 ? (dia.count / maxCount) * 100 : 0;
-        const tooltip   = `${dia.label}: ${dia.count} pedido${dia.count !== 1 ? 's' : ''}`;
-        return `
-            <div class="bar-item">
-                <div class="bar-fill"
-                     style="height: ${heightPct}%"
-                     data-value="${tooltip}"
-                     title="${tooltip}">
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    labelsEl.innerHTML = dias.map((dia, index) => {
-        const show = (index % 5 === 0) || index === 29;
-        return `<span class="bar-label ${show ? '' : 'hidden-label'}">${show ? dia.label : ''}</span>`;
-    }).join('');
-}
-
-function renderTopProducts(items) {
-    const container = document.getElementById('topProductsList');
-
-    const productMap = {};
-    items.forEach(item => {
-        const pid  = item.productos?.id;
-        const name = item.productos?.nombre || 'Producto';
-        if (!pid) return;
-        if (!productMap[pid]) {
-            productMap[pid] = { nombre: name, total: 0 };
-        }
-        productMap[pid].total += item.cantidad || 1;
-    });
-
-    const top5 = Object.values(productMap)
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 5);
-
-    if (!top5.length) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <span class="empty-state-icon">🏆</span>
-                <p>No hay datos de productos vendidos.</p>
-            </div>`;
-        return;
-    }
-
-    const maxUnits = top5[0].total;
-
-    container.innerHTML = top5.map((product, index) => {
-        const rank    = index + 1;
-        const pct     = maxUnits > 0 ? (product.total / maxUnits) * 100 : 0;
-        const rankClass = `rank-${rank}`;
-        return `
-            <div class="top-product-item">
-                <div class="top-rank ${rankClass}">${rank}</div>
-                <div class="top-product-info">
-                    <div class="top-product-name" title="${product.nombre}">
-                        ${product.nombre}
-                    </div>
-                    <div class="top-product-bar-wrap">
-                        <div class="top-product-bar-bg">
-                            <div class="top-product-bar-fill"
-                                 style="width: ${pct}%">
-                            </div>
-                        </div>
-                        <span class="top-product-units">${product.total} uds.</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function renderEstadosChart(pedidos) {
-    const container = document.getElementById('estadosChart');
-    const total     = pedidos.length;
-
-    if (!total) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <span class="empty-state-icon">📋</span>
-                <p>No hay pedidos para mostrar.</p>
-            </div>`;
-        return;
-    }
-
-    const estadoMap = {
-        pendiente:  0,
-        confirmado: 0,
-        enviado:    0,
-        entregado:  0,
-        cancelado:  0
-    };
-
-    pedidos.forEach(p => {
-        const estado = p.estado || 'pendiente';
-        if (estadoMap.hasOwnProperty(estado)) {
-            estadoMap[estado]++;
-        }
-    });
-
-    const emojis = {
-        pendiente:  '⏳',
-        confirmado: '✅',
-        enviado:    '🚚',
-        entregado:  '🎉',
-        cancelado:  '❌'
-    };
-
-    container.innerHTML = Object.entries(estadoMap).map(([estado, count]) => {
-        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-        return `
-            <div class="estado-item">
-                <div class="estado-header-row">
-                    <span class="estado-name">
-                        <span class="estado-dot dot-${estado}"></span>
-                        ${emojis[estado]} ${capitalizeFirst(estado)}
-                    </span>
-                    <div class="estado-stats">
-                        <span class="estado-count">${count} pedidos</span>
-                        <span class="estado-pct">${pct}%</span>
-                    </div>
-                </div>
-                <div class="estado-bar-bg">
-                    <div class="estado-bar-fill fill-${estado}"
-                         style="width: ${pct}%">
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function renderRecentOrders(pedidos) {
-    const container = document.getElementById('recentOrders');
-
-    if (!pedidos.length) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <span class="empty-state-icon">🕒</span>
-                <p>No hay pedidos recientes.</p>
-            </div>`;
-        return;
-    }
-
-    container.innerHTML = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Pedido</th>
-                    <th>Cliente</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${pedidos.map(p => `
-                    <tr>
-                        <td><strong>#${p.id.slice(-8).toUpperCase()}</strong></td>
-                        <td>${p.cliente_nombre || p.cliente_email || '—'}</td>
-                        <td>${formatDate(p.created_at)}</td>
-                        <td><strong>${formatPrice(p.total)}</strong></td>
-                        <td>
-                            <span class="estado-badge estado-${p.estado || 'pendiente'}">
-                                ${capitalizeFirst(p.estado || 'pendiente')}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-function renderStatsEmpty() {
-    document.getElementById('statsLoading').classList.add('hidden');
-    document.getElementById('statsContent').classList.remove('hidden');
-
-    ['statIngresos','statVentasMes','statTotalPedidos','statTicket'].forEach(id => {
-        document.getElementById(id).textContent = id.includes('stat') ? '0' : '$0';
-    });
-
-    ['barChart','topProductsList','estadosChart','recentOrders'].forEach(id => {
-        document.getElementById(id).innerHTML = `
-            <div class="empty-state">
-                <span class="empty-state-icon">📊</span>
-                <p>Sin datos disponibles.</p>
-            </div>`;
-    });
 }
 
 /* ══════════════════════════════════════════════
@@ -791,7 +484,7 @@ function closeModal() {
 }
 
 /* ══════════════════════════════════════════════
-   TOAST
+   TOAST DE NOTIFICACIONES
 ══════════════════════════════════════════════ */
 let toastTimeout = null;
 
@@ -809,6 +502,8 @@ function showToast(message, type = 'success') {
 /* ══════════════════════════════════════════════
    UTILIDADES
 ══════════════════════════════════════════════ */
+
+/** Formatea precio en CLP */
 function formatPrice(amount) {
     if (!amount && amount !== 0) return '$0';
     return new Intl.NumberFormat('es-CL', {
@@ -819,6 +514,7 @@ function formatPrice(amount) {
     }).format(Math.round(amount));
 }
 
+/** Formatea fecha en formato legible */
 function formatDate(dateStr) {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('es-CL', {
@@ -828,15 +524,20 @@ function formatDate(dateStr) {
     });
 }
 
+/** Primera letra mayúscula */
 function capitalizeFirst(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+/** Escapar comillas para HTML */
 function escapeStr(str) {
     return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-window.editProduct    = editProduct;
-window.confirmDelete  = confirmDelete;
-window.updateEstado   = updateEstado;
+/* ══════════════════════════════════════════════
+   EXPONER FUNCIONES GLOBALES
+══════════════════════════════════════════════ */
+window.editProduct   = editProduct;
+window.confirmDelete = confirmDelete;
+window.updateEstado  = updateEstado;
