@@ -1,1 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas — MAISON</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="css/estadisticas.css">
+</head>
+<body>
+
+<!-- Pantalla de acceso denegado -->
+<div class="access-denied" id="accessDenied" style="display:none;">
+  <div class="access-box">
+    <span class="access-logo">MAISON</span>
+    <h2>Acceso restringido</h2>
+    <p>Debes iniciar sesión como vendedor para ver las estadísticas.</p>
+    <a href="admin.html" class="btn-access">Ir al panel</a>
+  </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="stats-page" id="statsPage" style="display:none;">
+
+  <!-- HEADER -->
+  <header class="stats-header">
+    <div class="header-left">
+      <span class="stats-logo">MAISON <em>estadísticas</em></span>
+    </div>
+    <div class="header-right">
+      <a href="admin.html" class="btn-back">Volver al panel</a>
+      <button id="btnRefresh" class="btn-refresh">Actualizar datos</button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main class="stats-main">
+
+    <div class="stats-intro">
+      <h1 class="page-title">Resumen del negocio</h1>
+      <p class="page-subtitle" id="pageSubtitle">Datos actualizados en tiempo real</p>
+    </div>
+
+    <!-- Loading -->
+    <div id="statsLoading" class="stats-loading">
+      <p>Cargando estadísticas...</p>
+    </div>
+
+    <!-- Contenido -->
+    <div id="statsContent" style="display:none;">
+
+      <!-- FILA 1: Tarjetas de métricas -->
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Ingresos del mes</span>
+            <span class="stat-value" id="statIngresos">$0</span>
+            <span class="stat-sub" id="statIngresosSub"></span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Ventas del mes</span>
+            <span class="stat-value" id="statVentasMes">0</span>
+            <span class="stat-sub">pedidos este mes</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Total de pedidos</span>
+            <span class="stat-value" id="statTotalPedidos">0</span>
+            <span class="stat-sub">pedidos históricos</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Ticket promedio</span>
+            <span class="stat-value" id="statTicket">$0</span>
+            <span class="stat-sub">por pedido</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA 2: Gráfico de barras -->
+      <section class="section-card">
+        <div class="card-header">
+          <h3 class="card-title">Ventas últimos 30 días</h3>
+          <p class="card-subtitle">Número de pedidos por día</p>
+        </div>
+        <div class="bar-chart-container">
+          <div id="barChart" class="bar-chart"></div>
+          <div class="bar-chart-labels" id="barChartLabels"></div>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item">
+            <span class="legend-color"></span>
+            Pedidos por día
+          </span>
+        </div>
+      </section>
+
+      <!-- FILA 3: Dos columnas -->
+      <div class="stats-row-2">
+
+        <section class="section-card">
+          <div class="card-header">
+            <h3 class="card-title">Productos más vendidos</h3>
+            <p class="card-subtitle">Top 5 por unidades vendidas</p>
+          </div>
+          <div id="topProductsList" class="top-products-list"></div>
+        </section>
+
+        <section class="section-card">
+          <div class="card-header">
+            <h3 class="card-title">Estado de pedidos</h3>
+            <p class="card-subtitle">Distribución actual</p>
+          </div>
+          <div id="estadosChart" class="estados-chart"></div>
+        </section>
+
+      </div>
+
+      <!-- FILA 4: Pedidos recientes -->
+      <section class="section-card">
+        <div class="card-header">
+          <h3 class="card-title">Pedidos recientes</h3>
+          <p class="card-subtitle">Últimos 5 pedidos recibidos</p>
+        </div>
+        <div id="recentOrders" class="recent-orders-table"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="stats-footer">
+    <p>MAISON &copy; 2025 — Panel de vendedor</p>
+  </footer>
+
+</div>
+
+<!-- Scripts -->
+<script src="js/supabase-client.js"></script>
+<script src="js/estadisticas.js"></script>
+
+</body>
+</html>
