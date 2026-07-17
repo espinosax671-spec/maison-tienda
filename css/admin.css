@@ -158,6 +158,28 @@ body {
 }
 
 /* ============================================
+   ENLACE VOLVER A LA TIENDA (Login)
+============================================ */
+.back-to-store {
+    display: block;
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-200);
+    color: var(--gray-600);
+    font-size: 0.8rem;
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.back-to-store:hover {
+    color: var(--gold-dark);
+    transform: translateX(-3px);
+}
+
+/* ============================================
    ADMIN PANEL LAYOUT
 ============================================ */
 .admin-panel {
@@ -205,7 +227,34 @@ body {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
+}
+
+/* Botón "Ver Tienda" */
+.btn-store-link {
+    padding: 8px 16px;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-store-link:hover {
+    background: var(--gold-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(201,169,110,0.3);
 }
 
 .user-email {
@@ -214,7 +263,7 @@ body {
     display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
     .user-email { display: block; }
 }
 
@@ -879,7 +928,6 @@ body {
     position: relative;
 }
 
-/* Líneas guía horizontales */
 .bar-chart::before {
     content: '';
     position: absolute;
@@ -922,7 +970,6 @@ body {
     background: linear-gradient(to top, #8a6030, var(--gold-dark));
 }
 
-/* Tooltip al hacer hover */
 .bar-fill::after {
     content: attr(data-value);
     position: absolute;
@@ -1160,7 +1207,6 @@ body {
     transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Colores por estado */
 .fill-pendiente  { background: var(--warning); }
 .fill-confirmado { background: var(--info); }
 .fill-enviado    { background: #9b59b6; }
@@ -1382,8 +1428,9 @@ body {
 @media (max-width: 768px) {
 
     .admin-header {
-        padding: 0 16px;
+        padding: 0 12px;
         height: 56px;
+        gap: 8px;
     }
 
     .admin-logo {
@@ -1392,6 +1439,24 @@ body {
 
     .admin-subtitle {
         display: none;
+    }
+
+    .header-right {
+        gap: 8px;
+    }
+
+    .btn-store-link {
+        padding: 6px 10px;
+        font-size: 0.65rem;
+    }
+
+    .btn-store-link span {
+        display: none;
+    }
+
+    .btn-logout {
+        padding: 6px 12px;
+        font-size: 0.65rem;
     }
 
     .admin-nav {
