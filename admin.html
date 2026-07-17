@@ -1,562 +1,305 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel — MAISON</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<link rel="stylesheet" href="css/admin.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAISON - Panel Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<!-- ============ PANTALLA DE ACCESO ============ -->
-<div class="gate" id="gate">
-  <div class="gate-box">
-    <span class="gate-logo">MAISON</span>
-    <p class="gate-sub">Panel de administración</p>
-
-    <form id="gateForm" class="gate-form">
-      <label>Correo electrónico
-        <input type="email" id="gateEmail" required autocomplete="email">
-      </label>
-      <label>Contraseña
-        <div class="password-wrap">
-          <input type="password" id="gatePassword" required autocomplete="current-password">
-          <button type="button" class="toggle-password" data-target="gatePassword" aria-label="Mostrar contraseña"></button>
+    <!-- ============================================
+         PANTALLA DE LOGIN
+    ============================================ -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-logo">
+                <h1>MAISON</h1>
+                <p>Panel de Administración</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <div id="loginError" class="login-error hidden"></div>
+                <button type="submit" class="btn-login">Ingresar</button>
+            </form>
         </div>
-      </label>
-      <p class="gate-error" id="gateError"></p>
-      <div class="forgot-password">
-    <a href="#" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
-</div>
-      <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar al panel</button>
-    </form>
-    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al administrador que te agregue.</p>
-  </div>
-</div>
-
-<!-- ============ PANTALLA: SIN PERMISO ============ -->
-<div class="gate" id="noAccess" style="display:none;">
-  <div class="gate-box">
-    <span class="gate-logo">MAISON</span>
-    <p class="gate-sub">Sin acceso al panel</p>
-    <p class="gate-text">Tu cuenta inició sesión correctamente, pero todavía no tiene permiso para administrar productos. Pide al dueño de la tienda que te agregue como staff.</p>
-    <button class="btn btn-ghost btn-full" id="noAccessLogout">Cerrar sesión</button>
-  </div>
-</div>
-
-<!-- ============ PANEL PRINCIPAL ============ -->
-<div class="admin-app" id="adminApp" style="display:none;">
-
-  <header class="admin-header">
-    <span class="admin-logo">MAISON <em>panel</em></span>
-    <div class="admin-user">
-      <!-- NUEVO: Botón de silenciar notificaciones -->
-      <button type="button" class="notif-toggle-btn" id="notifToggleBtn" title="Notificaciones activadas" aria-label="Activar/silenciar notificaciones">
-        <svg class="notif-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <svg class="notif-icon-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          <path d="M18.63 13A17.89 17.89 0 0 1 18 8"/>
-          <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/>
-          <path d="M18 8a6 6 0 0 0-9.33-5"/>
-          <line x1="1" y1="1" x2="23" y2="23"/>
-        </svg>
-      </button>
-      <span id="adminUserName"></span>
-      <button class="btn-text" id="logoutBtn">Cerrar sesión</button>
-    </div>
-  </header>
-
-  <main class="admin-main">
-    
-    <!-- ============ TABS DE NAVEGACIÓN ============ -->
-    <div class="admin-tabs">
-      <button type="button" class="admin-tab active" data-tab="productos">
-        <span class="tab-label">Productos</span>
-      </button>
-      <button type="button" class="admin-tab" data-tab="pedidos">
-        <span class="tab-label">Pedidos</span>
-        <span class="tab-badge" id="pendingOrdersBadge" style="display:none;">0</span>
-      </button>
-      <button type="button" class="admin-tab" data-tab="estadisticas">
-        <span class="tab-label">Estadísticas</span>
-      </button>
     </div>
 
-    <!-- ============ VISTA: PRODUCTOS ============ -->
-    <div class="admin-view active" id="viewProductos">
-      <div class="admin-toolbar">
-        <h1>Productos</h1>
-        <button class="btn btn-primary" id="newProductBtn">+ Nuevo producto</button>
-      </div>
+    <!-- ============================================
+         PANEL PRINCIPAL (se muestra tras login)
+    ============================================ -->
+    <div id="adminPanel" class="admin-panel hidden">
 
-      <div class="admin-filters">
-        <button class="filter-chip active" data-filter="todos">Todos</button>
-        <button class="filter-chip" data-filter="dama">Dama</button>
-        <button class="filter-chip" data-filter="caballero">Caballero</button>
-        <button class="filter-chip" data-filter="calzado">Calzado</button>
-      </div>
+        <!-- HEADER -->
+        <header class="admin-header">
+            <div class="header-left">
+                <h1 class="admin-logo">MAISON</h1>
+                <span class="admin-subtitle">Panel de Vendedor</span>
+            </div>
+            <div class="header-right">
+                <span id="userEmail" class="user-email"></span>
+                <button id="btnLogout" class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </header>
 
-      <div class="product-table" id="productTable">
-        <p class="loading-msg" id="loadingMsg">Cargando productos...</p>
-      </div>
-    </div>
+        <!-- NAVEGACIÓN DE PESTAÑAS -->
+        <nav class="admin-nav">
+            <button class="nav-tab active" data-tab="productos">
+                <span class="tab-icon">📦</span>
+                Productos
+            </button>
+            <button class="nav-tab" data-tab="pedidos">
+                <span class="tab-icon">🛍️</span>
+                Pedidos
+            </button>
+            <button class="nav-tab" data-tab="estadisticas">
+                <span class="tab-icon">📊</span>
+                Estadísticas
+            </button>
+        </nav>
 
-    <!-- ============ VISTA: PEDIDOS ============ -->
-    <div class="admin-view" id="viewPedidos">
-      <div class="admin-toolbar">
-        <h1>Pedidos</h1>
-        <button class="btn btn-ghost" id="refreshOrdersBtn">Actualizar</button>
-      </div>
+        <!-- ============================================
+             PESTAÑA: PRODUCTOS
+        ============================================ -->
+        <div id="tab-productos" class="tab-content active">
 
-      <div class="admin-filters">
-        <button class="filter-chip active" data-order-filter="pendiente">
-          Pendientes <span class="chip-count" id="countPendiente">0</span>
-        </button>
-        <button class="filter-chip" data-order-filter="confirmado">
-          Confirmados <span class="chip-count" id="countConfirmado">0</span>
-        </button>
-        <button class="filter-chip" data-order-filter="entregado">
-          Entregados <span class="chip-count" id="countEntregado">0</span>
-        </button>
-        <button class="filter-chip" data-order-filter="cancelado">
-          Cancelados <span class="chip-count" id="countCancelado">0</span>
-        </button>
-        <button class="filter-chip" data-order-filter="todos">Todos</button>
-      </div>
+            <!-- Formulario agregar/editar producto -->
+            <section class="section-card">
+                <h2 class="section-title" id="formTitle">Agregar Nuevo Producto</h2>
 
-      <div class="orders-list" id="ordersList">
-        <p class="loading-msg">Cargando pedidos...</p>
-      </div>
-    </div>
+                <form id="productForm" class="product-form">
+                    <input type="hidden" id="productId">
 
-    <!-- ============ VISTA: ESTADÍSTICAS ============ -->
-    <div class="admin-view" id="viewEstadisticas">
-      <div class="admin-toolbar">
-        <h1>Estadísticas</h1>
-        <button class="btn btn-ghost" id="refreshStatsBtn">Actualizar</button>
-      </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del producto *</label>
+                            <input type="text" id="productName" placeholder="Ej: Vestido Louis Luigi" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Precio (CLP) *</label>
+                            <input type="number" id="productPrice" placeholder="89900" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Categoría *</label>
+                            <select id="productCategory" required>
+                                <option value="">Seleccionar categoría</option>
+                                <option value="vestidos">Vestidos</option>
+                                <option value="zapatos">Zapatos</option>
+                                <option value="camisas">Camisas</option>
+                                <option value="pantalones">Pantalones</option>
+                                <option value="accesorios">Accesorios</option>
+                                <option value="abrigos">Abrigos</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock disponible *</label>
+                            <input type="number" id="productStock" placeholder="10" required min="0">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Descripción</label>
+                            <textarea id="productDescription" placeholder="Describe el producto..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>URL de imagen</label>
+                            <input type="url" id="productImage" placeholder="https://ejemplo.com/imagen.jpg">
+                        </div>
+                    </div>
 
-      <div class="stats-cards">
-        <div class="stat-card">
-          <span class="stat-label">Ventas del mes</span>
-          <span class="stat-value" id="statVentasMes">—</span>
+                    <!-- Preview de imagen -->
+                    <div id="imagePreview" class="image-preview hidden">
+                        <img id="previewImg" src="" alt="Preview">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="btnSubmit">
+                            ✚ Agregar Producto
+                        </button>
+                        <button type="button" class="btn-secondary hidden" id="btnCancel">
+                            ✕ Cancelar
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Lista de productos -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Mis Productos</h2>
+                    <div class="search-box">
+                        <input type="text" id="searchProducts" placeholder="🔍 Buscar producto...">
+                    </div>
+                </div>
+
+                <div id="productsMessage" class="info-message hidden"></div>
+                <div id="productsList" class="products-grid">
+                    <div class="loading-spinner">Cargando productos...</div>
+                </div>
+            </section>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Pedidos totales</span>
-          <span class="stat-value" id="statPedidosTotales">—</span>
+
+        <!-- ============================================
+             PESTAÑA: PEDIDOS
+        ============================================ -->
+        <div id="tab-pedidos" class="tab-content hidden">
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Gestión de Pedidos</h2>
+                    <div class="pedidos-filters">
+                        <select id="filterEstado">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="confirmado">Confirmado</option>
+                            <option value="enviado">Enviado</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                        <input type="date" id="filterFecha" title="Filtrar por fecha">
+                    </div>
+                </div>
+
+                <div id="pedidosList" class="pedidos-list">
+                    <div class="loading-spinner">Cargando pedidos...</div>
+                </div>
+            </section>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Ingresos del mes</span>
-          <span class="stat-value" id="statIngresosMes">—</span>
+
+        <!-- ============================================
+             PESTAÑA: ESTADÍSTICAS ← NUEVA
+        ============================================ -->
+        <div id="tab-estadisticas" class="tab-content hidden">
+
+            <!-- Mensaje de carga -->
+            <div id="statsLoading" class="stats-loading">
+                <div class="loading-spinner">Cargando estadísticas...</div>
+            </div>
+
+            <!-- Contenido de estadísticas -->
+            <div id="statsContent" class="hidden">
+
+                <!-- FILA 1: Tarjetas de métricas -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Ingresos del Mes</span>
+                            <span class="stat-value" id="statIngresos">$0</span>
+                            <span class="stat-sub" id="statIngresosSub"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🛍️</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Ventas del Mes</span>
+                            <span class="stat-value" id="statVentasMes">0</span>
+                            <span class="stat-sub">pedidos este mes</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Pedidos</span>
+                            <span class="stat-value" id="statTotalPedidos">0</span>
+                            <span class="stat-sub">pedidos históricos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Ticket Promedio</span>
+                            <span class="stat-value" id="statTicket">$0</span>
+                            <span class="stat-sub">por pedido</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILA 2: Gráfico de barras - últimos 30 días -->
+                <section class="section-card stats-section">
+                    <h2 class="section-title">📈 Ventas Últimos 30 Días</h2>
+                    <p class="stats-desc">Número de pedidos por día</p>
+                    <div class="bar-chart-container">
+                        <div id="barChart" class="bar-chart">
+                            <!-- Se genera con JS -->
+                        </div>
+                        <div class="bar-chart-labels" id="barChartLabels">
+                            <!-- Labels de fechas -->
+                        </div>
+                    </div>
+                    <div class="chart-legend">
+                        <span class="legend-item">
+                            <span class="legend-color" style="background: var(--gold)"></span>
+                            Pedidos por día
+                        </span>
+                    </div>
+                </section>
+
+                <!-- FILA 3: Dos columnas -->
+                <div class="stats-row-2">
+
+                    <!-- TOP 5 Productos -->
+                    <section class="section-card stats-section">
+                        <h2 class="section-title">🏆 Productos Más Vendidos</h2>
+                        <p class="stats-desc">Top 5 por unidades vendidas</p>
+                        <div id="topProductsList" class="top-products-list">
+                            <!-- Se genera con JS -->
+                        </div>
+                    </section>
+
+                    <!-- Estados de pedidos -->
+                    <section class="section-card stats-section">
+                        <h2 class="section-title">📋 Estado de Pedidos</h2>
+                        <p class="stats-desc">Distribución por estado</p>
+                        <div id="estadosChart" class="estados-chart">
+                            <!-- Se genera con JS -->
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- FILA 4: Tabla de pedidos recientes -->
+                <section class="section-card stats-section">
+                    <h2 class="section-title">🕒 Pedidos Recientes</h2>
+                    <p class="stats-desc">Últimos 5 pedidos recibidos</p>
+                    <div id="recentOrders" class="recent-orders-table">
+                        <!-- Se genera con JS -->
+                    </div>
+                </section>
+
+            </div><!-- fin statsContent -->
+        </div><!-- fin tab-estadisticas -->
+
+    </div><!-- fin adminPanel -->
+
+    <!-- Modal de confirmación -->
+    <div id="confirmModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 id="modalTitle">¿Confirmar acción?</h3>
+            <p id="modalMessage">Esta acción no se puede deshacer.</p>
+            <div class="modal-actions">
+                <button id="modalConfirm" class="btn-danger">Confirmar</button>
+                <button id="modalCancel" class="btn-secondary">Cancelar</button>
+            </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Ticket promedio</span>
-          <span class="stat-value" id="statTicketPromedio">—</span>
-        </div>
-      </div>
-
-      <div class="stats-section">
-        <h2 class="stats-section-title">Ventas últimos 30 días</h2>
-        <div class="sales-chart" id="salesChart">
-          <p class="loading-msg">Cargando gráfico...</p>
-        </div>
-      </div>
-
-      <div class="stats-section">
-        <h2 class="stats-section-title">Productos más vendidos</h2>
-        <div class="top-products" id="topProducts">
-          <p class="loading-msg">Cargando productos...</p>
-        </div>
-      </div>
-
-      <div class="stats-section">
-        <h2 class="stats-section-title">Estados de pedidos</h2>
-        <div class="status-distribution" id="statusDistribution">
-          <p class="loading-msg">Cargando distribución...</p>
-        </div>
-      </div>
     </div>
 
-  </main>
-</div>
+    <!-- Toast de notificaciones -->
+    <div id="toast" class="toast hidden"></div>
 
-<!-- ============ NUEVO: BANNER DE PERMISO DE NOTIFICACIONES ============ -->
-<div class="notif-permission-banner" id="notifPermissionBanner" style="display:none;">
-  <div class="notif-banner-content">
-    <div class="notif-banner-icon">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-    </div>
-    <div class="notif-banner-text">
-      <strong>Recibe notificaciones de pedidos nuevos</strong>
-      <p>Te avisaremos al instante cuando un cliente haga un pedido, incluso si tienes el panel en otra pestaña.</p>
-    </div>
-    <div class="notif-banner-actions">
-      <button type="button" class="btn-notif-later" id="notifLaterBtn">Ahora no</button>
-      <button type="button" class="btn-notif-allow" id="notifAllowBtn">Activar notificaciones</button>
-    </div>
-    <button type="button" class="notif-banner-close" id="notifBannerClose" aria-label="Cerrar">&times;</button>
-  </div>
-</div>
+    <!-- ============================================
+         SCRIPTS (orden importante)
+    ============================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/admin.js"></script>
 
-<!-- ============ MODAL: CREAR/EDITAR PRODUCTO ============ -->
-<div class="modal-overlay" id="modalOverlay"></div>
-<div class="product-form-modal" id="productFormModal">
-  <button class="modal-close" id="formModalClose" aria-label="Cerrar">&times;</button>
-  <h2 id="formTitle">Nuevo producto</h2>
-
-  <form id="productForm" class="product-form">
-    <input type="hidden" id="productId">
-
-    <label>Categoría
-      <select id="productCategory" required>
-        <option value="dama">Dama</option>
-        <option value="caballero">Caballero</option>
-        <option value="calzado">Calzado</option>
-      </select>
-    </label>
-
-    <label>Nombre del producto
-      <input type="text" id="productName" required placeholder="Ej: Vestido Midi Lino">
-    </label>
-
-    <label>Precio (COP)
-      <div class="price-input-wrap">
-        <span class="price-currency">$</span>
-        <input type="text" id="productPrice" required placeholder="Ej: 219.000" inputmode="numeric" autocomplete="off">
-      </div>
-      <span class="price-hint" id="priceHint">Ingresa el precio sin puntos ni comas</span>
-    </label>
-
-    <label>Descuento (%)  <span class="optional-label">Opcional</span>
-      <div class="discount-input-wrap">
-        <input type="number" id="productDiscount" min="0" max="99" placeholder="0" value="0">
-        <span class="discount-symbol">%</span>
-      </div>
-      <div class="discount-preview" id="discountPreview">
-        <span class="discount-preview-label">Sin descuento aplicado</span>
-      </div>
-    </label>
-
-    <label>Etiqueta (opcional)
-      <input type="text" id="productTag" placeholder="Ej: Nuevo, Edición limitada">
-    </label>
-
-    <label>Descripción
-      <textarea id="productDesc" rows="3" placeholder="Descripción corta que verá el cliente"></textarea>
-    </label>
-
-    <label>Tallas disponibles (separadas por coma)
-      <input type="text" id="productSizes" placeholder="Ej: XS, S, M, L, XL">
-    </label>
-
-    <label>Stock inicial por talla
-      <input type="number" id="productInitialStock" min="0" max="9999" value="5" placeholder="Ej: 5">
-      <span class="stock-initial-hint">Cada talla iniciará con este número de unidades. Podrás ajustarlas después desde el botón "Stock".</span>
-    </label>
-
-    <label>Foto del producto
-      <input type="file" id="productImageFile" accept="image/*">
-    </label>
-    <div class="image-preview-wrap">
-      <img id="imagePreview" class="image-preview" style="display:none;">
-      <p class="image-hint" id="imageHint">Formatos JPG o PNG. Se recomienda foto vertical.</p>
-    </div>
-
-    <label class="checkbox-label">
-      <input type="checkbox" id="productActive" checked>
-      Visible en la tienda
-    </label>
-
-    <p class="form-error" id="formError"></p>
-
-    <div class="form-actions">
-      <button type="button" class="btn btn-ghost" id="cancelFormBtn">Cancelar</button>
-      <button type="submit" class="btn btn-primary" id="saveProductBtn">Guardar producto</button>
-    </div>
-  </form>
-</div>
-
-<!-- ============ MODAL: RECUPERAR CONTRASEÑA ============ -->
-<div class="modal-overlay" id="resetOverlay"></div>
-<div class="confirm-modal" id="resetModal">
-  <button class="modal-close" id="resetModalClose">&times;</button>
-  <h3>Recuperar contraseña</h3>
-  <p>Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
-  
-  <form id="resetForm" class="product-form">
-    <label>Correo electrónico
-      <input type="email" id="resetEmail" required placeholder="tucorreo@maison.com">
-    </label>
-    <p class="form-error" id="resetError"></p>
-    <p class="reset-success" id="resetSuccess"></p>
-    
-    <div class="form-actions">
-      <button type="button" class="btn btn-ghost" id="cancelResetBtn">Cancelar</button>
-      <button type="submit" class="btn btn-primary" id="sendResetBtn">Enviar enlace</button>
-    </div>
-  </form>
-</div>
-
-<!-- ============ MODAL: CONFIRMAR ELIMINAR ============ -->
-<div class="modal-overlay" id="deleteOverlay"></div>
-<div class="confirm-modal" id="deleteConfirmModal">
-  <h3>¿Eliminar este producto?</h3>
-  <p>Esta acción no se puede deshacer. El producto dejará de verse en la tienda.</p>
-  <div class="form-actions">
-    <button class="btn btn-ghost" id="cancelDeleteBtn">Cancelar</button>
-    <button class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
-  </div>
-</div>
-
-<!-- ============ MODAL DE GESTIÓN DE STOCK ============ -->
-<div class="modal-overlay" id="stockOverlay"></div>
-<div class="form-modal" id="stockModal">
-  <button class="modal-close" id="stockModalClose">&times;</button>
-  <h2 class="form-title">Gestionar Inventario</h2>
-  <p class="form-subtitle" id="stockProductName">Producto</p>
-  
-  <div class="stock-list" id="stockList">
-  </div>
-
-  <p class="stock-total-info">
-    Stock total: <strong id="stockTotalDisplay">0</strong> unidades
-  </p>
-
-  <p class="form-error" id="stockError"></p>
-
-  <div class="form-actions">
-    <button type="button" class="btn btn-ghost" id="cancelStockBtn">Cancelar</button>
-    <button type="button" class="btn btn-primary" id="saveStockBtn">Guardar stock</button>
-  </div>
-</div>
-
-<!-- ============ NUEVO: TOAST DE NOTIFICACIÓN DE PEDIDO ============ -->
-<div class="order-notification-toast" id="orderNotificationToast">
-  <div class="onotif-icon">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <path d="M16 10a4 4 0 0 1-8 0"/>
-    </svg>
-  </div>
-  <div class="onotif-content">
-    <div class="onotif-header">
-      <span class="onotif-title">Pedido nuevo</span>
-      <span class="onotif-time" id="onotifTime">Ahora</span>
-    </div>
-    <span class="onotif-number" id="onotifNumber">#M251015-ABC1</span>
-    <span class="onotif-customer" id="onotifCustomer">Cliente</span>
-    <span class="onotif-total" id="onotifTotal">$0</span>
-  </div>
-  <button type="button" class="onotif-close" id="onotifClose" aria-label="Cerrar">&times;</button>
-  <button type="button" class="onotif-view" id="onotifView">Ver pedido</button>
-</div>
-
-<script>
-const ICON_EYE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
-const ICON_EYE_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".toggle-password").forEach((btn) => {
-    btn.innerHTML = ICON_EYE;
-    btn.addEventListener("click", () => {
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      const isHidden = input.type === "password";
-      input.type = isHidden ? "text" : "password";
-      btn.innerHTML = isHidden ? ICON_EYE_OFF : ICON_EYE;
-    });
-  });
-});
-</script>
-<script src="js/supabase-client.js"></script>
-<script src="js/admin.js"></script>
-
-<style>
-/* Estilos del descuento y stock */
-.stock-initial-hint {
-  display: block;
-  font-size: 11px;
-  color: var(--color-ink-soft);
-  margin-top: 6px;
-  letter-spacing: 0.5px;
-  font-style: italic;
-  text-transform: none;
-  line-height: 1.5;
-}
-
-.optional-label {
-  display: inline-block;
-  font-size: 10px;
-  padding: 2px 8px;
-  background: rgba(168, 130, 75, 0.15);
-  color: var(--color-gold-dark);
-  border-radius: 10px;
-  margin-left: 8px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  vertical-align: middle;
-}
-
-.discount-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  overflow: hidden;
-  transition: var(--transition);
-  max-width: 200px;
-}
-
-.discount-input-wrap:focus-within {
-  border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(168, 130, 75, 0.15);
-}
-
-.discount-input-wrap input {
-  flex: 1;
-  border: none !important;
-  background: transparent !important;
-  padding: 12px 14px !important;
-  font-size: 18px !important;
-  color: var(--color-ink) !important;
-  font-family: var(--font-sans) !important;
-  font-weight: 600;
-  outline: none !important;
-  box-shadow: none !important;
-  text-align: center;
-  -moz-appearance: textfield;
-}
-
-.discount-input-wrap input::-webkit-outer-spin-button,
-.discount-input-wrap input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.discount-symbol {
-  padding: 0 14px;
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--color-gold-dark);
-  background: rgba(168, 130, 75, 0.08);
-  border-left: 1px solid var(--color-border);
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-}
-
-.discount-preview {
-  margin-top: 10px;
-  padding: 12px 14px;
-  background: rgba(232, 220, 200, 0.4);
-  border: 1px dashed var(--color-border);
-  border-radius: 4px;
-  transition: all .3s ease;
-}
-
-.discount-preview.active {
-  background: linear-gradient(135deg, rgba(212, 168, 105, 0.15), rgba(143, 107, 63, 0.1));
-  border: 1px solid var(--color-gold-light);
-  border-style: solid;
-}
-
-.discount-preview-label {
-  display: block;
-  font-size: 11px;
-  color: var(--color-ink-soft);
-  letter-spacing: 0.5px;
-  text-transform: none;
-  font-style: italic;
-  font-weight: 400;
-}
-
-.discount-preview.active .discount-preview-label {
-  font-style: normal;
-  color: var(--color-gold-dark);
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.discount-preview-values {
-  display: none;
-  margin-top: 6px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--color-ink);
-}
-
-.discount-preview.active .discount-preview-values {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.discount-preview-old {
-  text-decoration: line-through;
-  color: var(--color-ink-soft);
-  font-size: 13px;
-}
-
-.discount-preview-new {
-  font-weight: 700;
-  color: var(--color-gold-dark);
-  font-size: 16px;
-}
-
-.discount-preview-savings {
-  font-size: 11px;
-  padding: 3px 10px;
-  background: var(--color-success);
-  color: var(--color-white);
-  border-radius: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.price-original-small {
-  text-decoration: line-through;
-  color: var(--color-ink-soft);
-  font-size: 12px;
-  opacity: 0.7;
-  margin-right: 6px;
-}
-
-.price-new-small {
-  color: var(--color-gold-dark);
-  font-weight: 600;
-  font-size: 14px;
-  margin-right: 6px;
-}
-
-.discount-badge-small {
-  background: #c8102e;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-</style>
 </body>
 </html>
