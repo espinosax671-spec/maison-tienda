@@ -5,7 +5,7 @@
 
 // ─── CONFIGURACIÓN SUPABASE ──────────────────
 // Reutilizamos el cliente definido en js/supabase-client.js
-const supabase = supabaseClient;
+const supabase = supabaseClient || window.supabaseClient;
 
 // ─── ESTADO GLOBAL ───────────────────────────
 let currentUser     = null;
