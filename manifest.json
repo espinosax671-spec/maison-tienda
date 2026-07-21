@@ -1,8 +1,8 @@
 {
-  "name": "Casa — Panel Admin",
-  "short_name": "Casa Admin",
-  "description": "Panel de administración de Casa Tienda",
-  "start_url": "/administrador.html",
+  "name": "MAISON — Tienda",
+  "short_name": "MAISON",
+  "description": "Tienda de moda exclusiva — Dama, Caballero y Calzado",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
@@ -10,7 +10,7 @@
   "orientation": "portrait-primary",
   "lang": "es",
   "dir": "ltr",
-  "categories": ["business", "productivity", "shopping"],
+  "categories": ["shopping", "lifestyle", "business"],
   "icons": [
     {
       "src": "iconos/icon-192.png",
@@ -35,6 +35,15 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Panel Admin",
+      "short_name": "Admin",
+      "description": "Acceder al panel de administración",
+      "url": "/administrador.html",
+      "icons": [{ "src": "iconos/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
