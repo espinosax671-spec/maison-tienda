@@ -14,7 +14,7 @@ let selectedImageFile = null;
 let currentStockProduct = null;
 let currentStockData = {};
 
-// ============ NUEVO: Variables del sistema de notificaciones ============
+// ============ Variables del sistema de notificaciones ============
 let notificationsMuted = false;
 let notificationSound = null;
 let orderSubscription = null;
@@ -101,7 +101,7 @@ async function checkStaffAndEnter(user) {
 
   await loadProducts();
   
-  // ============ NUEVO: Inicializar sistema de notificaciones ============
+  // Inicializar sistema de notificaciones
   initNotificationSystem();
 }
 
@@ -119,7 +119,6 @@ document.getElementById("logoutBtn").addEventListener("click", doLogout);
 document.getElementById("noAccessLogout").addEventListener("click", doLogout);
 
 async function doLogout() {
-  // Limpiar subscripción de notificaciones
   if (orderSubscription) {
     await supabaseClient.removeChannel(orderSubscription);
     orderSubscription = null;
@@ -174,13 +173,29 @@ async function loadProducts() {
 }
 
 // ---------------------------------------------------------------
-// Renderizar tabla de productos (CON stock y descuento)
+// Renderizar tabla de productos (CON nueva lógica de filtrado)
 // ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
-  const filtered = currentFilter === "todos"
-    ? allProducts
-    : allProducts.filter((p) => p.category === currentFilter);
+  
+  // ============ NUEVA LÓGICA DE FILTRADO ============
+  let filtered;
+  if (currentFilter === "todos") {
+    filtered = allProducts;
+  } else if (currentFilter === "dama") {
+    // Dama muestra: ropa dama + calzado dama
+    filtered = allProducts.filter((p) => 
+      p.category === "dama" || p.category === "calzado_dama"
+    );
+  } else if (currentFilter === "caballero") {
+    // Caballero muestra: ropa caballero + calzado caballero
+    filtered = allProducts.filter((p) => 
+      p.category === "caballero" || p.category === "calzado_caballero"
+    );
+  } else {
+    // calzado_dama o calzado_caballero: filtro exacto
+    filtered = allProducts.filter((p) => p.category === currentFilter);
+  }
 
   if (filtered.length === 0) {
     table.innerHTML = `<p class="empty-msg">No hay productos en esta categoría todavía.</p>`;
@@ -243,8 +258,15 @@ function renderProductTable() {
   });
 }
 
+// ============ ETIQUETAS DE CATEGORÍA ACTUALIZADAS ============
 function categoryLabel(c) {
-  return { dama: "Dama", caballero: "Caballero", calzado: "Calzado" }[c] || c;
+  return { 
+    dama: "Dama", 
+    caballero: "Caballero", 
+    calzado: "Calzado",
+    calzado_dama: "Calzado Dama",
+    calzado_caballero: "Calzado Caballero"
+  }[c] || c;
 }
 
 function formatPrice(value) {
@@ -1219,36 +1241,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================================================================
-// ============ NUEVO: SISTEMA DE NOTIFICACIONES ============
+// SISTEMA DE NOTIFICACIONES
 // ===================================================================
 
-/**
- * Inicializa el sistema de notificaciones al ingresar al panel
- */
 function initNotificationSystem() {
-  // Cargar estado de silencio desde localStorage
   notificationsMuted = localStorage.getItem("maison_notif_muted") === "true";
   updateNotificationButtonUI();
-  
-  // Crear el sonido de notificación
   initNotificationSound();
-  
-  // Suscribirse a nuevos pedidos en tiempo real
   subscribeToNewOrders();
-  
-  // Configurar los listeners de la UI
   setupNotificationUIListeners();
-  
-  // Verificar si debemos mostrar el banner de permisos
   checkNotificationPermission();
 }
 
-/**
- * Crea el objeto de sonido (usa un sonido base64 corto)
- */
 function initNotificationSound() {
   try {
-    // Sonido corto de "ding" en base64
     notificationSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmU=");
     notificationSound.volume = 0.5;
   } catch (err) {
@@ -1256,17 +1262,12 @@ function initNotificationSound() {
   }
 }
 
-/**
- * Configura los listeners de los botones de notificación
- */
 function setupNotificationUIListeners() {
-  // Botón de silenciar/activar campanita
   const notifBtn = document.getElementById("notifToggleBtn");
   if (notifBtn) {
     notifBtn.addEventListener("click", toggleNotificationsMute);
   }
   
-  // Banner de permisos
   const allowBtn = document.getElementById("notifAllowBtn");
   const laterBtn = document.getElementById("notifLaterBtn");
   const closeBtn = document.getElementById("notifBannerClose");
@@ -1275,7 +1276,6 @@ function setupNotificationUIListeners() {
   if (laterBtn) laterBtn.addEventListener("click", dismissNotificationBanner);
   if (closeBtn) closeBtn.addEventListener("click", dismissNotificationBanner);
   
-  // Toast de notificación de pedido
   const toastClose = document.getElementById("onotifClose");
   const toastView = document.getElementById("onotifView");
   
@@ -1283,31 +1283,21 @@ function setupNotificationUIListeners() {
   if (toastView) toastView.addEventListener("click", handleViewOrderFromNotification);
 }
 
-/**
- * Verifica el estado del permiso de notificaciones y muestra banner si es necesario
- */
 function checkNotificationPermission() {
   if (!("Notification" in window)) {
     console.log("Este navegador no soporta notificaciones");
     return;
   }
   
-  // Si el usuario ya decidió (allowed o denied), no mostramos el banner
   if (Notification.permission !== "default") return;
-  
-  // Si el usuario cerró el banner previamente, respetarlo
   if (localStorage.getItem("maison_notif_banner_dismissed") === "true") return;
   
-  // Mostrar banner después de 2 segundos
   setTimeout(() => {
     const banner = document.getElementById("notifPermissionBanner");
     if (banner) banner.style.display = "block";
   }, 2000);
 }
 
-/**
- * Solicita permiso al navegador para enviar notificaciones
- */
 async function requestNotificationPermission() {
   const banner = document.getElementById("notifPermissionBanner");
   
@@ -1315,7 +1305,6 @@ async function requestNotificationPermission() {
     const permission = await Notification.requestPermission();
     
     if (permission === "granted") {
-      // Enviar notificación de prueba
       new Notification("MAISON - Notificaciones activadas", {
         body: "Recibirás alertas cuando lleguen nuevos pedidos",
         icon: "/favicon.ico"
@@ -1329,27 +1318,18 @@ async function requestNotificationPermission() {
   localStorage.setItem("maison_notif_banner_dismissed", "true");
 }
 
-/**
- * Oculta el banner de permisos
- */
 function dismissNotificationBanner() {
   const banner = document.getElementById("notifPermissionBanner");
   if (banner) banner.style.display = "none";
   localStorage.setItem("maison_notif_banner_dismissed", "true");
 }
 
-/**
- * Alternar silencio de notificaciones
- */
 function toggleNotificationsMute() {
   notificationsMuted = !notificationsMuted;
   localStorage.setItem("maison_notif_muted", notificationsMuted.toString());
   updateNotificationButtonUI();
 }
 
-/**
- * Actualiza el ícono del botón de campanita
- */
 function updateNotificationButtonUI() {
   const btn = document.getElementById("notifToggleBtn");
   if (!btn) return;
@@ -1370,13 +1350,9 @@ function updateNotificationButtonUI() {
   }
 }
 
-/**
- * Suscribirse a nuevos pedidos en tiempo real vía Supabase Realtime
- */
 function subscribeToNewOrders() {
   if (!adminUser) return;
   
-  // Limpiar subscripción anterior si existe
   if (orderSubscription) {
     supabaseClient.removeChannel(orderSubscription);
   }
@@ -1401,39 +1377,24 @@ function subscribeToNewOrders() {
     });
 }
 
-/**
- * Maneja la recepción de un nuevo pedido
- */
 function handleNewOrderReceived(order) {
-  // Evitar notificar el mismo pedido 2 veces
   if (lastNotifiedOrderId === order.id) return;
   lastNotifiedOrderId = order.id;
   
-  // Actualizar la lista de pedidos si estamos en esa vista
   if (currentTab === "pedidos") {
     loadOrders();
   } else {
-    // Actualizar contador aunque no estemos en la vista
     allOrders.unshift(order);
     updateOrderCounts();
   }
   
-  // Si están silenciadas, no notificar
   if (notificationsMuted) return;
   
-  // Guardar el pedido para el botón "Ver"
   pendingNotificationOrder = order;
-  
-  // 1. Mostrar toast en pantalla
   showOrderNotificationToast(order);
-  
-  // 2. Reproducir sonido
   playNotificationSound();
-  
-  // 3. Notificación del navegador (si está permitido)
   showBrowserNotification(order);
   
-  // 4. Marcar la campanita como con nueva actividad
   const notifBtn = document.getElementById("notifToggleBtn");
   if (notifBtn) {
     notifBtn.classList.add("has-new");
@@ -1441,9 +1402,6 @@ function handleNewOrderReceived(order) {
   }
 }
 
-/**
- * Muestra el toast de notificación de pedido en pantalla
- */
 function showOrderNotificationToast(order) {
   const toast = document.getElementById("orderNotificationToast");
   if (!toast) return;
@@ -1458,7 +1416,6 @@ function showOrderNotificationToast(order) {
   toast.classList.remove("hiding");
   toast.classList.add("show");
   
-  // Auto-ocultar después de 8 segundos
   setTimeout(() => {
     if (toast.classList.contains("show")) {
       hideOrderNotificationToast();
@@ -1466,9 +1423,6 @@ function showOrderNotificationToast(order) {
   }, 8000);
 }
 
-/**
- * Oculta el toast con animación
- */
 function hideOrderNotificationToast() {
   const toast = document.getElementById("orderNotificationToast");
   if (!toast) return;
@@ -1479,22 +1433,16 @@ function hideOrderNotificationToast() {
   }, 400);
 }
 
-/**
- * Al hacer clic en "Ver pedido" desde el toast
- */
 function handleViewOrderFromNotification() {
   hideOrderNotificationToast();
   
-  // Cambiar a la pestaña de pedidos
   switchTab("pedidos");
   
-  // Cambiar el filtro a "pendiente" para verlo
   document.querySelectorAll("[data-order-filter]").forEach((c) => c.classList.remove("active"));
   const pendingChip = document.querySelector("[data-order-filter='pendiente']");
   if (pendingChip) pendingChip.classList.add("active");
   currentOrderFilter = "pendiente";
   
-  // Hacer scroll al pedido específico después de un momento
   setTimeout(() => {
     if (pendingNotificationOrder) {
       const orderCard = document.querySelector(`[data-order-id="${pendingNotificationOrder.id}"]`);
@@ -1509,9 +1457,6 @@ function handleViewOrderFromNotification() {
   }, 500);
 }
 
-/**
- * Reproduce el sonido de notificación
- */
 function playNotificationSound() {
   if (!notificationSound || notificationsMuted) return;
   
@@ -1520,7 +1465,7 @@ function playNotificationSound() {
     const playPromise = notificationSound.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
-        console.log("No se pudo reproducir sonido (probablemente falta interacción del usuario):", err);
+        console.log("No se pudo reproducir sonido:", err);
       });
     }
   } catch (err) {
@@ -1528,9 +1473,6 @@ function playNotificationSound() {
   }
 }
 
-/**
- * Muestra notificación del navegador (fuera del sitio)
- */
 function showBrowserNotification(order) {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
@@ -1551,7 +1493,6 @@ function showBrowserNotification(order) {
       notification.close();
     };
     
-    // Auto-cerrar después de 10 segundos
     setTimeout(() => notification.close(), 10000);
     
   } catch (err) {
