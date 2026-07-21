@@ -809,6 +809,71 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
+<!-- ============ BOTÓN INSTALAR APP (PWA) ============ -->
+<button id="installAppBtn" aria-label="Instalar aplicación" title="Instalar como app">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  <span class="install-btn-text">Instalar App</span>
+</button>
+
+<!-- ============ MODAL INSTRUCCIONES iOS ============ -->
+<div class="ios-install-overlay" id="iosInstallOverlay"></div>
+<div class="ios-install-modal" id="iosInstallModal">
+  <button class="modal-close" id="iosInstallClose" aria-label="Cerrar">&times;</button>
+  <div class="ios-install-content">
+    <div class="ios-install-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+        <line x1="12" y1="18" x2="12.01" y2="18"/>
+      </svg>
+    </div>
+    <h3 class="ios-install-title">Instala MAISON en tu iPhone</h3>
+    <p class="ios-install-subtitle">Sigue estos pasos para tener la app en tu pantalla de inicio:</p>
+    
+    <div class="ios-install-steps">
+      <div class="ios-step">
+        <span class="ios-step-number">1</span>
+        <div class="ios-step-content">
+          <p>Toca el botón <strong>Compartir</strong></p>
+          <span class="ios-step-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+      
+      <div class="ios-step">
+        <span class="ios-step-number">2</span>
+        <div class="ios-step-content">
+          <p>Selecciona <strong>"Añadir a pantalla de inicio"</strong></p>
+          <span class="ios-step-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+      
+      <div class="ios-step">
+        <span class="ios-step-number">3</span>
+        <div class="ios-step-content">
+          <p>Toca <strong>"Añadir"</strong> arriba a la derecha</p>
+        </div>
+      </div>
+    </div>
+    
+    <button type="button" class="btn btn-primary btn-full" id="iosInstallGotIt">Entendido</button>
+  </div>
+</div>
+
 <!-- ============ BOTÓN VOLVER ARRIBA ============ -->
 <button id="scrollTopBtnFixed" aria-label="Volver arriba" title="Volver arriba">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -818,6 +883,236 @@ document.addEventListener("DOMContentLoaded", () => {
 </button>
 
 <style>
+/* ============================================
+   BOTÓN FLOTANTE "INSTALAR APP" (PWA)
+============================================ */
+#installAppBtn {
+  position: fixed !important;
+  bottom: 100px !important;
+  right: 30px !important;
+  min-width: 55px !important;
+  height: 55px !important;
+  padding: 0 22px !important;
+  border: none !important;
+  border-radius: 30px !important;
+  background: linear-gradient(135deg, #0a0a0a, #2a2010) !important;
+  color: #c9a96e !important;
+  cursor: pointer !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  z-index: 999998 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(201, 169, 110, 0.2) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+  font-family: 'Jost', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
+  outline: none !important;
+  animation: installBtnPulse 2s ease-in-out infinite;
+}
+
+#installAppBtn.show {
+  display: flex !important;
+}
+
+#installAppBtn:hover {
+  transform: translateY(-4px) scale(1.05) !important;
+  box-shadow: 0 12px 30px rgba(201, 169, 110, 0.4), 0 0 0 2px rgba(201, 169, 110, 0.5) !important;
+  background: linear-gradient(135deg, #c9a96e, #8f6b3f) !important;
+  color: #ffffff !important;
+  animation: none;
+}
+
+#installAppBtn svg {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+#installAppBtn:hover svg {
+  transform: translateY(2px);
+}
+
+.install-btn-text {
+  white-space: nowrap;
+}
+
+@keyframes installBtnPulse {
+  0%, 100% {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(201, 169, 110, 0.2);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(201, 169, 110, 0.15);
+  }
+}
+
+@media (max-width: 768px) {
+  #installAppBtn {
+    bottom: 80px !important;
+    right: 20px !important;
+    padding: 0 18px !important;
+    height: 48px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #installAppBtn {
+    padding: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+  }
+  
+  .install-btn-text {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   MODAL INSTRUCCIONES iOS
+============================================ */
+.ios-install-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999999;
+  display: none;
+  backdrop-filter: blur(4px);
+}
+
+.ios-install-overlay.show {
+  display: block;
+}
+
+.ios-install-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 420px;
+  width: calc(100% - 40px);
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1000000;
+  display: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: iosModalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ios-install-modal.show {
+  display: block;
+}
+
+@keyframes iosModalIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.ios-install-content {
+  text-align: center;
+}
+
+.ios-install-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #c9a96e, #8f6b3f);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.ios-install-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: #0a0a0a;
+  margin: 0 0 12px 0;
+}
+
+.ios-install-subtitle {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 28px 0;
+  line-height: 1.5;
+}
+
+.ios-install-steps {
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+.ios-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(201, 169, 110, 0.2);
+}
+
+.ios-step:last-child {
+  border-bottom: none;
+}
+
+.ios-step-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #c9a96e, #8f6b3f);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: 'Jost', sans-serif;
+}
+
+.ios-step-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ios-step-content p {
+  margin: 0;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.ios-step-content strong {
+  color: #0a0a0a;
+  font-weight: 600;
+}
+
+.ios-step-icon {
+  color: #c9a96e;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   BOTÓN VOLVER ARRIBA
+============================================ */
 #scrollTopBtnFixed {
   position: fixed !important;
   bottom: 30px !important;
@@ -862,6 +1157,96 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 </style>
 
+<!-- ============ LÓGICA BOTÓN INSTALAR APP ============ -->
+<script>
+(function() {
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installAppBtn');
+  const iosOverlay = document.getElementById('iosInstallOverlay');
+  const iosModal = document.getElementById('iosInstallModal');
+  const iosClose = document.getElementById('iosInstallClose');
+  const iosGotIt = document.getElementById('iosInstallGotIt');
+
+  if (!installBtn) return;
+
+  // Detectar si ya está instalada
+  function isAppInstalled() {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }
+
+  // Detectar iOS
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) 
+      && !window.MSStream;
+  }
+
+  // Si ya está instalada, ocultar botón permanentemente
+  if (isAppInstalled()) {
+    installBtn.style.display = 'none';
+    return;
+  }
+
+  // Chrome/Edge/Android: Evento nativo de instalación
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.classList.add('show');
+    console.log('📱 App lista para instalar');
+  });
+
+  // iOS: Mostrar botón manualmente (no tienen beforeinstallprompt)
+  if (isIOS() && !isAppInstalled()) {
+    setTimeout(() => {
+      installBtn.classList.add('show');
+    }, 3000);
+  }
+
+  // Click en el botón instalar
+  installBtn.addEventListener('click', async () => {
+    // iOS → mostrar modal con instrucciones
+    if (isIOS()) {
+      iosOverlay.classList.add('show');
+      iosModal.classList.add('show');
+      return;
+    }
+
+    // Android/Chrome/Edge → prompt nativo
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('✅ Usuario aceptó instalar');
+        installBtn.classList.remove('show');
+      } else {
+        console.log('❌ Usuario rechazó instalar');
+      }
+      
+      deferredPrompt = null;
+    }
+  });
+
+  // Cuando la app se instala exitosamente
+  window.addEventListener('appinstalled', () => {
+    console.log('🎉 App instalada correctamente');
+    installBtn.classList.remove('show');
+    deferredPrompt = null;
+  });
+
+  // Cerrar modal iOS
+  function closeIosModal() {
+    iosOverlay.classList.remove('show');
+    iosModal.classList.remove('show');
+  }
+
+  if (iosClose) iosClose.addEventListener('click', closeIosModal);
+  if (iosGotIt) iosGotIt.addEventListener('click', closeIosModal);
+  if (iosOverlay) iosOverlay.addEventListener('click', closeIosModal);
+})();
+</script>
+
+<!-- ============ SCRIPT SCROLL TOP ============ -->
 <script>
 (function() {
   var btn = document.getElementById("scrollTopBtnFixed");
