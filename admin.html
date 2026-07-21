@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel — MAISON</title>
 
+<!-- ============================================
+     PWA — Progressive Web App
+============================================ -->
+<meta name="theme-color" content="#c9a96e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MAISON Panel">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="MAISON Panel">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="iconos/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="iconos/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="iconos/icon-512.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -341,6 +355,37 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+
+<!-- ============================================
+     Registro del Service Worker (PWA)
+============================================ -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('✅ Service Worker registrado:', registration.scope);
+
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('🔄 Nueva versión disponible');
+                if (confirm('Hay una actualización disponible. ¿Recargar ahora?')) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  window.location.reload();
+                }
+              }
+            });
+          });
+        })
+        .catch(err => {
+          console.error('❌ Error al registrar Service Worker:', err);
+        });
+    });
+  }
+</script>
+
 <script src="js/supabase-client.js"></script>
 <script src="js/admin.js"></script>
 
