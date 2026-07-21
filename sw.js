@@ -1,13 +1,15 @@
 // ============================================
-// SERVICE WORKER — Casa Admin PWA
-// Versión: 1.0
+// SERVICE WORKER — MAISON PWA
+// Versión: 1.1
 // ============================================
 
-const CACHE_NAME = 'casa-admin-v1';
-const CACHE_STATIC = 'casa-static-v1';
+const CACHE_NAME = 'maison-v1';
+const CACHE_STATIC = 'maison-static-v1';
 
 // Archivos a cachear al instalar
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   '/administrador.html',
   '/css/admin.css',
   '/js/supabase-client.js',
@@ -17,91 +19,58 @@ const STATIC_ASSETS = [
   '/manifest.json'
 ];
 
-// Dominios que SIEMPRE van a la red (nunca cache)
+// Dominios que SIEMPRE van a la red
 const NETWORK_ONLY_DOMAINS = [
   'supabase.co',
   'fonts.googleapis.com',
   'fonts.gstatic.com'
 ];
 
-// ============================================
-// INSTALL — Cachear archivos estáticos
-// ============================================
+// INSTALL
 self.addEventListener('install', event => {
   console.log('[SW] Instalando Service Worker...');
-  
   event.waitUntil(
     caches.open(CACHE_STATIC)
       .then(cache => {
         console.log('[SW] Cacheando archivos estáticos');
         return cache.addAll(STATIC_ASSETS);
       })
-      .then(() => {
-        console.log('[SW] Instalación completa');
-        return self.skipWaiting();
-      })
-      .catch(err => {
-        console.error('[SW] Error en instalación:', err);
-      })
+      .then(() => self.skipWaiting())
+      .catch(err => console.error('[SW] Error:', err))
   );
 });
 
-// ============================================
-// ACTIVATE — Limpiar caches viejos
-// ============================================
+// ACTIVATE
 self.addEventListener('activate', event => {
-  console.log('[SW] Activando Service Worker...');
-  
+  console.log('[SW] Activando...');
   event.waitUntil(
-    caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames
-            .filter(name => name !== CACHE_NAME && name !== CACHE_STATIC)
-            .map(name => {
-              console.log('[SW] Eliminando cache viejo:', name);
-              return caches.delete(name);
-            })
-        );
-      })
-      .then(() => {
-        console.log('[SW] Activación completa');
-        return self.clients.claim();
-      })
+    caches.keys().then(names =>
+      Promise.all(
+        names
+          .filter(name => name !== CACHE_NAME && name !== CACHE_STATIC)
+          .map(name => caches.delete(name))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// ============================================
-// FETCH — Estrategia por tipo de recurso
-// ============================================
+// FETCH
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-
-  // Solo manejar GET
   if (event.request.method !== 'GET') return;
 
-  // Dominios de red siempre van directo
-  const isNetworkOnly = NETWORK_ONLY_DOMAINS.some(domain => 
+  const isNetworkOnly = NETWORK_ONLY_DOMAINS.some(domain =>
     url.hostname.includes(domain)
   );
-  
-  if (isNetworkOnly) {
-    return;
-  }
+  if (isNetworkOnly) return;
 
-  // Archivos estáticos: Cache first
   if (isStaticAsset(url.pathname)) {
     event.respondWith(cacheFirst(event.request));
     return;
   }
 
-  // HTML y páginas: Network first
   event.respondWith(networkFirst(event.request));
 });
-
-// ============================================
-// HELPERS
-// ============================================
 
 function isStaticAsset(pathname) {
   return (
@@ -118,13 +87,9 @@ function isStaticAsset(pathname) {
   );
 }
 
-// Cache first — CSS, JS, imágenes
 async function cacheFirst(request) {
   const cached = await caches.match(request);
-  if (cached) {
-    return cached;
-  }
-  
+  if (cached) return cached;
   try {
     const response = await fetch(request);
     if (response.ok) {
@@ -133,12 +98,10 @@ async function cacheFirst(request) {
     }
     return response;
   } catch (err) {
-    console.error('[SW] Error de red:', err);
     return new Response('Recurso no disponible offline', { status: 503 });
   }
 }
 
-// Network first — HTML y páginas
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
@@ -148,26 +111,22 @@ async function networkFirst(request) {
     }
     return response;
   } catch (err) {
-    console.log('[SW] Sin red, buscando en cache:', request.url);
     const cached = await caches.match(request);
     if (cached) return cached;
-    
-    // Fallback a administrador.html
-    const fallback = await caches.match('/administrador.html');
+    const fallback = await caches.match('/index.html');
     if (fallback) return fallback;
 
-    // Página offline por defecto
     return new Response(`
       <!DOCTYPE html>
       <html lang="es">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Sin conexión — Casa Admin</title>
+        <title>Sin conexión — MAISON</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: 'Montserrat', -apple-system, sans-serif;
+            font-family: 'Jost', sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2010 100%);
             color: #ffffff;
             min-height: 100vh;
@@ -186,12 +145,7 @@ async function networkFirst(request) {
             color: #c9a96e;
             margin-bottom: 12px;
           }
-          p {
-            color: #999;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin-bottom: 28px;
-          }
+          p { color: #999; font-size: 0.9rem; line-height: 1.6; margin-bottom: 28px; }
           button {
             padding: 14px 36px;
             background: #c9a96e;
@@ -203,19 +157,15 @@ async function networkFirst(request) {
             text-transform: uppercase;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s;
           }
-          button:hover { 
-            background: #e8d5b0;
-            transform: translateY(-2px);
-          }
+          button:hover { background: #e8d5b0; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="icon">📡</div>
           <h1>Sin Conexión</h1>
-          <p>No hay conexión a internet. Por favor verifica tu red e intenta nuevamente.</p>
+          <p>No hay conexión a internet. Verifica tu red e intenta nuevamente.</p>
           <button onclick="location.reload()">Reintentar</button>
         </div>
       </body>
@@ -227,18 +177,8 @@ async function networkFirst(request) {
   }
 }
 
-// ============================================
-// MENSAJES DESDE LA APP
-// ============================================
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
-  }
-  
-  if (event.data && event.data.type === 'CLEAR_CACHE') {
-    caches.keys().then(names => {
-      names.forEach(name => caches.delete(name));
-    });
-    console.log('[SW] Cache limpiado manualmente');
   }
 });
