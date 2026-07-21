@@ -71,7 +71,7 @@
     <span class="admin-logo">MAISON <em>panel</em></span>
     <div class="admin-user">
 
-      <!-- ============ NUEVO: Enlace a Estadísticas ============ -->
+      <!-- ============ Enlace a Estadísticas ============ -->
       <a href="estadisticas.html" target="_blank" class="btn-stats-link" title="Ver estadísticas en nueva pestaña">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="20" x2="18" y2="10"/>
@@ -120,11 +120,29 @@
         <button class="btn btn-primary" id="newProductBtn">+ Nuevo producto</button>
       </div>
 
-      <div class="admin-filters">
-        <button class="filter-chip active" data-filter="todos">Todos</button>
-        <button class="filter-chip" data-filter="dama">Dama</button>
-        <button class="filter-chip" data-filter="caballero">Caballero</button>
-        <button class="filter-chip" data-filter="calzado">Calzado</button>
+      <!-- ============ FILTROS EN 2 FILAS (NUEVO) ============ -->
+      <div class="admin-filters admin-filters-2rows">
+        <div class="filter-row">
+          <button class="filter-chip active" data-filter="todos">Todos</button>
+          <button class="filter-chip" data-filter="dama">Dama</button>
+          <button class="filter-chip" data-filter="caballero">Caballero</button>
+        </div>
+        <div class="filter-row">
+          <button class="filter-chip filter-chip-calzado" data-filter="calzado_dama">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 18h20l-2 3H4l-2-3z"/>
+              <path d="M4 18V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9"/>
+            </svg>
+            Calzado Dama
+          </button>
+          <button class="filter-chip filter-chip-calzado" data-filter="calzado_caballero">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 18h20l-2 3H4l-2-3z"/>
+              <path d="M4 18V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9"/>
+            </svg>
+            Calzado Caballero
+          </button>
+        </div>
       </div>
 
       <div class="product-table" id="productTable">
@@ -193,11 +211,17 @@
   <form id="productForm" class="product-form">
     <input type="hidden" id="productId">
 
+    <!-- ============ SELECT CON GRUPOS (NUEVO) ============ -->
     <label>Categoría
       <select id="productCategory" required>
-        <option value="dama">Dama</option>
-        <option value="caballero">Caballero</option>
-        <option value="calzado">Calzado</option>
+        <optgroup label="👗 Ropa">
+          <option value="dama">Dama</option>
+          <option value="caballero">Caballero</option>
+        </optgroup>
+        <optgroup label="👞 Calzado">
+          <option value="calzado_dama">Calzado Dama</option>
+          <option value="calzado_caballero">Calzado Caballero</option>
+        </optgroup>
       </select>
     </label>
 
@@ -609,6 +633,73 @@ document.addEventListener("DOMContentLoaded", () => {
     height: 36px;
     justify-content: center;
     gap: 0;
+  }
+}
+
+/* ============================================
+   FILTROS EN 2 FILAS - CALZADO POR GÉNERO (NUEVO)
+============================================ */
+.admin-filters-2rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-chip-calzado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(168, 130, 75, 0.08) !important;
+  border-color: rgba(168, 130, 75, 0.3) !important;
+}
+
+.filter-chip-calzado:hover {
+  background: rgba(168, 130, 75, 0.15) !important;
+  border-color: var(--color-gold) !important;
+}
+
+.filter-chip-calzado.active {
+  background: var(--color-ink) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-ink) !important;
+}
+
+.filter-chip-calzado.active svg {
+  color: var(--color-gold-light);
+}
+
+.filter-chip-calzado svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .filter-row {
+    gap: 8px;
+  }
+  
+  .admin-filters-2rows .filter-chip {
+    font-size: 10px !important;
+    padding: 8px 12px !important;
+    letter-spacing: 0.8px !important;
+  }
+  
+  .filter-chip-calzado svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-filters-2rows .filter-chip {
+    padding: 7px 10px !important;
+    font-size: 9px !important;
   }
 }
 </style>
