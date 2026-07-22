@@ -3,8 +3,8 @@
 // Versión: 1.2
 // ============================================
 
-const CACHE_NAME = 'maison-v2';
-const CACHE_STATIC = 'maison-static-v2';
+const CACHE_NAME = 'maison-v3';
+const CACHE_STATIC = 'maison-static-v3';
 
 // Archivos a cachear al instalar
 const STATIC_ASSETS = [
