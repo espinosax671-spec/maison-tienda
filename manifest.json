@@ -42,7 +42,7 @@
       "name": "Panel Admin",
       "short_name": "Admin",
       "description": "Acceder al panel de administración",
-      "url": "/administrador.html",
+      "url": "/admin.html",
       "icons": [{ "src": "iconos/icon-192.png", "sizes": "192x192" }]
     }
   ]
