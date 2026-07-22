@@ -1,13 +1,12 @@
 /* ===================================================================
    PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
-   Cada usuario pertenece a una tienda (store_id)
-   Solo el dueño puede gestionar empleados
+   Iconos SVG elegantes (sin emojis)
 =================================================================== */
 
 let adminUser = null;
 let currentStoreId = null;
 let currentStoreName = "";
-let currentUserRole = null;  // 'dueño' o 'empleado'
+let currentUserRole = null;
 let allProducts = [];
 let allEmployees = [];
 let currentFilter = "todos";
@@ -85,7 +84,6 @@ async function checkStaffAndEnter(user) {
     return;
   }
 
-  // Verificar que está en staff_users Y obtener su store_id
   const { data: staff, error: staffError } = await supabaseClient
     .from("staff_users")
     .select("id, store_id, role")
@@ -103,13 +101,11 @@ async function checkStaffAndEnter(user) {
     return;
   }
 
-  // Guardar el store_id y rol globalmente
   currentStoreId = staff.store_id;
-  currentUserRole = staff.role;  // 'dueño' o 'empleado'
+  currentUserRole = staff.role;
   window.currentStoreId = staff.store_id;
   window.currentUserRole = staff.role;
 
-  // Obtener info de la tienda
   const { data: store } = await supabaseClient
     .from("stores")
     .select("name, active")
@@ -123,7 +119,6 @@ async function checkStaffAndEnter(user) {
 
   currentStoreName = store?.name || "Mi Tienda";
 
-  // Mostrar interfaz
   gate.style.display = "none";
   noAccess.style.display = "none";
   adminApp.style.display = "block";
@@ -131,11 +126,9 @@ async function checkStaffAndEnter(user) {
   document.getElementById("adminUserName").textContent =
     profile.full_name || user.user_metadata?.full_name || user.email;
 
-  // Mostrar nombre de la tienda en el header
   const storeNameEl = document.getElementById("adminStoreName");
   if (storeNameEl) storeNameEl.textContent = currentStoreName;
 
-  // Mostrar pestaña Empleados SOLO si es dueño
   const tabEmpleados = document.getElementById("tabEmpleados");
   if (tabEmpleados) {
     tabEmpleados.style.display = currentUserRole === "dueño" ? "flex" : "none";
@@ -855,7 +848,7 @@ function capitalize(str) {
 }
 
 // ===================================================================
-// GESTIÓN DE EMPLEADOS (NUEVO)
+// GESTIÓN DE EMPLEADOS (CON ICONOS SVG - SIN EMOJIS)
 // ===================================================================
 
 const employeeOverlay = document.getElementById("employeeOverlay");
@@ -863,13 +856,11 @@ const employeeModal = document.getElementById("employeeModal");
 const deleteEmployeeOverlay = document.getElementById("deleteEmployeeOverlay");
 const deleteEmployeeModal = document.getElementById("deleteEmployeeModal");
 
-// Botón "Agregar empleado"
 document.getElementById("newEmployeeBtn")?.addEventListener("click", openEmployeeModal);
 document.getElementById("employeeModalClose")?.addEventListener("click", closeEmployeeModal);
 document.getElementById("cancelEmployeeBtn")?.addEventListener("click", closeEmployeeModal);
 employeeOverlay?.addEventListener("click", closeEmployeeModal);
 
-// Botones eliminar empleado
 document.getElementById("cancelDeleteEmployeeBtn")?.addEventListener("click", closeDeleteEmployeeModal);
 deleteEmployeeOverlay?.addEventListener("click", closeDeleteEmployeeModal);
 document.getElementById("confirmDeleteEmployeeBtn")?.addEventListener("click", confirmDeleteEmployee);
@@ -879,7 +870,6 @@ function openEmployeeModal() {
   document.getElementById("employeeError").textContent = "";
   document.getElementById("employeeSuccess").textContent = "";
   
-  // Generar contraseña aleatoria
   const randomPass = Math.random().toString(36).slice(-8);
   document.getElementById("employeePassword").value = randomPass;
   
@@ -902,7 +892,6 @@ function closeDeleteEmployeeModal() {
   pendingDeleteEmployeeId = null;
 }
 
-// Cargar empleados de la tienda
 async function loadEmployees() {
   const list = document.getElementById("employeesList");
   if (!list) return;
@@ -935,7 +924,6 @@ function updateEmployeesCountBadge() {
   const badge = document.getElementById("employeesCountBadge");
   if (!badge) return;
   
-  // Contar solo empleados (no dueños)
   const empleadosCount = allEmployees.filter(e => e.role === 'empleado').length;
   badge.textContent = empleadosCount;
 }
@@ -979,19 +967,40 @@ function renderEmployeesList() {
         <div class="employee-name">
           ${escapeHtml(emp.full_name || 'Sin nombre')}
           <span class="employee-role-badge ${isOwner ? 'dueno' : 'empleado'}">
-            ${isOwner ? '👑 Dueño' : 'Empleado'}
+            ${isOwner ? 'Dueño' : 'Empleado'}
           </span>
         </div>
         <div class="employee-details">
           <span class="employee-detail-item">
-            📧 ${escapeHtml(emp.email || '-')}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            ${escapeHtml(emp.email || '-')}
           </span>
-          ${emp.phone ? `<span class="employee-detail-item">📱 ${escapeHtml(emp.phone)}</span>` : ''}
+          ${emp.phone ? `
+            <span class="employee-detail-item">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              ${escapeHtml(emp.phone)}
+            </span>
+          ` : ''}
           <span class="employee-detail-item">
-            📦 ${emp.productos_creados || 0} productos
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            ${emp.productos_creados || 0} productos
           </span>
           <span class="employee-detail-item">
-            📅 Desde ${fecha}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Desde ${fecha}
           </span>
         </div>
       </div>
@@ -1007,7 +1016,6 @@ function renderEmployeesList() {
     list.appendChild(card);
   });
 
-  // Agregar listeners a botones de eliminar
   list.querySelectorAll("[data-delete-employee]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const empId = btn.dataset.deleteEmployee;
@@ -1064,7 +1072,6 @@ async function confirmDeleteEmployee() {
   }
 }
 
-// Crear nuevo empleado
 document.getElementById("employeeForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   
@@ -1098,7 +1105,6 @@ document.getElementById("employeeForm")?.addEventListener("submit", async (e) =>
   btn.textContent = "Creando...";
   
   try {
-    // 1) Crear el usuario en auth
     const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
       email,
       password,
@@ -1125,7 +1131,6 @@ document.getElementById("employeeForm")?.addEventListener("submit", async (e) =>
       return;
     }
     
-    // 2) Agregar como empleado a la tienda
     const { data, error } = await supabaseClient.rpc("agregar_empleado_a_tienda", {
       p_user_id: signUpData.user.id,
       p_full_name: name,
@@ -1141,7 +1146,7 @@ document.getElementById("employeeForm")?.addEventListener("submit", async (e) =>
     }
     
     successEl.innerHTML = `
-      ✅ <strong>Empleado creado correctamente</strong><br>
+      <strong>Empleado creado correctamente</strong><br>
       Correo: <strong>${email}</strong><br>
       Contraseña: <strong>${password}</strong><br>
       <em style="font-size:11px;">Comparte estas credenciales con tu empleado.</em>
@@ -1149,7 +1154,6 @@ document.getElementById("employeeForm")?.addEventListener("submit", async (e) =>
     
     document.getElementById("employeeForm").reset();
     
-    // Cerrar automáticamente después de 5 segundos
     setTimeout(() => {
       closeEmployeeModal();
       loadEmployees();
