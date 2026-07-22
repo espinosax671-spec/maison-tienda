@@ -1,6 +1,8 @@
 /* ===================================================================
    MAISON — Lógica de la tienda
    Edita NUMERO_WHATSAPP con tu número (código de país + número, sin +)
+   
+   ACTUALIZADO: Soporte para calzado por género y unisex
 =================================================================== */
 
 // EDITA ESTE NÚMERO
@@ -149,7 +151,32 @@ async function fetchProductsFromSupabase() {
 }
 
 // ---------------------------------------------------------------
-// Render del catálogo (CON descuentos)
+// ⭐ NUEVA FUNCIÓN: Determinar en qué grid(s) va cada producto
+// Retorna un array con los IDs de los grids donde debe aparecer
+//
+// Reglas:
+// - dama → grid "dama"
+// - caballero → grid "caballero"
+// - calzado → grid "calzado" (categoría antigua)
+// - calzado_dama → grids "dama" Y "calzado"
+// - calzado_caballero → grids "caballero" Y "calzado"
+// - calzado_unisex → grids "dama", "caballero" Y "calzado"
+// ---------------------------------------------------------------
+function getGridsForCategory(category) {
+  const mapping = {
+    "dama": ["dama"],
+    "caballero": ["caballero"],
+    "calzado": ["calzado"],
+    "calzado_dama": ["dama", "calzado"],
+    "calzado_caballero": ["caballero", "calzado"],
+    "calzado_unisex": ["dama", "caballero", "calzado"]
+  };
+  return mapping[category] || [];
+}
+
+// ---------------------------------------------------------------
+// Render del catálogo (CON descuentos y soporte calzado por género)
+// ⭐ ACTUALIZADO: Ahora un producto puede aparecer en varios grids
 // ---------------------------------------------------------------
 async function renderCatalog() {
   const grids = {
@@ -161,80 +188,112 @@ async function renderCatalog() {
   STORE_PRODUCTS = await fetchProductsFromSupabase();
 
   STORE_PRODUCTS.forEach((product) => {
-    const grid = grids[product.category];
-    if (!grid) return;
+    // ⭐ Obtener todos los grids donde debe aparecer el producto
+    const targetGrids = getGridsForCategory(product.category);
+    
+    if (targetGrids.length === 0) {
+      console.warn(`Categoría desconocida: ${product.category}`);
+      return;
+    }
 
-    const card = document.createElement("article");
-    card.className = "product-card reveal";
-    card.dataset.productName = normalizeText(product.name);
-    card.dataset.productCategory = normalizeText(product.category);
-    card.dataset.productTag = normalizeText(product.tag);
-    card.dataset.productPrice = product.price;
-    card.dataset.productId = product.id;
-    
-    const isFav = userFavorites.has(product.id);
-    
-    const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
-    
-    let priceHtml = "";
-    if (hasDiscount) {
-      priceHtml = `
-        <div class="product-price-wrap">
-          <span class="product-price-original">${formatPrice(product.original_price)}</span>
-          <span class="product-price-discounted">${formatPrice(product.price)}</span>
-        </div>
-      `;
-    } else {
-      priceHtml = `<p class="product-price">${formatPrice(product.price)}</p>`;
-    }
-    
-    let discountBadgeHtml = "";
-    if (hasDiscount) {
-      discountBadgeHtml = `
-        <span class="discount-badge">
-          <span class="discount-badge-percent">-${product.discount_percent}%</span>
-          <span class="discount-badge-label">OFERTA</span>
-        </span>
-      `;
-    }
-    
-    card.innerHTML = `
-      <div class="product-image">
-        ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ""}
-        ${discountBadgeHtml}
-        <button type="button" class="favorite-btn ${isFav ? 'is-favorite' : ''}" data-favorite-btn="${product.id}" aria-label="Añadir a favoritos" title="Añadir a favoritos">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-        </button>
-        <img src="${product.image}" alt="${product.name}" loading="lazy">
-      </div>
-      <div class="product-info">
-        <span class="product-category">${categoryLabel(product.category)}</span>
-        <h3 class="product-name">${product.name}</h3>
-        ${priceHtml}
-      </div>
-    `;
-    
-    card.addEventListener("click", (e) => {
-      if (e.target.closest(".favorite-btn")) return;
-      openProductModal(product);
+    // Crear una tarjeta por cada grid donde aparecerá
+    targetGrids.forEach((gridId) => {
+      const grid = grids[gridId];
+      if (!grid) return;
+
+      const card = createProductCard(product);
+      grid.appendChild(card);
     });
-    
-    const favBtn = card.querySelector(".favorite-btn");
-    if (favBtn) {
-      favBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleFavorite(product);
-      });
-    }
-    
-    grid.appendChild(card);
   });
 }
 
+// ---------------------------------------------------------------
+// ⭐ NUEVA FUNCIÓN: Crear la tarjeta de producto (reutilizable)
+// Antes estaba dentro de renderCatalog, la separé para poder crear
+// múltiples instancias del mismo producto en diferentes grids
+// ---------------------------------------------------------------
+function createProductCard(product) {
+  const card = document.createElement("article");
+  card.className = "product-card reveal";
+  card.dataset.productName = normalizeText(product.name);
+  card.dataset.productCategory = normalizeText(product.category);
+  card.dataset.productTag = normalizeText(product.tag);
+  card.dataset.productPrice = product.price;
+  card.dataset.productId = product.id;
+  
+  const isFav = userFavorites.has(product.id);
+  
+  const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
+  
+  let priceHtml = "";
+  if (hasDiscount) {
+    priceHtml = `
+      <div class="product-price-wrap">
+        <span class="product-price-original">${formatPrice(product.original_price)}</span>
+        <span class="product-price-discounted">${formatPrice(product.price)}</span>
+      </div>
+    `;
+  } else {
+    priceHtml = `<p class="product-price">${formatPrice(product.price)}</p>`;
+  }
+  
+  let discountBadgeHtml = "";
+  if (hasDiscount) {
+    discountBadgeHtml = `
+      <span class="discount-badge">
+        <span class="discount-badge-percent">-${product.discount_percent}%</span>
+        <span class="discount-badge-label">OFERTA</span>
+      </span>
+    `;
+  }
+  
+  card.innerHTML = `
+    <div class="product-image">
+      ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ""}
+      ${discountBadgeHtml}
+      <button type="button" class="favorite-btn ${isFav ? 'is-favorite' : ''}" data-favorite-btn="${product.id}" aria-label="Añadir a favoritos" title="Añadir a favoritos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </button>
+      <img src="${product.image}" alt="${product.name}" loading="lazy">
+    </div>
+    <div class="product-info">
+      <span class="product-category">${categoryLabel(product.category)}</span>
+      <h3 class="product-name">${product.name}</h3>
+      ${priceHtml}
+    </div>
+  `;
+  
+  card.addEventListener("click", (e) => {
+    if (e.target.closest(".favorite-btn")) return;
+    openProductModal(product);
+  });
+  
+  const favBtn = card.querySelector(".favorite-btn");
+  if (favBtn) {
+    favBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleFavorite(product);
+    });
+  }
+  
+  return card;
+}
+
+// ---------------------------------------------------------------
+// Etiquetas de categoría
+// ⭐ ACTUALIZADO: Incluye calzado por género y unisex
+// ---------------------------------------------------------------
 function categoryLabel(category) {
-  const labels = { dama: "Dama", caballero: "Caballero", calzado: "Calzado" };
+  const labels = { 
+    dama: "Dama", 
+    caballero: "Caballero", 
+    calzado: "Calzado",
+    calzado_dama: "Calzado Dama",
+    calzado_caballero: "Calzado Caballero",
+    calzado_unisex: "Calzado Unisex"
+  };
   return labels[category] || category;
 }
 
@@ -1337,7 +1396,8 @@ async function toggleFavorite(product) {
     }
     
     const isFav = userFavorites.has(product.id);
-    const btn = document.querySelector(`[data-favorite-btn="${product.id}"]`);
+    // ⭐ Actualizar TODOS los botones del mismo producto (puede aparecer en varios grids)
+    const btns = document.querySelectorAll(`[data-favorite-btn="${product.id}"]`);
     
     if (isFav) {
       const { error } = await supabaseClient
@@ -1350,7 +1410,7 @@ async function toggleFavorite(product) {
       
       userFavorites.delete(product.id);
       
-      if (btn) {
+      btns.forEach((btn) => {
         btn.classList.add("removing");
         setTimeout(() => {
           btn.classList.remove("is-favorite");
@@ -1358,7 +1418,7 @@ async function toggleFavorite(product) {
           const svg = btn.querySelector("svg");
           if (svg) svg.setAttribute("fill", "none");
         }, 200);
-      }
+      });
       
       showCustomToast("Quitado de favoritos", product.name);
       
@@ -1374,11 +1434,11 @@ async function toggleFavorite(product) {
       
       userFavorites.add(product.id);
       
-      if (btn) {
+      btns.forEach((btn) => {
         btn.classList.add("is-favorite");
         const svg = btn.querySelector("svg");
         if (svg) svg.setAttribute("fill", "currentColor");
-      }
+      });
       
       showCustomToast("Agregado a favoritos", product.name);
     }
@@ -1976,6 +2036,7 @@ window.checkProfileHasData = checkProfileHasData;
 window.updateProfileTabCounts = updateProfileTabCounts;
 window.showProfileForm = showProfileForm;
 window.updateProfileInfoView = updateProfileInfoView;
+
 // ---------------------------------------------------------------
 // BOTÓN VOLVER ARRIBA (se maneja en el HTML con estilos inline)
 // ---------------------------------------------------------------
