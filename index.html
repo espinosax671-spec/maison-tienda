@@ -255,7 +255,7 @@
       </div>
     </div>
   </div>
-  <p class="footer-legal">© 2026 MAISON. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a></p>
+  <p class="footer-legal">© 2026 MAISON. Hecho con cuidado en Colombia. <a href="administrador.html" class="admin-link">Panel</a></p>
 </footer>
 
 <!-- ============ CARRITO LATERAL ============ -->
@@ -401,8 +401,8 @@
           <path d="M9 21v-6h6v6"/>
         </svg>
       </span>
-      <span class="role-tab-name">Vendedor</span>
-      <span class="role-tab-desc">Gestionar tienda</span>
+      <span class="role-tab-name">Dueño</span>
+      <span class="role-tab-desc">Crear mi tienda</span>
     </button>
   </div>
 
@@ -495,7 +495,21 @@
         <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Mostrar contraseña"></button>
       </div>
 
+      <!-- ============ CAMPOS DEL DUEÑO DE TIENDA (ACTUALIZADO) ============ -->
       <div id="vendorFields" style="display:none;">
+        
+        <!-- Nombre de la tienda (NUEVO) -->
+        <div class="input-group vendor-store-name">
+          <span class="input-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l1-5h16l1 5"/>
+              <path d="M4 9v12h16V9"/>
+              <path d="M9 21v-6h6v6"/>
+            </svg>
+          </span>
+          <input type="text" id="registerStoreName" placeholder="Nombre de tu tienda (ej: MAISON Bogotá)">
+        </div>
+        
         <div class="input-group">
           <span class="input-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -504,7 +518,19 @@
           </span>
           <input type="tel" id="registerWhatsapp" placeholder="Tu número de WhatsApp (ej: 3001234567)">
         </div>
-        <p class="account-hint">Los clientes te contactarán a este número para cerrar sus pedidos.</p>
+        
+        <!-- Info box explicativo (NUEVO) -->
+        <div class="vendor-info-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <div>
+            <strong>Al crear tu cuenta se creará automáticamente tu tienda</strong>
+            <span>Podrás gestionar productos, pedidos e invitar empleados desde tu panel personal.</span>
+          </div>
+        </div>
       </div>
 
       <p class="terms-text">Al registrarte aceptas nuestros <a href="#">términos</a> y <a href="#">política de privacidad</a>.</p>
@@ -532,10 +558,10 @@
         <polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
     </div>
-    <span class="section-eyebrow">Bienvenido, vendedor</span>
-    <h3 class="account-title" id="vendorGreeting">Cuenta creada</h3>
-    <p class="account-text">Tu cuenta de vendedor ya está lista. Te estamos llevando al panel para que empieces a gestionar tus productos.</p>
-    <a href="admin.html" class="btn btn-primary btn-full btn-auth">
+    <span class="section-eyebrow">¡Bienvenido!</span>
+    <h3 class="account-title" id="vendorGreeting">Tienda creada</h3>
+    <p class="account-text">Tu tienda ya está lista. Te estamos llevando al panel para que empieces a gestionar tus productos.</p>
+    <a href="administrador.html" class="btn btn-primary btn-full btn-auth">
       <span>Ir al panel ahora</span>
       <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1155,6 +1181,46 @@ document.addEventListener("DOMContentLoaded", () => {
     height: 48px !important;
   }
 }
+
+/* ============================================
+   ESTILOS DEL REGISTRO DE VENDEDOR (NUEVO)
+============================================ */
+.vendor-store-name input {
+  font-weight: 600 !important;
+}
+
+.vendor-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.12), rgba(143, 107, 63, 0.06));
+  border: 1px solid rgba(212, 168, 105, 0.25);
+  border-radius: 10px;
+  margin: 12px 0;
+}
+
+.vendor-info-box svg {
+  color: #8f6b3f;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.vendor-info-box strong {
+  display: block;
+  font-size: 12px;
+  color: #1a1410;
+  margin-bottom: 4px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.vendor-info-box span {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.5;
+}
 </style>
 
 <!-- ============ LÓGICA BOTÓN INSTALAR APP ============ -->
@@ -1169,25 +1235,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!installBtn) return;
 
-  // Detectar si ya está instalada
   function isAppInstalled() {
     return window.matchMedia('(display-mode: standalone)').matches
       || window.navigator.standalone === true;
   }
 
-  // Detectar iOS
   function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) 
       && !window.MSStream;
   }
 
-  // Si ya está instalada, ocultar botón permanentemente
   if (isAppInstalled()) {
     installBtn.style.display = 'none';
     return;
   }
 
-  // Chrome/Edge/Android: Evento nativo de instalación
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -1195,23 +1257,19 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log('📱 App lista para instalar');
   });
 
-  // iOS: Mostrar botón manualmente (no tienen beforeinstallprompt)
   if (isIOS() && !isAppInstalled()) {
     setTimeout(() => {
       installBtn.classList.add('show');
     }, 3000);
   }
 
-  // Click en el botón instalar
   installBtn.addEventListener('click', async () => {
-    // iOS → mostrar modal con instrucciones
     if (isIOS()) {
       iosOverlay.classList.add('show');
       iosModal.classList.add('show');
       return;
     }
 
-    // Android/Chrome/Edge → prompt nativo
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -1227,14 +1285,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Cuando la app se instala exitosamente
   window.addEventListener('appinstalled', () => {
     console.log('🎉 App instalada correctamente');
     installBtn.classList.remove('show');
     deferredPrompt = null;
   });
 
-  // Cerrar modal iOS
   function closeIosModal() {
     iosOverlay.classList.remove('show');
     iosModal.classList.remove('show');
