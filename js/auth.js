@@ -2,10 +2,14 @@
    AUTENTICACIÓN — Registro, Login, Perfil, Sesión
    Sistema MULTI-TIENDA con creación automática de tienda
    Roles: comprador (tienda) y administrador (dueño de tienda)
+   
+   ACTUALIZADO: Detecta staff (dueño/empleado) y los redirige al panel
+   sin mostrar su cuenta en el header de la tienda pública
 =================================================================== */
 
 let currentUser = null;
 let currentRole = null;
+let isStaffUser = false; // ⭐ NUEVO: Indica si el usuario es dueño/empleado
 let selectedRole = 'comprador';
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -84,8 +88,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------------
   // Botón "Ingresar" del header
+  // ⭐ ACTUALIZADO: Si es staff, redirige al panel directamente
   // ---------------------------------------------------------------
   accountToggle.addEventListener("click", () => {
+    // Si es staff (dueño/empleado), redirigir al panel en lugar de abrir modal
+    if (currentUser && isStaffUser) {
+      window.location.href = "admin.html";
+      return;
+    }
+
     openAccountModal();
     if (currentUser) {
       toggleRoleTabs(false);
@@ -269,6 +280,7 @@ window.addEventListener("DOMContentLoaded", () => {
     await supabaseClient.auth.signOut();
     currentUser = null;
     currentRole = null;
+    isStaffUser = false; // ⭐ Resetear flag de staff
     
     if (typeof window.userFavorites !== "undefined") {
       window.userFavorites = new Set();
@@ -359,16 +371,45 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------------
+  // ⭐ NUEVA FUNCIÓN: Verificar si el usuario es staff (dueño/empleado)
+  // Consulta la tabla staff_users para detectar si pertenece a alguna tienda
+  // ---------------------------------------------------------------
+  async function checkIfUserIsStaff(userId) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("staff_users")
+        .select("id, store_id, role")
+        .eq("id", userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.warn("Error verificando staff:", error);
+        return false;
+      }
+      
+      // Es staff si existe registro en staff_users con store_id
+      return !!(data && data.store_id);
+    } catch (err) {
+      console.error("Error en checkIfUserIsStaff:", err);
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------
   // Tras login/registro exitoso
   // ---------------------------------------------------------------
   async function onAuthSuccess(user) {
     currentUser = user;
     toggleRoleTabs(false);
+    
+    // ⭐ Verificar si es staff antes de continuar
+    isStaffUser = await checkIfUserIsStaff(user.id);
+    
     await loadProfileIntoForm();
     updateAccountUI();
 
     // Vendedor o Administrador (dueño de tienda) van al panel
-    if (currentRole === "vendedor" || currentRole === "administrador") {
+    if (currentRole === "vendedor" || currentRole === "administrador" || isStaffUser) {
       showAccountView("vendor");
       const firstName = user.user_metadata?.full_name?.split(" ")[0] || "vendedor";
       const vendorGreeting = document.getElementById("vendorGreeting");
@@ -469,19 +510,39 @@ window.addEventListener("DOMContentLoaded", () => {
     if (profileGreeting) profileGreeting.textContent = `Hola, ${firstName}`;
   }
 
+  // ---------------------------------------------------------------
+  // ⭐ ACTUALIZADO: Actualizar UI del header según tipo de usuario
+  // Si es staff → muestra "IR AL PANEL" en lugar del nombre
+  // Si es cliente → muestra el nombre normalmente
+  // Si no hay sesión → muestra "INGRESAR"
+  // ---------------------------------------------------------------
   function updateAccountUI() {
     if (currentUser) {
-      const name = currentUser.user_metadata?.full_name || currentUser.email;
-      accountLabel.textContent = name.split(" ")[0];
-      accountToggle.classList.add("logged-in");
+      if (isStaffUser) {
+        // Es staff (dueño/empleado): mostrar botón "IR AL PANEL"
+        accountLabel.textContent = "Ir al panel";
+        accountToggle.classList.add("logged-in");
+        accountToggle.classList.add("is-staff");
+        accountToggle.title = "Ir al panel de administración";
+      } else {
+        // Es cliente normal: mostrar su nombre
+        const name = currentUser.user_metadata?.full_name || currentUser.email;
+        accountLabel.textContent = name.split(" ")[0];
+        accountToggle.classList.add("logged-in");
+        accountToggle.classList.remove("is-staff");
+        accountToggle.title = "Mi cuenta";
+      }
     } else {
       accountLabel.textContent = "Ingresar";
       accountToggle.classList.remove("logged-in");
+      accountToggle.classList.remove("is-staff");
+      accountToggle.title = "Iniciar sesión";
     }
   }
 
   // ---------------------------------------------------------------
   // Inicialización: revisar sesión activa
+  // ⭐ ACTUALIZADO: Detecta si el usuario es staff al cargar
   // ---------------------------------------------------------------
   async function initAuth() {
     const { data } = await supabaseClient.auth.getSession();
@@ -495,9 +556,14 @@ window.addEventListener("DOMContentLoaded", () => {
         .maybeSingle();
 
       currentRole = profile?.role || currentUser.user_metadata?.role || "comprador";
+      
+      // ⭐ Verificar si es staff (dueño/empleado)
+      isStaffUser = await checkIfUserIsStaff(currentUser.id);
+      
       await loadProfileIntoForm();
       
-      if (currentRole !== "vendedor" && currentRole !== "administrador" && typeof window.loadUserFavorites === "function") {
+      // Solo cargar favoritos si NO es staff
+      if (!isStaffUser && currentRole !== "vendedor" && currentRole !== "administrador" && typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
         setTimeout(() => {
@@ -510,8 +576,16 @@ window.addEventListener("DOMContentLoaded", () => {
     updateAccountUI();
   }
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user || null;
+    
+    // ⭐ Re-verificar si es staff cuando cambia el estado de auth
+    if (currentUser) {
+      isStaffUser = await checkIfUserIsStaff(currentUser.id);
+    } else {
+      isStaffUser = false;
+    }
+    
     updateAccountUI();
   });
 
