@@ -255,7 +255,7 @@
       </div>
     </div>
   </div>
-  <p class="footer-legal">© 2026 MAISON. Hecho con cuidado en Colombia. <a href="administrador.html" class="admin-link">Panel</a></p>
+  <p class="footer-legal">© 2026 MAISON. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a></p>
 </footer>
 
 <!-- ============ CARRITO LATERAL ============ -->
@@ -495,10 +495,10 @@
         <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Mostrar contraseña"></button>
       </div>
 
-      <!-- ============ CAMPOS DEL DUEÑO DE TIENDA (ACTUALIZADO) ============ -->
+      <!-- ============ CAMPOS DEL DUEÑO DE TIENDA ============ -->
       <div id="vendorFields" style="display:none;">
         
-        <!-- Nombre de la tienda (NUEVO) -->
+        <!-- Nombre de la tienda -->
         <div class="input-group vendor-store-name">
           <span class="input-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -519,7 +519,7 @@
           <input type="tel" id="registerWhatsapp" placeholder="Tu número de WhatsApp (ej: 3001234567)">
         </div>
         
-        <!-- Info box explicativo (NUEVO) -->
+        <!-- Info box explicativo -->
         <div class="vendor-info-box">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
@@ -561,7 +561,7 @@
     <span class="section-eyebrow">¡Bienvenido!</span>
     <h3 class="account-title" id="vendorGreeting">Tienda creada</h3>
     <p class="account-text">Tu tienda ya está lista. Te estamos llevando al panel para que empieces a gestionar tus productos.</p>
-    <a href="administrador.html" class="btn btn-primary btn-full btn-auth">
+    <a href="admin.html" class="btn btn-primary btn-full btn-auth">
       <span>Ir al panel ahora</span>
       <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="5" y1="12" x2="19" y2="12"/>
@@ -585,16 +585,14 @@
     <button type="button" class="btn btn-ghost btn-full" id="confirmBackBtn">Volver a iniciar sesión</button>
   </div>
 
-  <!-- ============ NUEVA VISTA: PERFIL CON PESTAÑAS ============ -->
+  <!-- ============ VISTA: PERFIL CON PESTAÑAS ============ -->
   <div class="account-view" id="viewProfile">
     
-    <!-- Header del perfil -->
     <div class="profile-header">
       <span class="section-eyebrow">Tu cuenta</span>
       <h3 class="account-title" id="profileGreeting">Hola</h3>
     </div>
 
-    <!-- Pestañas de navegación -->
     <div class="profile-tabs" id="profileTabs">
       <button type="button" class="profile-tab active" data-profile-tab="perfil">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -621,10 +619,8 @@
       </button>
     </div>
 
-    <!-- ============ PESTAÑA: MI PERFIL ============ -->
     <div class="profile-tab-content active" id="profileContentPerfil">
       
-      <!-- Vista de datos guardados (cuando ya tiene datos) -->
       <div class="profile-info-view" id="profileInfoView" style="display:none;">
         <p class="account-subtitle">Estos son tus datos de contacto.</p>
         
@@ -677,7 +673,6 @@
         </button>
       </div>
 
-      <!-- Vista de formulario (para editar o llenar por primera vez) -->
       <div class="profile-form-view" id="profileFormView">
         <p class="account-subtitle">Mantén tus datos actualizados para agilizar tus pedidos.</p>
         
@@ -725,7 +720,6 @@
 
     </div>
 
-    <!-- ============ PESTAÑA: FAVORITOS ============ -->
     <div class="profile-tab-content" id="profileContentFavoritos">
       <p class="account-subtitle">Los productos que has guardado como favoritos.</p>
       
@@ -739,15 +733,12 @@
         </p>
       </div>
       
-      <!-- Contador oculto para compatibilidad -->
       <span id="favoritesCount" style="display:none;">0</span>
     </div>
 
-    <!-- ============ PESTAÑA: PEDIDOS ============ -->
     <div class="profile-tab-content" id="profileContentPedidos">
       <p class="account-subtitle">Aquí puedes ver el historial de todas tus compras.</p>
       
-      <!-- Filtros por estado -->
       <div class="orders-history-filters" id="ordersHistoryFilters">
         <button type="button" class="order-history-filter active" data-history-filter="todos">
           Todos
@@ -763,7 +754,6 @@
         </button>
       </div>
       
-      <!-- Lista de pedidos -->
       <div class="orders-history-list" id="ordersHistoryList">
         <p class="orders-history-empty" id="ordersHistoryEmpty">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -776,11 +766,9 @@
         </p>
       </div>
       
-      <!-- Contador oculto para compatibilidad -->
       <span id="ordersHistoryCount" style="display:none;">0</span>
     </div>
 
-    <!-- Botón de cerrar sesión (siempre visible) -->
     <button type="button" class="btn btn-ghost btn-full logout-btn" id="logoutBtn">Cerrar sesión</button>
   </div>
 
@@ -1183,7 +1171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 /* ============================================
-   ESTILOS DEL REGISTRO DE VENDEDOR (NUEVO)
+   ESTILOS DEL REGISTRO DE VENDEDOR
 ============================================ */
 .vendor-store-name input {
   font-weight: 600 !important;
