@@ -156,6 +156,13 @@
             </svg>
             Calzado Caballero
           </button>
+          <button class="filter-chip filter-chip-calzado filter-chip-unisex" data-filter="calzado_unisex">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 18h20l-2 3H4l-2-3z"/>
+              <path d="M4 18V9a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9"/>
+            </svg>
+            Calzado Unisex
+          </button>
         </div>
       </div>
 
@@ -258,6 +265,7 @@
         <optgroup label="Calzado">
           <option value="calzado_dama">Calzado Dama</option>
           <option value="calzado_caballero">Calzado Caballero</option>
+          <option value="calzado_unisex">Calzado Unisex</option>
         </optgroup>
       </select>
     </label>
@@ -499,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script src="js/supabase-client.js"></script>
-<script src="js/admin.js?v=20250122c"></script>
+<script src="js/admin.js?v=20250122d"></script>
 
 <style>
 /* Estilos del descuento y stock */
@@ -765,6 +773,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 .filter-chip-calzado svg {
   flex-shrink: 0;
+}
+
+/* Estilo especial para chip UNISEX */
+.filter-chip-unisex {
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.12), rgba(143, 107, 63, 0.08)) !important;
+  border-color: rgba(212, 168, 105, 0.4) !important;
+  position: relative;
+}
+
+.filter-chip-unisex:hover {
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.2), rgba(143, 107, 63, 0.15)) !important;
+  border-color: var(--color-gold-dark) !important;
+}
+
+.filter-chip-unisex.active {
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-ink)) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-gold-dark) !important;
+}
+
+.filter-chip-unisex.active svg {
+  color: var(--color-gold-light);
 }
 
 @media (max-width: 640px) {
