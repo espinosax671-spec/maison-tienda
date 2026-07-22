@@ -377,7 +377,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       
       setTimeout(() => {
-        window.location.href = "administrador.html";
+        window.location.href = "admin.html";
       }, 2500);
     } else {
       showAccountView("profile");
