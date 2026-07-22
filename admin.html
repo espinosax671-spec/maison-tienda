@@ -114,7 +114,7 @@
         <span class="tab-label">Pedidos</span>
         <span class="tab-badge" id="pendingOrdersBadge" style="display:none;">0</span>
       </button>
-      <!-- ============ NUEVA PESTAÑA: EMPLEADOS (solo dueño) ============ -->
+      <!-- ============ PESTAÑA EMPLEADOS (solo dueño) ============ -->
       <button type="button" class="admin-tab tab-empleados" data-tab="empleados" id="tabEmpleados" style="display:none;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:middle;">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -192,7 +192,7 @@
       </div>
     </div>
 
-    <!-- ============ NUEVA VISTA: EMPLEADOS ============ -->
+    <!-- ============ VISTA: EMPLEADOS ============ -->
     <div class="admin-view" id="viewEmpleados">
       <div class="admin-toolbar">
         <h1>Empleados</h1>
@@ -251,11 +251,11 @@
 
     <label>Categoría
       <select id="productCategory" required>
-        <optgroup label="👗 Ropa">
+        <optgroup label="Ropa">
           <option value="dama">Dama</option>
           <option value="caballero">Caballero</option>
         </optgroup>
-        <optgroup label="👞 Calzado">
+        <optgroup label="Calzado">
           <option value="calzado_dama">Calzado Dama</option>
           <option value="calzado_caballero">Calzado Caballero</option>
         </optgroup>
@@ -499,7 +499,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script src="js/supabase-client.js"></script>
-<script src="js/admin.js?v=999999"></script>
+<script src="js/admin.js?v=20250122c"></script>
 
 <style>
 /* Estilos del descuento y stock */
@@ -960,9 +960,14 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 .employee-detail-item {
-  display: flex;
+  display: inline-flex !important;
   align-items: center;
-  gap: 4px;
+  gap: 6px !important;
+}
+
+.employee-detail-item svg {
+  color: var(--color-gold-dark);
+  flex-shrink: 0;
 }
 
 .employee-actions {
