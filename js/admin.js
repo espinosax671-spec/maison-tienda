@@ -1,6 +1,7 @@
 /* ===================================================================
    PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
    Iconos SVG elegantes (sin emojis)
+   ACTUALIZADO: Soporte para Calzado Unisex
 =================================================================== */
 
 let adminUser = null;
@@ -216,6 +217,8 @@ async function loadProducts() {
 
 // ---------------------------------------------------------------
 // Renderizar tabla de productos
+// ACTUALIZADO: Los productos "Calzado Unisex" aparecen en filtros
+// Dama y Caballero (además de su propio filtro)
 // ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
@@ -225,11 +228,15 @@ function renderProductTable() {
     filtered = allProducts;
   } else if (currentFilter === "dama") {
     filtered = allProducts.filter((p) => 
-      p.category === "dama" || p.category === "calzado_dama"
+      p.category === "dama" || 
+      p.category === "calzado_dama" || 
+      p.category === "calzado_unisex"
     );
   } else if (currentFilter === "caballero") {
     filtered = allProducts.filter((p) => 
-      p.category === "caballero" || p.category === "calzado_caballero"
+      p.category === "caballero" || 
+      p.category === "calzado_caballero" || 
+      p.category === "calzado_unisex"
     );
   } else {
     filtered = allProducts.filter((p) => p.category === currentFilter);
@@ -296,13 +303,18 @@ function renderProductTable() {
   });
 }
 
+// ---------------------------------------------------------------
+// Etiquetas de categoría
+// ACTUALIZADO: Incluye "Calzado Unisex"
+// ---------------------------------------------------------------
 function categoryLabel(c) {
   return { 
     dama: "Dama", 
     caballero: "Caballero", 
     calzado: "Calzado",
     calzado_dama: "Calzado Dama",
-    calzado_caballero: "Calzado Caballero"
+    calzado_caballero: "Calzado Caballero",
+    calzado_unisex: "Calzado Unisex"
   }[c] || c;
 }
 
