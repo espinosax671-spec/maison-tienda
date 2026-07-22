@@ -1,7 +1,7 @@
 /* ===================================================================
    AUTENTICACIÓN — Registro, Login, Perfil, Sesión
-   Con roles: comprador (tienda) y vendedor/dueño (panel admin)
-   Sistema multi-tienda con creación automática de tienda
+   Sistema MULTI-TIENDA con creación automática de tienda
+   Roles: comprador (tienda) y administrador (dueño de tienda)
 =================================================================== */
 
 let currentUser = null;
@@ -89,9 +89,10 @@ window.addEventListener("DOMContentLoaded", () => {
     openAccountModal();
     if (currentUser) {
       toggleRoleTabs(false);
-      showAccountView(currentRole === "vendedor" || currentRole === "administrador" ? "vendor" : "profile");
+      const esVendedor = currentRole === "vendedor" || currentRole === "administrador";
+      showAccountView(esVendedor ? "vendor" : "profile");
       
-      if (currentRole !== "vendedor" && currentRole !== "administrador") {
+      if (!esVendedor) {
         if (typeof window.checkProfileHasData === "function") {
           window.checkProfileHasData();
         }
@@ -128,7 +129,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------------
-  // REGISTRO (ACTUALIZADO PARA MULTI-TIENDA)
+  // REGISTRO (MULTI-TIENDA)
   // ---------------------------------------------------------------
   document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -142,7 +143,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const storeName = document.getElementById("registerStoreName")?.value.trim() || "";
     const btn = document.getElementById("registerSubmitBtn");
 
-    // Validaciones específicas para dueño de tienda
+    // Validaciones para dueño de tienda
     if (selectedRole === "vendedor") {
       if (!storeName) {
         errorEl.textContent = "Como dueño de tienda, necesitas ingresar el nombre de tu tienda.";
@@ -162,9 +163,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const originalHtml = btn.innerHTML;
     btn.innerHTML = "<span>Creando cuenta...</span>";
 
-    // Determinar el rol real que va a auth.users
-    // 'vendedor' en la UI significa 'dueño de tienda' → role='administrador'
-    // 'comprador' en la UI se guarda como role='comprador'
+    // Determinar el rol real:
+    // 'vendedor' (en la UI) → 'administrador' (dueño de tienda)
+    // 'comprador' → 'comprador'
     const roleParaGuardar = selectedRole === "vendedor" ? "administrador" : "comprador";
 
     const { data, error } = await supabaseClient.auth.signUp({
@@ -202,7 +203,7 @@ window.addEventListener("DOMContentLoaded", () => {
       updated_at: new Date().toISOString(),
     });
 
-    // Si es dueño de tienda, crear la tienda
+    // Si es dueño de tienda, crear la tienda con la función RPC
     if (selectedRole === "vendedor") {
       const { data: storeId, error: storeError } = await supabaseClient.rpc("registrar_vendedor_con_tienda", {
         user_id: data.user.id,
