@@ -1,16 +1,16 @@
 // ============================================
 // SERVICE WORKER — MAISON PWA
-// Versión: 1.1
+// Versión: 1.2
 // ============================================
 
-const CACHE_NAME = 'maison-v1';
-const CACHE_STATIC = 'maison-static-v1';
+const CACHE_NAME = 'maison-v2';
+const CACHE_STATIC = 'maison-static-v2';
 
 // Archivos a cachear al instalar
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/administrador.html',
+  '/admin.html',
   '/css/admin.css',
   '/js/supabase-client.js',
   '/js/admin.js',
