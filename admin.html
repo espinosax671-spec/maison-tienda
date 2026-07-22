@@ -50,7 +50,7 @@
 </div>
       <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar al panel</button>
     </form>
-    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al administrador que te agregue.</p>
+    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al dueño de la tienda que te agregue.</p>
   </div>
 </div>
 
@@ -68,7 +68,10 @@
 <div class="admin-app" id="adminApp" style="display:none;">
 
   <header class="admin-header">
-    <span class="admin-logo">MAISON <em>panel</em></span>
+    <div class="admin-logo-wrap">
+      <span class="admin-logo">MAISON <em>panel</em></span>
+      <span class="admin-store-name" id="adminStoreName"></span>
+    </div>
     <div class="admin-user">
 
       <!-- ============ Enlace a Estadísticas ============ -->
@@ -120,7 +123,7 @@
         <button class="btn btn-primary" id="newProductBtn">+ Nuevo producto</button>
       </div>
 
-      <!-- ============ FILTROS EN 2 FILAS (NUEVO) ============ -->
+      <!-- ============ FILTROS EN 2 FILAS ============ -->
       <div class="admin-filters admin-filters-2rows">
         <div class="filter-row">
           <button class="filter-chip active" data-filter="todos">Todos</button>
@@ -211,7 +214,6 @@
   <form id="productForm" class="product-form">
     <input type="hidden" id="productId">
 
-    <!-- ============ SELECT CON GRUPOS (NUEVO) ============ -->
     <label>Categoría
       <select id="productCategory" required>
         <optgroup label="👗 Ropa">
@@ -637,7 +639,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 /* ============================================
-   FILTROS EN 2 FILAS - CALZADO POR GÉNERO (NUEVO)
+   FILTROS EN 2 FILAS - CALZADO POR GÉNERO
 ============================================ */
 .admin-filters-2rows {
   display: flex;
@@ -700,6 +702,36 @@ document.addEventListener("DOMContentLoaded", () => {
   .admin-filters-2rows .filter-chip {
     padding: 7px 10px !important;
     font-size: 9px !important;
+  }
+}
+
+/* ============================================
+   NOMBRE DE LA TIENDA EN HEADER (NUEVO)
+============================================ */
+.admin-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-store-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-gold-dark);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.admin-store-name:empty {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .admin-store-name {
+    font-size: 9px;
+    letter-spacing: 1px;
   }
 }
 </style>
