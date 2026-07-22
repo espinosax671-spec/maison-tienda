@@ -114,6 +114,17 @@
         <span class="tab-label">Pedidos</span>
         <span class="tab-badge" id="pendingOrdersBadge" style="display:none;">0</span>
       </button>
+      <!-- ============ NUEVA PESTAÑA: EMPLEADOS (solo dueño) ============ -->
+      <button type="button" class="admin-tab tab-empleados" data-tab="empleados" id="tabEmpleados" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:middle;">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="tab-label">Empleados</span>
+        <span class="tab-badge" id="employeesCountBadge">0</span>
+      </button>
     </div>
 
     <!-- ============ VISTA: PRODUCTOS ============ -->
@@ -178,6 +189,30 @@
 
       <div class="orders-list" id="ordersList">
         <p class="loading-msg">Cargando pedidos...</p>
+      </div>
+    </div>
+
+    <!-- ============ NUEVA VISTA: EMPLEADOS ============ -->
+    <div class="admin-view" id="viewEmpleados">
+      <div class="admin-toolbar">
+        <h1>Empleados</h1>
+        <button class="btn btn-primary" id="newEmployeeBtn">+ Agregar empleado</button>
+      </div>
+      
+      <div class="employees-info-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <div>
+          <strong>Gestiona el equipo de tu tienda</strong>
+          <span>Los empleados podrán crear, editar productos y gestionar pedidos, pero NO podrán invitar a otros empleados ni cambiar la información de tu tienda.</span>
+        </div>
+      </div>
+      
+      <div class="employees-list" id="employeesList">
+        <p class="loading-msg">Cargando empleados...</p>
       </div>
     </div>
 
@@ -288,6 +323,57 @@
   </form>
 </div>
 
+<!-- ============ MODAL: AGREGAR EMPLEADO ============ -->
+<div class="modal-overlay" id="employeeOverlay"></div>
+<div class="product-form-modal" id="employeeModal">
+  <button class="modal-close" id="employeeModalClose" aria-label="Cerrar">&times;</button>
+  <h2>Agregar nuevo empleado</h2>
+  <p class="form-subtitle" style="margin-bottom:24px;color:var(--color-ink-soft);font-size:13px;">
+    Crea una cuenta para tu empleado. Luego compártele el correo y contraseña para que pueda ingresar.
+  </p>
+
+  <form id="employeeForm" class="product-form">
+    
+    <label>Nombre completo del empleado
+      <input type="text" id="employeeName" required placeholder="Ej: María González" minlength="3">
+    </label>
+
+    <label>Correo electrónico
+      <input type="email" id="employeeEmail" required placeholder="empleado@ejemplo.com">
+      <span class="stock-initial-hint">Este será su correo para iniciar sesión</span>
+    </label>
+
+    <label>Contraseña temporal
+      <input type="text" id="employeePassword" required placeholder="Mínimo 6 caracteres" minlength="6" value="">
+      <span class="stock-initial-hint">Comparte esta contraseña con tu empleado. Podrá cambiarla después.</span>
+    </label>
+
+    <label>WhatsApp (opcional)
+      <input type="tel" id="employeePhone" placeholder="Ej: 3001234567">
+    </label>
+
+    <p class="form-error" id="employeeError"></p>
+    <p class="reset-success" id="employeeSuccess"></p>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="cancelEmployeeBtn">Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="saveEmployeeBtn">Crear empleado</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: CONFIRMAR ELIMINAR EMPLEADO ============ -->
+<div class="modal-overlay" id="deleteEmployeeOverlay"></div>
+<div class="confirm-modal" id="deleteEmployeeModal">
+  <h3>¿Eliminar este empleado?</h3>
+  <p>El empleado perderá acceso al panel. Sus productos y pedidos se mantendrán en la tienda.</p>
+  <p style="margin-top:12px;font-weight:600;" id="deleteEmployeeName"></p>
+  <div class="form-actions">
+    <button class="btn btn-ghost" id="cancelDeleteEmployeeBtn">Cancelar</button>
+    <button class="btn btn-danger" id="confirmDeleteEmployeeBtn">Eliminar</button>
+  </div>
+</div>
+
 <!-- ============ MODAL: RECUPERAR CONTRASEÑA ============ -->
 <div class="modal-overlay" id="resetOverlay"></div>
 <div class="confirm-modal" id="resetModal">
@@ -309,7 +395,7 @@
   </form>
 </div>
 
-<!-- ============ MODAL: CONFIRMAR ELIMINAR ============ -->
+<!-- ============ MODAL: CONFIRMAR ELIMINAR PRODUCTO ============ -->
 <div class="modal-overlay" id="deleteOverlay"></div>
 <div class="confirm-modal" id="deleteConfirmModal">
   <h3>¿Eliminar este producto?</h3>
@@ -706,7 +792,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 /* ============================================
-   NOMBRE DE LA TIENDA EN HEADER (NUEVO)
+   NOMBRE DE LA TIENDA EN HEADER
 ============================================ */
 .admin-logo-wrap {
   display: flex;
@@ -732,6 +818,222 @@ document.addEventListener("DOMContentLoaded", () => {
   .admin-store-name {
     font-size: 9px;
     letter-spacing: 1px;
+  }
+}
+
+/* ============================================
+   PESTAÑA EMPLEADOS
+============================================ */
+.tab-empleados {
+  position: relative;
+}
+
+.tab-empleados #employeesCountBadge {
+  background: var(--color-gold-dark);
+  color: var(--color-white);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+  min-width: 18px;
+  display: inline-block;
+  text-align: center;
+}
+
+.employees-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.08), rgba(143, 107, 63, 0.04));
+  border: 1px solid rgba(212, 168, 105, 0.2);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.employees-info-box svg {
+  color: var(--color-gold-dark);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.employees-info-box strong {
+  display: block;
+  font-size: 13px;
+  color: var(--color-ink);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.employees-info-box span {
+  display: block;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  line-height: 1.5;
+}
+
+.employees-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.employee-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.employee-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: var(--color-gold-light);
+}
+
+.employee-card.owner-card {
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.08), rgba(143, 107, 63, 0.03));
+  border-color: var(--color-gold);
+}
+
+.employee-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.employee-info {
+  min-width: 0;
+}
+
+.employee-name {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--color-ink);
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.employee-role-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.employee-role-badge.dueno {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-white);
+}
+
+.employee-role-badge.empleado {
+  background: rgba(168, 130, 75, 0.15);
+  color: var(--color-gold-dark);
+}
+
+.employee-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+
+.employee-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.employee-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-delete-employee {
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 600;
+}
+
+.btn-delete-employee:hover {
+  background: var(--color-danger);
+  color: var(--color-white);
+}
+
+.employees-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-ink-soft);
+}
+
+.employees-empty svg {
+  color: var(--color-border);
+  margin-bottom: 16px;
+}
+
+.employees-empty h3 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--color-ink);
+  margin: 0 0 8px 0;
+}
+
+.employees-empty p {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .employee-card {
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+  }
+  
+  .employee-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  
+  .employee-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+  
+  .employee-name {
+    font-size: 15px;
   }
 }
 </style>
