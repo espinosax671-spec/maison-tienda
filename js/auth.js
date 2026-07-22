@@ -1,7 +1,7 @@
 /* ===================================================================
    AUTENTICACIÓN — Registro, Login, Perfil, Sesión
-   Con roles: comprador (tienda) y vendedor (panel admin)
-   Integrado con: Favoritos, Historial de pedidos, Pestañas del perfil
+   Con roles: comprador (tienda) y vendedor/dueño (panel admin)
+   Sistema multi-tienda con creación automática de tienda
 =================================================================== */
 
 let currentUser = null;
@@ -71,8 +71,8 @@ window.addEventListener("DOMContentLoaded", () => {
       selectedRole = tab.dataset.roleTab;
 
       if (selectedRole === "vendedor") {
-        if (loginEyebrow) loginEyebrow.textContent = "Acceso Vendedor";
-        if (registerEyebrow) registerEyebrow.textContent = "Crear cuenta Vendedor";
+        if (loginEyebrow) loginEyebrow.textContent = "Acceso Dueño de Tienda";
+        if (registerEyebrow) registerEyebrow.textContent = "Crea tu tienda MAISON";
         if (vendorFields) vendorFields.style.display = "block";
       } else {
         if (loginEyebrow) loginEyebrow.textContent = "Acceso Cliente";
@@ -89,25 +89,21 @@ window.addEventListener("DOMContentLoaded", () => {
     openAccountModal();
     if (currentUser) {
       toggleRoleTabs(false);
-      showAccountView(currentRole === "vendedor" ? "vendor" : "profile");
+      showAccountView(currentRole === "vendedor" || currentRole === "administrador" ? "vendor" : "profile");
       
-      if (currentRole !== "vendedor") {
-        // Verificar si el perfil tiene datos para mostrar vista correcta
+      if (currentRole !== "vendedor" && currentRole !== "administrador") {
         if (typeof window.checkProfileHasData === "function") {
           window.checkProfileHasData();
         }
         
-        // Cargar favoritos
         if (typeof window.renderFavoritesSection === "function") {
           window.renderFavoritesSection();
         }
         
-        // Cargar historial de pedidos
         if (typeof window.renderOrdersHistory === "function") {
           window.renderOrdersHistory();
         }
         
-        // Actualizar contadores de las pestañas
         updateTabCounters();
       }
     } else {
@@ -132,7 +128,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------------
-  // REGISTRO
+  // REGISTRO (ACTUALIZADO PARA MULTI-TIENDA)
   // ---------------------------------------------------------------
   document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -143,16 +139,33 @@ window.addEventListener("DOMContentLoaded", () => {
     const email = document.getElementById("registerEmail").value.trim();
     const password = document.getElementById("registerPassword").value;
     const whatsapp = document.getElementById("registerWhatsapp")?.value.trim() || "";
+    const storeName = document.getElementById("registerStoreName")?.value.trim() || "";
     const btn = document.getElementById("registerSubmitBtn");
 
-    if (selectedRole === "vendedor" && !whatsapp) {
-      errorEl.textContent = "Como vendedor necesitas ingresar tu número de WhatsApp.";
-      return;
+    // Validaciones específicas para dueño de tienda
+    if (selectedRole === "vendedor") {
+      if (!storeName) {
+        errorEl.textContent = "Como dueño de tienda, necesitas ingresar el nombre de tu tienda.";
+        return;
+      }
+      if (!whatsapp) {
+        errorEl.textContent = "Como dueño necesitas ingresar tu número de WhatsApp.";
+        return;
+      }
+      if (storeName.length < 3) {
+        errorEl.textContent = "El nombre de tu tienda debe tener al menos 3 caracteres.";
+        return;
+      }
     }
 
     btn.disabled = true;
     const originalHtml = btn.innerHTML;
     btn.innerHTML = "<span>Creando cuenta...</span>";
+
+    // Determinar el rol real que va a auth.users
+    // 'vendedor' en la UI significa 'dueño de tienda' → role='administrador'
+    // 'comprador' en la UI se guarda como role='comprador'
+    const roleParaGuardar = selectedRole === "vendedor" ? "administrador" : "comprador";
 
     const { data, error } = await supabaseClient.auth.signUp({
       email,
@@ -160,8 +173,9 @@ window.addEventListener("DOMContentLoaded", () => {
       options: {
         data: {
           full_name: name,
-          role: selectedRole,
+          role: roleParaGuardar,
           whatsapp: whatsapp,
+          store_name: storeName,
         },
       },
     });
@@ -179,28 +193,34 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Crear/actualizar perfil
     await supabaseClient.from("profiles").upsert({
       id: data.user.id,
       full_name: name,
       phone: whatsapp,
-      role: selectedRole,
+      role: roleParaGuardar,
       updated_at: new Date().toISOString(),
     });
 
+    // Si es dueño de tienda, crear la tienda
     if (selectedRole === "vendedor") {
-      const { error: staffError } = await supabaseClient.rpc("registrar_vendedor", {
+      const { data: storeId, error: storeError } = await supabaseClient.rpc("registrar_vendedor_con_tienda", {
         user_id: data.user.id,
         nombre: name,
+        whatsapp_num: whatsapp,
+        nombre_tienda: storeName,
       });
       
-      if (staffError) {
-        console.error("Error al registrar como vendedor:", staffError);
-        errorEl.textContent = "Cuenta creada, pero hubo un problema con el acceso al panel. Contacta al administrador.";
+      if (storeError) {
+        console.error("Error al crear tienda:", storeError);
+        errorEl.textContent = "Cuenta creada, pero hubo un problema al crear tu tienda. Contacta al soporte.";
         return;
       }
+      
+      console.log("✅ Tienda creada con ID:", storeId);
     }
 
-    currentRole = selectedRole;
+    currentRole = roleParaGuardar;
     await onAuthSuccess(data.user);
   });
 
@@ -261,7 +281,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------------
-  // PERFIL — Guardar datos (con cambio a vista de resumen)
+  // PERFIL — Guardar datos
   // ---------------------------------------------------------------
   document.getElementById("profileForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -299,7 +319,6 @@ window.addEventListener("DOMContentLoaded", () => {
     successEl.textContent = "Datos guardados correctamente";
     document.getElementById("profileGreeting").textContent = `Hola, ${name.split(" ")[0]}`;
     
-    // Después de guardar, mostrar la vista de resumen
     setTimeout(() => {
       successEl.textContent = "";
       if (typeof window.showProfileForm === "function") {
@@ -347,21 +366,21 @@ window.addEventListener("DOMContentLoaded", () => {
     await loadProfileIntoForm();
     updateAccountUI();
 
-    if (currentRole === "vendedor") {
+    // Vendedor o Administrador (dueño de tienda) van al panel
+    if (currentRole === "vendedor" || currentRole === "administrador") {
       showAccountView("vendor");
       const firstName = user.user_metadata?.full_name?.split(" ")[0] || "vendedor";
       const vendorGreeting = document.getElementById("vendorGreeting");
       if (vendorGreeting) {
-        vendorGreeting.textContent = `Hola, ${firstName}`;
+        vendorGreeting.textContent = `¡Hola, ${firstName}!`;
       }
       
       setTimeout(() => {
-        window.location.href = "admin.html";
+        window.location.href = "administrador.html";
       }, 2500);
     } else {
       showAccountView("profile");
       
-      // Cargar favoritos
       if (typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
@@ -374,19 +393,16 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
       
-      // Cargar historial de pedidos
       if (typeof window.renderOrdersHistory === "function") {
         window.renderOrdersHistory();
       }
       
-      // Verificar si el perfil tiene datos
       if (typeof window.checkProfileHasData === "function") {
         setTimeout(() => {
           window.checkProfileHasData();
         }, 300);
       }
       
-      // Actualizar contadores de las pestañas
       setTimeout(() => {
         updateTabCounters();
       }, 500);
@@ -394,7 +410,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------------
-  // Actualizar contadores de favoritos y pedidos en las pestañas
+  // Actualizar contadores de favoritos y pedidos
   // ---------------------------------------------------------------
   async function updateTabCounters() {
     try {
@@ -402,13 +418,11 @@ window.addEventListener("DOMContentLoaded", () => {
       const user = authData?.user;
       if (!user) return;
       
-      // Contar favoritos
       let favCount = 0;
       if (typeof window.userFavorites !== "undefined") {
         favCount = window.userFavorites.size || 0;
       }
       
-      // Contar pedidos
       let ordersCount = 0;
       try {
         const { data: ordersData, error } = await supabaseClient
@@ -423,7 +437,6 @@ window.addEventListener("DOMContentLoaded", () => {
         console.error("Error contando pedidos:", err);
       }
       
-      // Actualizar contadores en las pestañas
       if (typeof window.updateProfileTabCounts === "function") {
         window.updateProfileTabCounts(favCount, ordersCount);
       }
@@ -483,7 +496,7 @@ window.addEventListener("DOMContentLoaded", () => {
       currentRole = profile?.role || currentUser.user_metadata?.role || "comprador";
       await loadProfileIntoForm();
       
-      if (currentRole !== "vendedor" && typeof window.loadUserFavorites === "function") {
+      if (currentRole !== "vendedor" && currentRole !== "administrador" && typeof window.loadUserFavorites === "function") {
         await window.loadUserFavorites();
         
         setTimeout(() => {
