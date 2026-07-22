@@ -1,15 +1,18 @@
 /* ===================================================================
-   PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA
+   PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
    Cada usuario pertenece a una tienda (store_id)
-   Solo ve/gestiona productos y pedidos de SU tienda
+   Solo el dueño puede gestionar empleados
 =================================================================== */
 
 let adminUser = null;
 let currentStoreId = null;
 let currentStoreName = "";
+let currentUserRole = null;  // 'dueño' o 'empleado'
 let allProducts = [];
+let allEmployees = [];
 let currentFilter = "todos";
 let pendingDeleteId = null;
+let pendingDeleteEmployeeId = null;
 let selectedImageFile = null;
 
 // Variables del sistema de stock
@@ -100,9 +103,11 @@ async function checkStaffAndEnter(user) {
     return;
   }
 
-  // Guardar el store_id globalmente
+  // Guardar el store_id y rol globalmente
   currentStoreId = staff.store_id;
+  currentUserRole = staff.role;  // 'dueño' o 'empleado'
   window.currentStoreId = staff.store_id;
+  window.currentUserRole = staff.role;
 
   // Obtener info de la tienda
   const { data: store } = await supabaseClient
@@ -130,6 +135,12 @@ async function checkStaffAndEnter(user) {
   const storeNameEl = document.getElementById("adminStoreName");
   if (storeNameEl) storeNameEl.textContent = currentStoreName;
 
+  // Mostrar pestaña Empleados SOLO si es dueño
+  const tabEmpleados = document.getElementById("tabEmpleados");
+  if (tabEmpleados) {
+    tabEmpleados.style.display = currentUserRole === "dueño" ? "flex" : "none";
+  }
+
   await loadProducts();
   initNotificationSystem();
 }
@@ -156,7 +167,9 @@ async function doLogout() {
   await supabaseClient.auth.signOut();
   adminUser = null;
   currentStoreId = null;
+  currentUserRole = null;
   window.currentStoreId = null;
+  window.currentUserRole = null;
   adminApp.style.display = "none";
   noAccess.style.display = "none";
   gate.style.display = "flex";
@@ -483,7 +496,7 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
       });
       
       payload.created_by = adminUser.id;
-      payload.store_id = currentStoreId;  // ← IMPORTANTE: guardar la tienda
+      payload.store_id = currentStoreId;
       payload.stock = stockObject;
       
       const { error } = await supabaseClient.from("products").insert(payload);
@@ -582,6 +595,8 @@ document.addEventListener("keydown", (e) => {
     closeDeleteConfirm();
     closeStockModal();
     hideOrderNotificationToast();
+    closeEmployeeModal();
+    closeDeleteEmployeeModal();
   }
 });
 
@@ -800,7 +815,7 @@ function getTotalStock(stock) {
 }
 
 // ===================================================================
-// SISTEMA DE TABS (Productos / Pedidos)
+// SISTEMA DE TABS (Productos / Pedidos / Empleados)
 // ===================================================================
 
 let currentTab = "productos";
@@ -830,12 +845,324 @@ function switchTab(tabName) {
   
   if (tabName === "pedidos") {
     loadOrders();
+  } else if (tabName === "empleados") {
+    loadEmployees();
   }
 }
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// ===================================================================
+// GESTIÓN DE EMPLEADOS (NUEVO)
+// ===================================================================
+
+const employeeOverlay = document.getElementById("employeeOverlay");
+const employeeModal = document.getElementById("employeeModal");
+const deleteEmployeeOverlay = document.getElementById("deleteEmployeeOverlay");
+const deleteEmployeeModal = document.getElementById("deleteEmployeeModal");
+
+// Botón "Agregar empleado"
+document.getElementById("newEmployeeBtn")?.addEventListener("click", openEmployeeModal);
+document.getElementById("employeeModalClose")?.addEventListener("click", closeEmployeeModal);
+document.getElementById("cancelEmployeeBtn")?.addEventListener("click", closeEmployeeModal);
+employeeOverlay?.addEventListener("click", closeEmployeeModal);
+
+// Botones eliminar empleado
+document.getElementById("cancelDeleteEmployeeBtn")?.addEventListener("click", closeDeleteEmployeeModal);
+deleteEmployeeOverlay?.addEventListener("click", closeDeleteEmployeeModal);
+document.getElementById("confirmDeleteEmployeeBtn")?.addEventListener("click", confirmDeleteEmployee);
+
+function openEmployeeModal() {
+  document.getElementById("employeeForm").reset();
+  document.getElementById("employeeError").textContent = "";
+  document.getElementById("employeeSuccess").textContent = "";
+  
+  // Generar contraseña aleatoria
+  const randomPass = Math.random().toString(36).slice(-8);
+  document.getElementById("employeePassword").value = randomPass;
+  
+  employeeOverlay.classList.add("active");
+  employeeModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEmployeeModal() {
+  if (!employeeOverlay || !employeeModal) return;
+  employeeOverlay.classList.remove("active");
+  employeeModal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function closeDeleteEmployeeModal() {
+  if (!deleteEmployeeOverlay || !deleteEmployeeModal) return;
+  deleteEmployeeOverlay.classList.remove("active");
+  deleteEmployeeModal.classList.remove("active");
+  pendingDeleteEmployeeId = null;
+}
+
+// Cargar empleados de la tienda
+async function loadEmployees() {
+  const list = document.getElementById("employeesList");
+  if (!list) return;
+  
+  list.innerHTML = `<p class="loading-msg">Cargando empleados...</p>`;
+
+  if (!currentStoreId) {
+    list.innerHTML = `<p class="empty-msg">No tienes tienda asignada.</p>`;
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient.rpc("obtener_empleados_tienda", {
+      p_store_id: currentStoreId
+    });
+
+    if (error) throw error;
+
+    allEmployees = data || [];
+    renderEmployeesList();
+    updateEmployeesCountBadge();
+    
+  } catch (err) {
+    console.error("Error cargando empleados:", err);
+    list.innerHTML = `<p class="empty-msg">No se pudieron cargar los empleados.</p>`;
+  }
+}
+
+function updateEmployeesCountBadge() {
+  const badge = document.getElementById("employeesCountBadge");
+  if (!badge) return;
+  
+  // Contar solo empleados (no dueños)
+  const empleadosCount = allEmployees.filter(e => e.role === 'empleado').length;
+  badge.textContent = empleadosCount;
+}
+
+function renderEmployeesList() {
+  const list = document.getElementById("employeesList");
+  if (!list) return;
+  
+  if (allEmployees.length === 0) {
+    list.innerHTML = `
+      <div class="employees-empty">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <h3>No hay empleados aún</h3>
+        <p>Agrega tu primer empleado para que te ayude a gestionar la tienda.</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = "";
+  
+  allEmployees.forEach((emp) => {
+    const isOwner = emp.role === 'dueño';
+    const card = document.createElement("div");
+    card.className = `employee-card ${isOwner ? 'owner-card' : ''}`;
+    card.dataset.employeeId = emp.id;
+    
+    const initials = getInitials(emp.full_name || emp.email);
+    const fecha = emp.added_at 
+      ? new Date(emp.added_at).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })
+      : "-";
+    
+    card.innerHTML = `
+      <div class="employee-avatar">${initials}</div>
+      <div class="employee-info">
+        <div class="employee-name">
+          ${escapeHtml(emp.full_name || 'Sin nombre')}
+          <span class="employee-role-badge ${isOwner ? 'dueno' : 'empleado'}">
+            ${isOwner ? '👑 Dueño' : 'Empleado'}
+          </span>
+        </div>
+        <div class="employee-details">
+          <span class="employee-detail-item">
+            📧 ${escapeHtml(emp.email || '-')}
+          </span>
+          ${emp.phone ? `<span class="employee-detail-item">📱 ${escapeHtml(emp.phone)}</span>` : ''}
+          <span class="employee-detail-item">
+            📦 ${emp.productos_creados || 0} productos
+          </span>
+          <span class="employee-detail-item">
+            📅 Desde ${fecha}
+          </span>
+        </div>
+      </div>
+      <div class="employee-actions">
+        ${!isOwner ? `
+          <button class="btn-delete-employee" data-delete-employee="${emp.id}" data-name="${escapeHtml(emp.full_name || emp.email)}">
+            Eliminar
+          </button>
+        ` : ''}
+      </div>
+    `;
+    
+    list.appendChild(card);
+  });
+
+  // Agregar listeners a botones de eliminar
+  list.querySelectorAll("[data-delete-employee]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const empId = btn.dataset.deleteEmployee;
+      const empName = btn.dataset.name;
+      openDeleteEmployeeConfirm(empId, empName);
+    });
+  });
+}
+
+function getInitials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function openDeleteEmployeeConfirm(empId, empName) {
+  pendingDeleteEmployeeId = empId;
+  document.getElementById("deleteEmployeeName").textContent = empName;
+  deleteEmployeeOverlay.classList.add("active");
+  deleteEmployeeModal.classList.add("active");
+}
+
+async function confirmDeleteEmployee() {
+  if (!pendingDeleteEmployeeId) return;
+  
+  const btn = document.getElementById("confirmDeleteEmployeeBtn");
+  btn.disabled = true;
+  btn.textContent = "Eliminando...";
+  
+  try {
+    const { data, error } = await supabaseClient.rpc("eliminar_empleado_de_tienda", {
+      p_employee_id: pendingDeleteEmployeeId,
+      p_owner_id: adminUser.id
+    });
+    
+    if (error) throw error;
+    
+    if (data && data.success === false) {
+      alert(data.error || "No se pudo eliminar el empleado.");
+      return;
+    }
+    
+    closeDeleteEmployeeModal();
+    await loadEmployees();
+    alert("Empleado eliminado correctamente.");
+    
+  } catch (err) {
+    console.error("Error al eliminar empleado:", err);
+    alert("No se pudo eliminar el empleado. Intenta de nuevo.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Eliminar";
+  }
+}
+
+// Crear nuevo empleado
+document.getElementById("employeeForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const errorEl = document.getElementById("employeeError");
+  const successEl = document.getElementById("employeeSuccess");
+  errorEl.textContent = "";
+  successEl.textContent = "";
+  
+  const name = document.getElementById("employeeName").value.trim();
+  const email = document.getElementById("employeeEmail").value.trim();
+  const password = document.getElementById("employeePassword").value;
+  const phone = document.getElementById("employeePhone").value.trim();
+  const btn = document.getElementById("saveEmployeeBtn");
+  
+  if (!name || name.length < 3) {
+    errorEl.textContent = "El nombre debe tener al menos 3 caracteres.";
+    return;
+  }
+  
+  if (!email) {
+    errorEl.textContent = "El correo es obligatorio.";
+    return;
+  }
+  
+  if (!password || password.length < 6) {
+    errorEl.textContent = "La contraseña debe tener al menos 6 caracteres.";
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = "Creando...";
+  
+  try {
+    // 1) Crear el usuario en auth
+    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+          role: "vendedor",
+          whatsapp: phone,
+        }
+      }
+    });
+    
+    if (signUpError) {
+      if (signUpError.message.includes("already registered")) {
+        errorEl.textContent = "Este correo ya está registrado. Usa otro correo.";
+      } else {
+        errorEl.textContent = signUpError.message;
+      }
+      return;
+    }
+    
+    if (!signUpData.user) {
+      errorEl.textContent = "No se pudo crear la cuenta. Intenta de nuevo.";
+      return;
+    }
+    
+    // 2) Agregar como empleado a la tienda
+    const { data, error } = await supabaseClient.rpc("agregar_empleado_a_tienda", {
+      p_user_id: signUpData.user.id,
+      p_full_name: name,
+      p_phone: phone,
+      p_store_id: currentStoreId
+    });
+    
+    if (error) throw error;
+    
+    if (data && data.success === false) {
+      errorEl.textContent = data.error || "Error al agregar el empleado.";
+      return;
+    }
+    
+    successEl.innerHTML = `
+      ✅ <strong>Empleado creado correctamente</strong><br>
+      Correo: <strong>${email}</strong><br>
+      Contraseña: <strong>${password}</strong><br>
+      <em style="font-size:11px;">Comparte estas credenciales con tu empleado.</em>
+    `;
+    
+    document.getElementById("employeeForm").reset();
+    
+    // Cerrar automáticamente después de 5 segundos
+    setTimeout(() => {
+      closeEmployeeModal();
+      loadEmployees();
+    }, 5000);
+    
+  } catch (err) {
+    console.error("Error al crear empleado:", err);
+    errorEl.textContent = err.message || "No se pudo crear el empleado. Intenta de nuevo.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Crear empleado";
+  }
+});
 
 // ===================================================================
 // CARGAR PEDIDOS DESDE SUPABASE (POR TIENDA)
@@ -845,7 +1172,6 @@ async function loadOrders() {
   const list = document.getElementById("ordersList");
   list.innerHTML = `<p class="loading-msg">Cargando pedidos...</p>`;
 
-  // Usar store_id si está disponible, sino usar seller_id como fallback
   let query = supabaseClient.from("orders").select("*");
   
   if (currentStoreId) {
@@ -1394,7 +1720,6 @@ function subscribeToNewOrders() {
     supabaseClient.removeChannel(orderSubscription);
   }
   
-  // Filtrar por store_id si está disponible, sino por seller_id
   const filterStr = currentStoreId 
     ? `store_id=eq.${currentStoreId}` 
     : `seller_id=eq.${adminUser.id}`;
