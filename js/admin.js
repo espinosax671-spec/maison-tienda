@@ -1,10 +1,12 @@
 /* ===================================================================
-   PANEL DE ADMINISTRACIÓN — Lógica
-   Requiere: js/supabase-client.js cargado antes que este archivo
-   Protegido: solo vendedores autorizados pueden acceder
+   PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA
+   Cada usuario pertenece a una tienda (store_id)
+   Solo ve/gestiona productos y pedidos de SU tienda
 =================================================================== */
 
 let adminUser = null;
+let currentStoreId = null;
+let currentStoreName = "";
 let allProducts = [];
 let currentFilter = "todos";
 let pendingDeleteId = null;
@@ -14,7 +16,7 @@ let selectedImageFile = null;
 let currentStockProduct = null;
 let currentStockData = {};
 
-// ============ Variables del sistema de notificaciones ============
+// Variables del sistema de notificaciones
 let notificationsMuted = false;
 let notificationSound = null;
 let orderSubscription = null;
@@ -57,7 +59,7 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------
-// PROTECCIÓN DEL PANEL
+// PROTECCIÓN DEL PANEL (MULTI-TIENDA)
 // ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
@@ -80,9 +82,10 @@ async function checkStaffAndEnter(user) {
     return;
   }
 
+  // Verificar que está en staff_users Y obtener su store_id
   const { data: staff, error: staffError } = await supabaseClient
     .from("staff_users")
-    .select("id")
+    .select("id, store_id, role")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -92,6 +95,30 @@ async function checkStaffAndEnter(user) {
     return;
   }
 
+  if (!staff.store_id) {
+    await denyAccess("Tu cuenta no está asociada a ninguna tienda. Contacta al soporte.");
+    return;
+  }
+
+  // Guardar el store_id globalmente
+  currentStoreId = staff.store_id;
+  window.currentStoreId = staff.store_id;
+
+  // Obtener info de la tienda
+  const { data: store } = await supabaseClient
+    .from("stores")
+    .select("name, active")
+    .eq("id", currentStoreId)
+    .maybeSingle();
+
+  if (store && !store.active) {
+    await denyAccess("Tu tienda está desactivada. Contacta al soporte.");
+    return;
+  }
+
+  currentStoreName = store?.name || "Mi Tienda";
+
+  // Mostrar interfaz
   gate.style.display = "none";
   noAccess.style.display = "none";
   adminApp.style.display = "block";
@@ -99,9 +126,11 @@ async function checkStaffAndEnter(user) {
   document.getElementById("adminUserName").textContent =
     profile.full_name || user.user_metadata?.full_name || user.email;
 
+  // Mostrar nombre de la tienda en el header
+  const storeNameEl = document.getElementById("adminStoreName");
+  if (storeNameEl) storeNameEl.textContent = currentStoreName;
+
   await loadProducts();
-  
-  // Inicializar sistema de notificaciones
   initNotificationSystem();
 }
 
@@ -126,6 +155,8 @@ async function doLogout() {
   
   await supabaseClient.auth.signOut();
   adminUser = null;
+  currentStoreId = null;
+  window.currentStoreId = null;
   adminApp.style.display = "none";
   noAccess.style.display = "none";
   gate.style.display = "flex";
@@ -150,16 +181,21 @@ async function initAdmin() {
 window.addEventListener("DOMContentLoaded", initAdmin);
 
 // ---------------------------------------------------------------
-// Cargar productos
+// Cargar productos (POR TIENDA)
 // ---------------------------------------------------------------
 async function loadProducts() {
   const table = document.getElementById("productTable");
   table.innerHTML = `<p class="loading-msg">Cargando productos...</p>`;
 
+  if (!currentStoreId) {
+    table.innerHTML = `<p class="empty-msg">No tienes una tienda asignada.</p>`;
+    return;
+  }
+
   const { data, error } = await supabaseClient
     .from("products")
     .select("*")
-    .eq("created_by", adminUser.id)
+    .eq("store_id", currentStoreId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -173,27 +209,23 @@ async function loadProducts() {
 }
 
 // ---------------------------------------------------------------
-// Renderizar tabla de productos (CON nueva lógica de filtrado)
+// Renderizar tabla de productos
 // ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
   
-  // ============ NUEVA LÓGICA DE FILTRADO ============
   let filtered;
   if (currentFilter === "todos") {
     filtered = allProducts;
   } else if (currentFilter === "dama") {
-    // Dama muestra: ropa dama + calzado dama
     filtered = allProducts.filter((p) => 
       p.category === "dama" || p.category === "calzado_dama"
     );
   } else if (currentFilter === "caballero") {
-    // Caballero muestra: ropa caballero + calzado caballero
     filtered = allProducts.filter((p) => 
       p.category === "caballero" || p.category === "calzado_caballero"
     );
   } else {
-    // calzado_dama o calzado_caballero: filtro exacto
     filtered = allProducts.filter((p) => p.category === currentFilter);
   }
 
@@ -258,7 +290,6 @@ function renderProductTable() {
   });
 }
 
-// ============ ETIQUETAS DE CATEGORÍA ACTUALIZADAS ============
 function categoryLabel(c) {
   return { 
     dama: "Dama", 
@@ -386,7 +417,7 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
 });
 
 // ---------------------------------------------------------------
-// Guardar producto
+// Guardar producto (CON store_id)
 // ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -452,6 +483,7 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
       });
       
       payload.created_by = adminUser.id;
+      payload.store_id = currentStoreId;  // ← IMPORTANTE: guardar la tienda
       payload.stock = stockObject;
       
       const { error } = await supabaseClient.from("products").insert(payload);
@@ -806,18 +838,23 @@ function capitalize(str) {
 }
 
 // ===================================================================
-// CARGAR PEDIDOS DESDE SUPABASE
+// CARGAR PEDIDOS DESDE SUPABASE (POR TIENDA)
 // ===================================================================
 
 async function loadOrders() {
   const list = document.getElementById("ordersList");
   list.innerHTML = `<p class="loading-msg">Cargando pedidos...</p>`;
 
-  const { data, error } = await supabaseClient
-    .from("orders")
-    .select("*")
-    .eq("seller_id", adminUser.id)
-    .order("created_at", { ascending: false });
+  // Usar store_id si está disponible, sino usar seller_id como fallback
+  let query = supabaseClient.from("orders").select("*");
+  
+  if (currentStoreId) {
+    query = query.eq("store_id", currentStoreId);
+  } else {
+    query = query.eq("seller_id", adminUser.id);
+  }
+  
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error cargando pedidos:", error);
@@ -1307,7 +1344,7 @@ async function requestNotificationPermission() {
     if (permission === "granted") {
       new Notification("MAISON - Notificaciones activadas", {
         body: "Recibirás alertas cuando lleguen nuevos pedidos",
-        icon: "/favicon.ico"
+        icon: "/iconos/icon-192.png"
       });
     }
   } catch (err) {
@@ -1357,6 +1394,11 @@ function subscribeToNewOrders() {
     supabaseClient.removeChannel(orderSubscription);
   }
   
+  // Filtrar por store_id si está disponible, sino por seller_id
+  const filterStr = currentStoreId 
+    ? `store_id=eq.${currentStoreId}` 
+    : `seller_id=eq.${adminUser.id}`;
+  
   orderSubscription = supabaseClient
     .channel("new-orders-channel")
     .on(
@@ -1365,7 +1407,7 @@ function subscribeToNewOrders() {
         event: "INSERT",
         schema: "public",
         table: "orders",
-        filter: `seller_id=eq.${adminUser.id}`
+        filter: filterStr
       },
       (payload) => {
         console.log("Nuevo pedido recibido:", payload.new);
@@ -1481,8 +1523,8 @@ function showBrowserNotification(order) {
     const customerText = order.customer_name || order.customer_email || "Cliente invitado";
     const notification = new Notification("Nuevo pedido en MAISON", {
       body: `#${order.order_number} - ${customerText}\nTotal: ${formatPrice(order.total)}`,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
+      icon: "/iconos/icon-192.png",
+      badge: "/iconos/icon-192.png",
       tag: `order-${order.id}`,
       requireInteraction: false
     });
