@@ -6,6 +6,7 @@
    - Soporte para calzado por género y unisex
    - Los pedidos guardan store_id para el sistema multi-tienda
    - Sistema multi-tienda con URLs personalizadas por slug
+   - Aplicación de tema personalizado (colores + fuente) por tienda
 =================================================================== */
 
 // EDITA ESTE NÚMERO (número de WhatsApp por defecto para tiendas sin whatsapp propio)
@@ -14,27 +15,22 @@ const NUMERO_WHATSAPP = "573001234567";
 // Clave para guardar el carrito en localStorage
 const CART_STORAGE_KEY = "maison_cart_v1";
 
-// ⭐ NUEVO: Variables globales para la tienda actual
-let currentStore = null;        // Datos completos de la tienda
-let currentStoreSlug = null;    // Slug de la tienda actual
-let storeWhatsapp = NUMERO_WHATSAPP; // WhatsApp de la tienda actual
+// Variables globales para la tienda actual
+let currentStore = null;
+let currentStoreSlug = null;
+let storeWhatsapp = NUMERO_WHATSAPP;
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Detectar la tienda desde la URL
-// Soporta: ?tienda=slug  Y  /slug (con vercel.json)
+// Detectar la tienda desde la URL
 // ---------------------------------------------------------------
 function detectStoreSlugFromUrl() {
-  // Intentar primero desde query param (?tienda=xxx)
   const urlParams = new URLSearchParams(window.location.search);
   let slug = urlParams.get("tienda");
   
-  // Si no hay query param, intentar desde el path (/xxx)
   if (!slug) {
     const pathname = window.location.pathname;
-    // Quitar el / inicial y verificar que no sea una ruta reservada
     const pathClean = pathname.replace(/^\/+/, "").replace(/\/+$/, "");
     
-    // Rutas que NO son slugs de tienda
     const rutasReservadas = ['', 'admin', 'admin.html', 'index.html', 
                              'estadisticas', 'estadisticas.html',
                              'reset-password', 'reset-password.html'];
@@ -48,7 +44,8 @@ function detectStoreSlugFromUrl() {
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Cargar datos de la tienda desde Supabase
+// Cargar datos de la tienda desde Supabase
+// ⭐ ACTUALIZADO: Trae también los datos del tema
 // ---------------------------------------------------------------
 async function loadStoreBySlug(slug) {
   try {
@@ -68,38 +65,183 @@ async function loadStoreBySlug(slug) {
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Aplicar información de la tienda al DOM
+// ⭐ NUEVA FUNCIÓN: Aplicar tema personalizado (colores + fuente)
+// ---------------------------------------------------------------
+function applyStoreTheme(store) {
+  if (!store) return;
+  
+  // Colores por defecto (MAISON original)
+  const primaryColor = store.theme_primary_color || '#d4a869';
+  const secondaryColor = store.theme_secondary_color || '#1a1410';
+  const accentColor = store.theme_accent_color || '#8f6b3f';
+  const font = store.theme_font || 'Cormorant Garamond';
+  
+  // Crear/actualizar el <style> con las variables CSS personalizadas
+  let styleEl = document.getElementById("customStoreTheme");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "customStoreTheme";
+    document.head.appendChild(styleEl);
+  }
+  
+  // Convertir colores hex a RGB para usar con transparencias
+  const primaryRgb = hexToRgb(primaryColor);
+  const secondaryRgb = hexToRgb(secondaryColor);
+  const accentRgb = hexToRgb(accentColor);
+  
+  styleEl.textContent = `
+    :root {
+      --color-gold: ${primaryColor} !important;
+      --color-gold-light: ${lightenColor(primaryColor, 15)} !important;
+      --color-gold-dark: ${accentColor} !important;
+      --color-ink: ${secondaryColor} !important;
+      --color-ink-soft: ${lightenColor(secondaryColor, 40)} !important;
+      --font-serif: '${font}', serif !important;
+    }
+    
+    /* Aplicar fuente a elementos importantes */
+    .logo,
+    .hero-title,
+    .section-title,
+    .about-title,
+    .product-name,
+    .modal-name,
+    .account-title {
+      font-family: '${font}', serif !important;
+    }
+    
+    /* Botones primarios */
+    .btn-primary {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+      color: #ffffff !important;
+      border-color: ${primaryColor} !important;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
+      box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
+    }
+    
+    /* Precios */
+    .product-price,
+    .product-price-discounted,
+    .modal-price-discounted {
+      color: ${primaryColor} !important;
+    }
+    
+    /* Header y navegación */
+    .site-header {
+      background: rgba(255, 255, 255, 0.98) !important;
+    }
+    
+    /* Logo color */
+    .logo {
+      color: ${secondaryColor} !important;
+    }
+    
+    /* Enlaces del footer y otros */
+    .footer-col a:hover,
+    .nav-link:hover {
+      color: ${accentColor} !important;
+    }
+    
+    /* Categorías de sección */
+    .catalog.catalog-dark {
+      background: ${secondaryColor} !important;
+    }
+    
+    /* Botones ghost */
+    .btn-ghost {
+      color: ${secondaryColor} !important;
+      border-color: ${secondaryColor} !important;
+    }
+    
+    .btn-ghost:hover {
+      background: ${secondaryColor} !important;
+      color: #ffffff !important;
+    }
+    
+    /* Botón "Ver colección" en hero */
+    .hero-actions .btn-primary {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+    }
+    
+    /* Section eyebrow */
+    .section-eyebrow,
+    .hero-eyebrow {
+      color: ${accentColor} !important;
+    }
+    
+    /* Cart button */
+    .cart-count {
+      background: ${accentColor} !important;
+    }
+  `;
+  
+  console.log(`🎨 Tema aplicado: ${font} + ${primaryColor}`);
+}
+
+// ---------------------------------------------------------------
+// ⭐ HELPER: Convertir color hex a RGB (para transparencias)
+// ---------------------------------------------------------------
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
+// ---------------------------------------------------------------
+// ⭐ HELPER: Aclarar u oscurecer color hex
+// ---------------------------------------------------------------
+function lightenColor(hex, percent) {
+  hex = hex.replace('#', '');
+  const num = parseInt(hex, 16);
+  const amt = Math.round(2.55 * percent);
+  const R = (num >> 16) + amt;
+  const G = (num >> 8 & 0x00FF) + amt;
+  const B = (num & 0x0000FF) + amt;
+  
+  return "#" + (0x1000000 + 
+    (R < 255 ? (R < 0 ? 0 : R) : 255) * 0x10000 +
+    (G < 255 ? (G < 0 ? 0 : G) : 255) * 0x100 +
+    (B < 255 ? (B < 0 ? 0 : B) : 255)
+  ).toString(16).slice(1);
+}
+
+// ---------------------------------------------------------------
+// Aplicar información de la tienda al DOM
 // ---------------------------------------------------------------
 function applyStoreToDOM(store) {
   if (!store) return;
   
-  // 1. Cambiar el nombre del logo (arriba a la izquierda)
+  // 1. Cambiar el nombre del logo
   const logoElements = document.querySelectorAll(".logo");
   logoElements.forEach((logo) => {
     logo.textContent = store.name;
-    // Si el nombre es muy largo, ajustar tamaño
     if (store.name.length > 12) {
       logo.style.fontSize = "clamp(1rem, 3vw, 1.5rem)";
       logo.style.letterSpacing = "0.15em";
     }
   });
   
-  // 2. Cambiar el título de la página
+  // 2. Título de la página
   document.title = `${store.name} — Ropa y Calzado`;
   
-  // 3. Actualizar meta description
+  // 3. Meta description
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) {
     metaDesc.setAttribute("content", `${store.name} - Boutique de ropa y calzado premium.`);
   }
   
-  // 4. Actualizar meta title para redes sociales
+  // 4. Meta title para redes sociales
   const metaTitle = document.querySelector('meta[property="og:title"]');
   if (metaTitle) {
     metaTitle.setAttribute("content", store.name);
   }
   
-  // 5. Actualizar footer con el nombre
+  // 5. Footer
   const footerBrand = document.querySelector(".footer-brand .logo");
   if (footerBrand) footerBrand.textContent = store.name;
   
@@ -111,7 +253,7 @@ function applyStoreToDOM(store) {
     footerLegal.innerHTML = `© 2026 ${store.name}. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a>`;
   }
   
-  // 6. Guardar WhatsApp de la tienda (si tiene)
+  // 6. WhatsApp de la tienda
   if (store.whatsapp) {
     storeWhatsapp = store.whatsapp.replace(/\D/g, "");
     if (!storeWhatsapp.startsWith("57")) {
@@ -119,25 +261,23 @@ function applyStoreToDOM(store) {
     }
   }
   
+  // 7. ⭐ APLICAR TEMA PERSONALIZADO
+  applyStoreTheme(store);
+  
   console.log(`✅ Tienda cargada: ${store.name} (${store.slug})`);
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Mostrar mensaje cuando la tienda no existe
+// Mostrar mensaje cuando la tienda no existe
 // ---------------------------------------------------------------
 function showStoreNotFound(slug) {
-  const main = document.querySelector("main") || document.body;
-  
-  // Ocultar todas las secciones normales
   document.querySelectorAll(".catalog, .hero, .about, .contact").forEach(el => {
     el.style.display = "none";
   });
   
-  // Ocultar el loader
   const loader = document.getElementById("loader");
   if (loader) loader.classList.add("hidden");
   
-  // Crear mensaje de tienda no encontrada
   const errorDiv = document.createElement("div");
   errorDiv.id = "storeNotFound";
   errorDiv.style.cssText = `
@@ -287,7 +427,6 @@ function cartCount() {
 
 // ---------------------------------------------------------------
 // Catálogo desde Supabase
-// ⭐ ACTUALIZADO: Filtra por store_id si hay tienda seleccionada
 // ---------------------------------------------------------------
 let STORE_PRODUCTS = [];
 
@@ -299,7 +438,6 @@ async function fetchProductsFromSupabase() {
       .eq("active", true)
       .order("created_at", { ascending: false });
     
-    // ⭐ Si hay una tienda seleccionada, filtrar solo sus productos
     if (currentStore && currentStore.id) {
       query = query.eq("store_id", currentStore.id);
     }
@@ -308,9 +446,7 @@ async function fetchProductsFromSupabase() {
 
     if (error) throw error;
     if (!data || data.length === 0) {
-      // Si es una tienda específica sin productos, retornar array vacío
       if (currentStore) return [];
-      // Si es la vista general sin productos, usar el fallback
       return typeof PRODUCTS !== "undefined" ? PRODUCTS : [];
     }
 
@@ -360,7 +496,6 @@ async function renderCatalog() {
 
   STORE_PRODUCTS = await fetchProductsFromSupabase();
   
-  // Si estamos en una tienda específica y no tiene productos, mostrar mensaje
   if (currentStore && STORE_PRODUCTS.length === 0) {
     Object.values(grids).forEach(grid => {
       if (grid) {
@@ -746,7 +881,6 @@ document.getElementById("cartOverlay").addEventListener("click", closeCart);
 
 // ---------------------------------------------------------------
 // WhatsApp
-// ⭐ ACTUALIZADO: Usa el WhatsApp de la tienda actual
 // ---------------------------------------------------------------
 function buildOrderMessage(orderNumber = null) {
   if (cart.length === 0) return "Hola, quisiera más información sobre sus prendas.";
@@ -833,36 +967,30 @@ window.addEventListener("scroll", () => {
 });
 
 // ---------------------------------------------------------------
-// ⭐ INICIALIZACIÓN ACTUALIZADA: Detecta tienda desde URL
+// INICIALIZACIÓN
 // ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", async () => {
-  // 1. Detectar si estamos en una tienda específica
   currentStoreSlug = detectStoreSlugFromUrl();
   
   if (currentStoreSlug) {
     console.log(`🔍 Cargando tienda: ${currentStoreSlug}`);
     
-    // 2. Cargar datos de la tienda
     currentStore = await loadStoreBySlug(currentStoreSlug);
     
     if (!currentStore) {
-      // Tienda no encontrada
       console.warn(`⚠️ Tienda "${currentStoreSlug}" no encontrada`);
       showStoreNotFound(currentStoreSlug);
       return;
     }
     
-    // 3. Aplicar información de la tienda al DOM
     applyStoreToDOM(currentStore);
     
-    // Guardar globalmente para otras funciones
     window.currentStore = currentStore;
     window.currentStoreSlug = currentStoreSlug;
   } else {
     console.log("📍 Vista general (sin tienda específica)");
   }
   
-  // 4. Continuar con el flujo normal
   await loadUserFavorites();
   await renderCatalog();
   renderCart();
@@ -875,7 +1003,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   }, 600);
 });
 
-// Cierre con Escape
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeCart();
@@ -928,18 +1055,15 @@ function showCustomToast(title, message) {
 
 // ---------------------------------------------------------------
 // SISTEMA DE PEDIDOS
-// ⭐ ACTUALIZADO: Ahora usa el store_id de la tienda actual (si existe)
 // ---------------------------------------------------------------
 
 async function createOrderInDatabase() {
   if (cart.length === 0) return null;
   
   try {
-    // ⭐ Si estamos en una tienda específica, usar SU store_id
     let storeId = currentStore ? currentStore.id : null;
     let sellerId = null;
     
-    // Si no hay tienda actual, obtener del primer producto
     if (!storeId) {
       const firstProductId = cart[0].id;
       const { data: productData, error: productError } = await supabaseClient
@@ -953,7 +1077,6 @@ async function createOrderInDatabase() {
       sellerId = productData?.created_by || null;
       storeId = productData?.store_id || null;
     } else {
-      // Si hay tienda, buscar el seller_id del primer producto
       const firstProductId = cart[0].id;
       const { data: productData } = await supabaseClient
         .from("products")
@@ -1438,7 +1561,6 @@ function resetAllProductVisibility() {
 
 // ===================================================================
 // SISTEMA DE COMPARTIR PRODUCTOS
-// ⭐ ACTUALIZADO: Genera URLs que incluyen la tienda
 // ===================================================================
 
 const shareProductBtn = document.getElementById("shareProductBtn");
@@ -1497,7 +1619,6 @@ Ropa y calzado premium.`;
 function generateProductUrl(product) {
   const baseUrl = window.location.origin;
   
-  // Si estamos en una tienda específica, incluir el slug en la URL
   if (currentStoreSlug) {
     return `${baseUrl}/${currentStoreSlug}?producto=${product.id}`;
   }
@@ -2121,7 +2242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.renderOrdersHistory = renderOrdersHistory;
 
 // ===================================================================
-// SISTEMA DE PESTAÑAS DEL PERFIL (Mi Perfil / Favoritos / Pedidos)
+// SISTEMA DE PESTAÑAS DEL PERFIL
 // ===================================================================
 
 let currentProfileTab = "perfil";
