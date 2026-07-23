@@ -5,12 +5,13 @@
    ACTUALIZADO: 
    - Soporte para Calzado Unisex
    - Banner con URL personalizada de la tienda + botón compartir
+   - Logo dinámico con el nombre de la tienda del dueño
 =================================================================== */
 
 let adminUser = null;
 let currentStoreId = null;
 let currentStoreName = "";
-let currentStoreSlug = null; // ⭐ NUEVO
+let currentStoreSlug = null;
 let currentUserRole = null;
 let allProducts = [];
 let allEmployees = [];
@@ -67,7 +68,7 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 
 // ---------------------------------------------------------------
 // PROTECCIÓN DEL PANEL (MULTI-TIENDA)
-// ⭐ ACTUALIZADO: También carga el slug de la tienda
+// ⭐ ACTUALIZADO: Logo dinámico con nombre de tienda
 // ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
@@ -112,7 +113,6 @@ async function checkStaffAndEnter(user) {
   window.currentStoreId = staff.store_id;
   window.currentUserRole = staff.role;
 
-  // ⭐ ACTUALIZADO: Traer también el slug
   const { data: store } = await supabaseClient
     .from("stores")
     .select("name, active, slug")
@@ -125,7 +125,7 @@ async function checkStaffAndEnter(user) {
   }
 
   currentStoreName = store?.name || "Mi Tienda";
-  currentStoreSlug = store?.slug || null; // ⭐ NUEVO
+  currentStoreSlug = store?.slug || null;
 
   gate.style.display = "none";
   noAccess.style.display = "none";
@@ -134,15 +134,36 @@ async function checkStaffAndEnter(user) {
   document.getElementById("adminUserName").textContent =
     profile.full_name || user.user_metadata?.full_name || user.email;
 
+  // ⭐ NUEVO: Cambiar el logo principal por el nombre de la tienda
+  const adminLogo = document.querySelector(".admin-logo");
+  if (adminLogo && currentStoreName) {
+    const nameUpper = currentStoreName.toUpperCase();
+    adminLogo.innerHTML = `${nameUpper} <em>panel</em>`;
+    
+    // Ajustar tamaño según longitud del nombre
+    const nameLength = currentStoreName.length;
+    if (nameLength <= 8) {
+      adminLogo.setAttribute("data-length", "short");
+    } else if (nameLength <= 16) {
+      adminLogo.setAttribute("data-length", "medium");
+    } else {
+      adminLogo.setAttribute("data-length", "long");
+    }
+  }
+
+  // Ocultar el nombre pequeño de la tienda (ahora está en el logo)
   const storeNameEl = document.getElementById("adminStoreName");
-  if (storeNameEl) storeNameEl.textContent = currentStoreName;
+  if (storeNameEl) storeNameEl.style.display = "none";
+
+  // ⭐ NUEVO: Cambiar el título de la pestaña del navegador
+  document.title = `${currentStoreName} — Panel`;
 
   const tabEmpleados = document.getElementById("tabEmpleados");
   if (tabEmpleados) {
     tabEmpleados.style.display = currentUserRole === "dueño" ? "flex" : "none";
   }
 
-  // ⭐ NUEVO: Mostrar el banner con la URL de la tienda
+  // Mostrar el banner con la URL de la tienda
   displayStoreUrlBanner();
 
   await loadProducts();
@@ -150,7 +171,7 @@ async function checkStaffAndEnter(user) {
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Mostrar banner con la URL personalizada
+// Mostrar banner con la URL personalizada
 // ---------------------------------------------------------------
 function displayStoreUrlBanner() {
   const banner = document.getElementById("storeUrlBanner");
@@ -161,7 +182,6 @@ function displayStoreUrlBanner() {
   
   if (!banner) return;
   
-  // Si no hay slug, no mostrar el banner
   if (!currentStoreSlug) {
     banner.style.display = "none";
     console.warn("⚠️ La tienda no tiene slug asignado");
@@ -169,17 +189,14 @@ function displayStoreUrlBanner() {
   }
   
   const fullUrl = `${window.location.origin}/${currentStoreSlug}`;
-  const shortUrl = fullUrl.replace(/^https?:\/\//, ''); // Sin http:// para vista más limpia
+  const shortUrl = fullUrl.replace(/^https?:\/\//, '');
   
-  // Mostrar la URL
   if (urlValueEl) urlValueEl.textContent = shortUrl;
   
-  // Configurar botón "Ver mi tienda"
   if (viewBtn) {
     viewBtn.href = `/${currentStoreSlug}`;
   }
   
-  // Configurar botón "Copiar"
   if (copyBtn) {
     copyBtn.onclick = async () => {
       try {
@@ -203,7 +220,6 @@ function displayStoreUrlBanner() {
     };
   }
   
-  // Configurar botón "Compartir por WhatsApp"
   if (shareBtn) {
     shareBtn.onclick = () => {
       const message = `¡Visita mi tienda ${currentStoreName}! 🛍️\n\n${fullUrl}`;
@@ -212,7 +228,6 @@ function displayStoreUrlBanner() {
     };
   }
   
-  // Mostrar el banner
   banner.style.display = "block";
   
   console.log(`✅ URL de tienda: ${fullUrl}`);
