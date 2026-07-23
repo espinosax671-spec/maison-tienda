@@ -94,7 +94,7 @@
     </div>
   </header>
 
-  <!-- ⭐ NUEVO: Banner con la URL personalizada de la tienda -->
+  <!-- Banner con la URL personalizada de la tienda -->
   <div class="store-url-banner" id="storeUrlBanner" style="display:none;">
     <div class="store-url-banner-inner">
       <div class="store-url-info">
@@ -608,7 +608,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script src="js/supabase-client.js"></script>
-<script src="js/admin.js?v=20250122f"></script>
+<script src="js/admin.js?v=20250122g"></script>
 
 <style>
 .stock-initial-hint {
@@ -941,6 +941,96 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 }
 
+/* ============================================
+   ⭐ LOGO DINÁMICO CON NOMBRE DE LA TIENDA
+============================================ */
+.admin-logo {
+  transition: font-size 0.3s ease, letter-spacing 0.3s ease;
+  line-height: 1.1;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.admin-logo em {
+  font-style: italic;
+  color: var(--color-gold-dark);
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 0.7em;
+  margin-left: 6px;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+}
+
+/* Nombre corto (≤ 8 caracteres): MAISON, JR STORE */
+.admin-logo[data-length="short"] {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  letter-spacing: 0.2em;
+}
+
+/* Nombre medio (9-16 caracteres): TIENDA DE JUAN */
+.admin-logo[data-length="medium"] {
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  letter-spacing: 0.12em;
+}
+
+/* Nombre largo (>16 caracteres): TIENDA DE OSCAR BOUTIQUE */
+.admin-logo[data-length="long"] {
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+  letter-spacing: 0.08em;
+}
+
+/* Responsive tablet */
+@media (max-width: 1024px) {
+  .admin-logo[data-length="medium"] {
+    font-size: clamp(0.95rem, 2vw, 1.2rem);
+  }
+  
+  .admin-logo[data-length="long"] {
+    font-size: clamp(0.8rem, 1.6vw, 1rem);
+  }
+}
+
+/* Responsive móvil */
+@media (max-width: 768px) {
+  .admin-logo {
+    white-space: normal;
+  }
+  
+  .admin-logo em {
+    display: none;
+  }
+  
+  .admin-logo[data-length="short"] {
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+  }
+  
+  .admin-logo[data-length="medium"] {
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+  }
+  
+  .admin-logo[data-length="long"] {
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-logo[data-length="short"] {
+    font-size: 1rem;
+  }
+  
+  .admin-logo[data-length="medium"] {
+    font-size: 0.85rem;
+  }
+  
+  .admin-logo[data-length="long"] {
+    font-size: 0.75rem;
+  }
+}
+
 .tab-empleados {
   position: relative;
 }
@@ -1160,7 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 /* ============================================
-   ⭐ BANNER DE URL DE LA TIENDA (Nuevo)
+   BANNER DE URL DE LA TIENDA
 ============================================ */
 .store-url-banner {
   background: linear-gradient(135deg, rgba(212, 168, 105, 0.12), rgba(143, 107, 63, 0.06));
@@ -1307,7 +1397,6 @@ document.addEventListener("DOMContentLoaded", () => {
   box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .store-url-banner {
     padding: 12px 20px;
