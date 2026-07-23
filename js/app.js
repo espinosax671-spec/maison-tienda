@@ -2,7 +2,9 @@
    MAISON — Lógica de la tienda
    Edita NUMERO_WHATSAPP con tu número (código de país + número, sin +)
    
-   ACTUALIZADO: Soporte para calzado por género y unisex
+   ACTUALIZADO: 
+   - Soporte para calzado por género y unisex
+   - Los pedidos ahora guardan store_id para el sistema multi-tienda
 =================================================================== */
 
 // EDITA ESTE NÚMERO
@@ -151,16 +153,7 @@ async function fetchProductsFromSupabase() {
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Determinar en qué grid(s) va cada producto
-// Retorna un array con los IDs de los grids donde debe aparecer
-//
-// Reglas:
-// - dama → grid "dama"
-// - caballero → grid "caballero"
-// - calzado → grid "calzado" (categoría antigua)
-// - calzado_dama → grids "dama" Y "calzado"
-// - calzado_caballero → grids "caballero" Y "calzado"
-// - calzado_unisex → grids "dama", "caballero" Y "calzado"
+// Determinar en qué grid(s) va cada producto
 // ---------------------------------------------------------------
 function getGridsForCategory(category) {
   const mapping = {
@@ -175,8 +168,7 @@ function getGridsForCategory(category) {
 }
 
 // ---------------------------------------------------------------
-// Render del catálogo (CON descuentos y soporte calzado por género)
-// ⭐ ACTUALIZADO: Ahora un producto puede aparecer en varios grids
+// Render del catálogo
 // ---------------------------------------------------------------
 async function renderCatalog() {
   const grids = {
@@ -188,7 +180,6 @@ async function renderCatalog() {
   STORE_PRODUCTS = await fetchProductsFromSupabase();
 
   STORE_PRODUCTS.forEach((product) => {
-    // ⭐ Obtener todos los grids donde debe aparecer el producto
     const targetGrids = getGridsForCategory(product.category);
     
     if (targetGrids.length === 0) {
@@ -196,7 +187,6 @@ async function renderCatalog() {
       return;
     }
 
-    // Crear una tarjeta por cada grid donde aparecerá
     targetGrids.forEach((gridId) => {
       const grid = grids[gridId];
       if (!grid) return;
@@ -208,9 +198,7 @@ async function renderCatalog() {
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Crear la tarjeta de producto (reutilizable)
-// Antes estaba dentro de renderCatalog, la separé para poder crear
-// múltiples instancias del mismo producto en diferentes grids
+// Crear la tarjeta de producto
 // ---------------------------------------------------------------
 function createProductCard(product) {
   const card = document.createElement("article");
@@ -283,7 +271,6 @@ function createProductCard(product) {
 
 // ---------------------------------------------------------------
 // Etiquetas de categoría
-// ⭐ ACTUALIZADO: Incluye calzado por género y unisex
 // ---------------------------------------------------------------
 function categoryLabel(category) {
   const labels = { 
@@ -704,22 +691,25 @@ function showCustomToast(title, message) {
 
 // ---------------------------------------------------------------
 // SISTEMA DE PEDIDOS
+// ⭐ ACTUALIZADO: Ahora guarda store_id para el sistema multi-tienda
 // ---------------------------------------------------------------
 
 async function createOrderInDatabase() {
   if (cart.length === 0) return null;
   
   try {
+    // ⭐ Obtener store_id Y seller_id del primer producto
     const firstProductId = cart[0].id;
     const { data: productData, error: productError } = await supabaseClient
       .from("products")
-      .select("created_by")
+      .select("created_by, store_id")
       .eq("id", firstProductId)
       .maybeSingle();
     
     if (productError) throw productError;
     
     const sellerId = productData?.created_by || null;
+    const storeId = productData?.store_id || null; // ⭐ NUEVO
     
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData?.user || null;
@@ -766,14 +756,15 @@ async function createOrderInDatabase() {
         total: cartTotal(),
         items_count: cartCount(),
         status: 'pendiente',
-        seller_id: sellerId
+        seller_id: sellerId,
+        store_id: storeId  // ⭐ NUEVO: Guardar la tienda del pedido
       })
       .select()
       .single();
     
     if (error) throw error;
     
-    console.log("Pedido creado:", data.order_number);
+    console.log("Pedido creado:", data.order_number, "Tienda:", storeId);
     return data;
     
   } catch (err) {
@@ -1396,7 +1387,7 @@ async function toggleFavorite(product) {
     }
     
     const isFav = userFavorites.has(product.id);
-    // ⭐ Actualizar TODOS los botones del mismo producto (puede aparecer en varios grids)
+    // Actualizar TODOS los botones del mismo producto (puede aparecer en varios grids)
     const btns = document.querySelectorAll(`[data-favorite-btn="${product.id}"]`);
     
     if (isFav) {
@@ -1599,26 +1590,21 @@ window.updateAllFavoriteButtons = function() {
 };
 
 // ===================================================================
-// SISTEMA DE HISTORIAL DE PEDIDOS (Mejora #8)
+// SISTEMA DE HISTORIAL DE PEDIDOS
 // ===================================================================
 
 let userOrders = [];
 let currentOrdersFilter = "todos";
 
-// ---------------------------------------------------------------
-// Cargar y renderizar el historial de pedidos del cliente
-// ---------------------------------------------------------------
 async function renderOrdersHistory() {
   const list = document.getElementById("ordersHistoryList");
   const countBadge = document.getElementById("ordersHistoryCount");
   
   if (!list || !countBadge) return;
   
-  // Mostrar loading
   list.innerHTML = `<p class="orders-history-loading">Cargando tus pedidos...</p>`;
   
   try {
-    // Verificar que el usuario esté logueado
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData?.user;
     
@@ -1628,7 +1614,6 @@ async function renderOrdersHistory() {
       return;
     }
     
-    // Consultar pedidos del cliente
     const { data, error } = await supabaseClient
       .from("orders")
       .select("*")
@@ -1649,7 +1634,6 @@ async function renderOrdersHistory() {
       return;
     }
     
-    // Renderizar pedidos
     displayOrdersList(list);
     
   } catch (err) {
@@ -1658,9 +1642,6 @@ async function renderOrdersHistory() {
   }
 }
 
-// ---------------------------------------------------------------
-// Mostrar mensaje cuando no hay pedidos
-// ---------------------------------------------------------------
 function showEmptyOrdersMessage(list, title, subtitle) {
   list.innerHTML = `
     <p class="orders-history-empty">
@@ -1675,11 +1656,7 @@ function showEmptyOrdersMessage(list, title, subtitle) {
   `;
 }
 
-// ---------------------------------------------------------------
-// Mostrar la lista de pedidos filtrada
-// ---------------------------------------------------------------
 function displayOrdersList(list) {
-  // Filtrar según el estado seleccionado
   const filteredOrders = currentOrdersFilter === "todos"
     ? userOrders
     : userOrders.filter(o => o.status === currentOrdersFilter);
@@ -1705,9 +1682,6 @@ function displayOrdersList(list) {
   });
 }
 
-// ---------------------------------------------------------------
-// Crear tarjeta de pedido individual
-// ---------------------------------------------------------------
 function createOrderHistoryCard(order) {
   const card = document.createElement("div");
   card.className = `order-history-card ${order.status}`;
@@ -1728,7 +1702,6 @@ function createOrderHistoryCard(order) {
     cancelado: "Cancelado"
   };
   
-  // Items del pedido
   let itemsHtml = `<div class="order-history-items">`;
   (order.items || []).forEach((item) => {
     itemsHtml += `
@@ -1744,7 +1717,6 @@ function createOrderHistoryCard(order) {
   });
   itemsHtml += `</div>`;
   
-  // Botones de acción (solo si no está cancelado)
   let actionsHtml = "";
   if (order.status !== "cancelado") {
     const whatsappMsg = `Hola! Tengo una consulta sobre mi pedido *#${order.order_number}*`;
@@ -1788,7 +1760,6 @@ function createOrderHistoryCard(order) {
     ${actionsHtml}
   `;
   
-  // Listener del botón "Volver a pedir"
   const reorderBtn = card.querySelector("[data-reorder]");
   if (reorderBtn) {
     reorderBtn.addEventListener("click", (e) => {
@@ -1800,9 +1771,6 @@ function createOrderHistoryCard(order) {
   return card;
 }
 
-// ---------------------------------------------------------------
-// Función helper para escapar HTML
-// ---------------------------------------------------------------
 function escapeHtml(str) {
   if (!str) return "";
   const div = document.createElement("div");
@@ -1810,9 +1778,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---------------------------------------------------------------
-// Manejar "Volver a pedir" — agregar los items al carrito
-// ---------------------------------------------------------------
 async function handleReorder(order) {
   if (!order || !order.items || order.items.length === 0) return;
   
@@ -1824,7 +1789,6 @@ async function handleReorder(order) {
   let notAvailable = [];
   
   for (const item of order.items) {
-    // Buscar el producto en el catálogo actual
     const product = STORE_PRODUCTS.find(p => p.id === item.product_id);
     
     if (!product) {
@@ -1832,14 +1796,12 @@ async function handleReorder(order) {
       continue;
     }
     
-    // Verificar stock de la talla
     const stockQty = getStockForSize(product, item.size);
     if (stockQty === 0 || stockQty === null) {
       notAvailable.push(`${item.name} (Talla ${item.size})`);
       continue;
     }
     
-    // Agregar al carrito
     const key = getCartKey(product.id, item.size);
     const existing = cart.find(c => c.key === key);
     
@@ -1850,7 +1812,7 @@ async function handleReorder(order) {
         key,
         id: product.id,
         name: product.name,
-        price: product.price, // Usa el precio actual (por si cambió)
+        price: product.price,
         image: product.image,
         size: item.size,
         qty: item.qty
@@ -1862,14 +1824,12 @@ async function handleReorder(order) {
   saveCartToStorage();
   renderCart();
   
-  // Cerrar modal de cuenta
   const accountOverlay = document.getElementById("accountOverlay");
   const accountModal = document.getElementById("accountModal");
   if (accountOverlay) accountOverlay.classList.remove("active");
   if (accountModal) accountModal.classList.remove("active");
   document.body.style.overflow = "";
   
-  // Mostrar mensaje según resultado
   if (addedCount > 0 && notAvailable.length === 0) {
     showCustomToast("Productos añadidos", `${addedCount} producto(s) al carrito`);
     setTimeout(() => openCart(), 400);
@@ -1881,22 +1841,16 @@ async function handleReorder(order) {
   }
 }
 
-// ---------------------------------------------------------------
-// Configurar filtros de estado
-// ---------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const filterButtons = document.querySelectorAll(".order-history-filter");
   
   filterButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      // Actualizar botón activo
       filterButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       
-      // Actualizar filtro
       currentOrdersFilter = btn.dataset.historyFilter;
       
-      // Renderizar lista filtrada
       const list = document.getElementById("ordersHistoryList");
       if (list && userOrders.length > 0) {
         displayOrdersList(list);
@@ -1905,7 +1859,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Exportar la función globalmente para que auth.js pueda llamarla
 window.renderOrdersHistory = renderOrdersHistory;
 
 // ===================================================================
@@ -1914,7 +1867,6 @@ window.renderOrdersHistory = renderOrdersHistory;
 
 let currentProfileTab = "perfil";
 
-// Configurar las pestañas del perfil
 document.addEventListener("DOMContentLoaded", () => {
   const profileTabs = document.querySelectorAll(".profile-tab");
   
@@ -1925,7 +1877,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
-  // Botón "Editar datos" del perfil
   const editProfileBtn = document.getElementById("editProfileBtn");
   if (editProfileBtn) {
     editProfileBtn.addEventListener("click", () => {
@@ -1933,7 +1884,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
-  // Botón "Cancelar" edición
   const cancelEditBtn = document.getElementById("cancelEditBtn");
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener("click", () => {
@@ -1945,12 +1895,10 @@ document.addEventListener("DOMContentLoaded", () => {
 function switchProfileTab(tabName) {
   currentProfileTab = tabName;
   
-  // Actualizar botones de pestañas
   document.querySelectorAll(".profile-tab").forEach((t) => {
     t.classList.toggle("active", t.dataset.profileTab === tabName);
   });
   
-  // Mostrar contenido de la pestaña activa
   document.querySelectorAll(".profile-tab-content").forEach((c) => {
     c.classList.remove("active");
   });
@@ -1959,7 +1907,6 @@ function switchProfileTab(tabName) {
   const targetContent = document.getElementById(`profileContent${capitalized}`);
   if (targetContent) targetContent.classList.add("active");
   
-  // Cargar datos de la pestaña según corresponda
   if (tabName === "favoritos" && typeof window.renderFavoritesSection === "function") {
     window.renderFavoritesSection();
   }
@@ -1968,7 +1915,6 @@ function switchProfileTab(tabName) {
   }
 }
 
-// Mostrar/ocultar formulario vs vista de datos guardados
 function showProfileForm(showForm) {
   const formView = document.getElementById("profileFormView");
   const infoView = document.getElementById("profileInfoView");
@@ -1986,7 +1932,6 @@ function showProfileForm(showForm) {
   }
 }
 
-// Actualizar la vista de datos guardados con los valores del formulario
 function updateProfileInfoView() {
   const nameEl = document.getElementById("displayName");
   const phoneEl = document.getElementById("displayPhone");
@@ -2001,12 +1946,10 @@ function updateProfileInfoView() {
   if (addressEl && addressInput) addressEl.textContent = addressInput.value || "-";
 }
 
-// Determinar si el perfil ya tiene datos guardados
 function checkProfileHasData() {
   const name = document.getElementById("profileName")?.value?.trim();
   const phone = document.getElementById("profilePhone")?.value?.trim();
   
-  // Si tiene al menos nombre y teléfono, mostrar vista de resumen
   if (name && phone) {
     showProfileForm(false);
     updateProfileInfoView();
@@ -2015,7 +1958,6 @@ function checkProfileHasData() {
   }
 }
 
-// Actualizar contadores en las pestañas (favoritos y pedidos)
 function updateProfileTabCounts(favCount, ordersCount) {
   const favCountEl = document.getElementById("profileTabFavoritesCount");
   const ordCountEl = document.getElementById("profileTabOrdersCount");
@@ -2030,13 +1972,8 @@ function updateProfileTabCounts(favCount, ordersCount) {
   }
 }
 
-// Exportar funciones para auth.js
 window.switchProfileTab = switchProfileTab;
 window.checkProfileHasData = checkProfileHasData;
 window.updateProfileTabCounts = updateProfileTabCounts;
 window.showProfileForm = showProfileForm;
 window.updateProfileInfoView = updateProfileInfoView;
-
-// ---------------------------------------------------------------
-// BOTÓN VOLVER ARRIBA (se maneja en el HTML con estilos inline)
-// ---------------------------------------------------------------
