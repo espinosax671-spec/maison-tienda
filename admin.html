@@ -94,6 +94,48 @@
     </div>
   </header>
 
+  <!-- ⭐ NUEVO: Banner con la URL personalizada de la tienda -->
+  <div class="store-url-banner" id="storeUrlBanner" style="display:none;">
+    <div class="store-url-banner-inner">
+      <div class="store-url-info">
+        <div class="store-url-icon-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <div class="store-url-text">
+          <span class="store-url-label">URL de tu tienda</span>
+          <span class="store-url-value" id="storeUrlValue">-</span>
+        </div>
+      </div>
+      <div class="store-url-actions">
+        <button type="button" class="btn-store-url btn-store-url-copy" id="copyStoreUrlBtn" title="Copiar URL al portapapeles">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span>Copiar</span>
+        </button>
+        <a href="#" target="_blank" class="btn-store-url btn-store-url-view" id="viewStoreBtn" title="Abrir mi tienda en nueva pestaña">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          <span>Ver mi tienda</span>
+        </a>
+        <button type="button" class="btn-store-url btn-store-url-share" id="shareStoreBtn" title="Compartir por WhatsApp">
+          <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16.003 3C9.373 3 4 8.373 4 15.003c0 2.647.858 5.093 2.316 7.09L4 29l7.116-2.267a11.94 11.94 0 0 0 4.887 1.038h.001C22.634 27.771 28 22.399 28 15.77c0-3.187-1.241-6.183-3.495-8.437A11.925 11.925 0 0 0 16.003 3zm5.458 14.32c-.299-.15-1.769-.873-2.043-.973-.274-.1-.474-.15-.673.15-.199.299-.772.973-.947 1.173-.174.199-.349.224-.648.075-.299-.15-1.264-.466-2.408-1.486-.89-.794-1.491-1.774-1.666-2.073-.174-.299-.019-.461.131-.61.135-.134.299-.349.449-.524.15-.174.199-.299.299-.499.1-.199.05-.374-.025-.524-.075-.15-.673-1.623-.923-2.222-.243-.583-.489-.504-.673-.513-.174-.008-.374-.01-.573-.01a1.098 1.098 0 0 0-.798.374c-.274.299-1.047 1.023-1.047 2.496 0 1.473 1.072 2.895 1.222 3.095.15.199 2.109 3.222 5.115 4.518.716.309 1.274.494 1.71.632.719.229 1.373.196 1.89.119.577-.086 1.769-.723 2.019-1.421.249-.698.249-1.297.174-1.421-.075-.125-.274-.199-.573-.349z"/>
+          </svg>
+          <span>Compartir</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <main class="admin-main">
     
     <div class="admin-tabs">
@@ -461,12 +503,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(registration => {
           console.log('✅ Service Worker registrado:', registration.scope);
 
-          // Verificar actualizaciones cada 60 segundos
           setInterval(() => {
             registration.update();
           }, 60000);
 
-          // Detectar nueva versión disponible
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             newWorker.addEventListener('statechange', () => {
@@ -568,7 +608,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script src="js/supabase-client.js"></script>
-<script src="js/admin.js?v=20250122e"></script>
+<script src="js/admin.js?v=20250122f"></script>
 
 <style>
 .stock-initial-hint {
@@ -1116,6 +1156,203 @@ document.addEventListener("DOMContentLoaded", () => {
   
   .employee-name {
     font-size: 15px;
+  }
+}
+
+/* ============================================
+   ⭐ BANNER DE URL DE LA TIENDA (Nuevo)
+============================================ */
+.store-url-banner {
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.12), rgba(143, 107, 63, 0.06));
+  border-bottom: 1px solid rgba(212, 168, 105, 0.25);
+  padding: 14px 32px;
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.store-url-banner-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.store-url-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.store-url-icon-wrap {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(143, 107, 63, 0.3);
+}
+
+.store-url-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.store-url-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  color: var(--color-gold-dark);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.store-url-value {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--color-ink);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.store-url-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn-store-url {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-store-url svg {
+  flex-shrink: 0;
+}
+
+.btn-store-url-copy {
+  background: transparent;
+  color: var(--color-gold-dark);
+  border-color: var(--color-gold-dark);
+}
+
+.btn-store-url-copy:hover {
+  background: var(--color-gold-dark);
+  color: var(--color-white);
+}
+
+.btn-store-url-copy.copied {
+  background: #4caf50 !important;
+  color: white !important;
+  border-color: #4caf50 !important;
+}
+
+.btn-store-url-view {
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  color: var(--color-white);
+}
+
+.btn-store-url-view:hover {
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-ink));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(143, 107, 63, 0.4);
+}
+
+.btn-store-url-share {
+  background: #25D366;
+  color: white;
+  border-color: #25D366;
+}
+
+.btn-store-url-share:hover {
+  background: #1eba57;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .store-url-banner {
+    padding: 12px 20px;
+  }
+  
+  .store-url-banner-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .store-url-info {
+    gap: 10px;
+  }
+  
+  .store-url-icon-wrap {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .store-url-value {
+    font-size: 12px;
+  }
+  
+  .store-url-actions {
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .btn-store-url {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-store-url span {
+    display: none;
+  }
+  
+  .btn-store-url {
+    padding: 8px 12px;
+    min-width: 40px;
   }
 }
 </style>
