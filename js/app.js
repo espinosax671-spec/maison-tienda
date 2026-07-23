@@ -6,7 +6,7 @@
    - Soporte para calzado por género y unisex
    - Los pedidos guardan store_id para el sistema multi-tienda
    - Sistema multi-tienda con URLs personalizadas por slug
-   - Aplicación de tema personalizado (colores + fuente) por tienda
+   - Aplicación de tema personalizado (colores + fuente + fondos) por tienda
 =================================================================== */
 
 const NUMERO_WHATSAPP = "573001234567";
@@ -60,7 +60,7 @@ async function loadStoreBySlug(slug) {
 }
 
 // ---------------------------------------------------------------
-// Aplicar tema personalizado (colores + fuente)
+// Aplicar tema personalizado (colores + fuente + fondos completos)
 // ---------------------------------------------------------------
 function applyStoreTheme(store) {
   if (!store) return;
@@ -81,6 +81,11 @@ function applyStoreTheme(store) {
   const secondaryRgb = hexToRgb(secondaryColor);
   const accentRgb = hexToRgb(accentColor);
   
+  // Generar tonos suaves para fondos (basados en el color primario)
+  const bgSoft = lightenColor(primaryColor, 42);
+  const bgLighter = lightenColor(primaryColor, 45);
+  const bgTinted = lightenColor(primaryColor, 38);
+  
   styleEl.textContent = `
     :root {
       --color-gold: ${primaryColor} !important;
@@ -88,9 +93,27 @@ function applyStoreTheme(store) {
       --color-gold-dark: ${accentColor} !important;
       --color-ink: ${secondaryColor} !important;
       --color-ink-soft: ${lightenColor(secondaryColor, 40)} !important;
+      --color-bg: ${bgLighter} !important;
+      --color-panel: ${bgSoft} !important;
+      --color-cream: ${bgSoft} !important;
+      --color-beige: ${bgTinted} !important;
       --font-serif: '${font}', serif !important;
     }
     
+    /* Fondos principales */
+    body {
+      background: ${bgLighter} !important;
+    }
+    
+    .catalog:not(.catalog-dark) {
+      background: ${bgSoft} !important;
+    }
+    
+    .about {
+      background: ${bgTinted} !important;
+    }
+    
+    /* Fuente para elementos importantes */
     .logo,
     .hero-title,
     .section-title,
@@ -101,6 +124,7 @@ function applyStoreTheme(store) {
       font-family: '${font}', serif !important;
     }
     
+    /* Botones primarios */
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
@@ -112,29 +136,35 @@ function applyStoreTheme(store) {
       box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
     }
     
+    /* Precios */
     .product-price,
     .product-price-discounted,
     .modal-price-discounted {
       color: ${primaryColor} !important;
     }
     
+    /* Header */
     .site-header {
       background: rgba(255, 255, 255, 0.98) !important;
     }
     
+    /* Logo */
     .logo {
       color: ${secondaryColor} !important;
     }
     
+    /* Links y hover */
     .footer-col a:hover,
     .nav-link:hover {
       color: ${accentColor} !important;
     }
     
+    /* Sección caballero (oscura) */
     .catalog.catalog-dark {
       background: ${secondaryColor} !important;
     }
     
+    /* Botones ghost */
     .btn-ghost {
       color: ${secondaryColor} !important;
       border-color: ${secondaryColor} !important;
@@ -145,17 +175,60 @@ function applyStoreTheme(store) {
       color: #ffffff !important;
     }
     
+    /* Botón hero */
     .hero-actions .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
     }
     
+    /* Eyebrows y texto acentuado */
     .section-eyebrow,
     .hero-eyebrow {
       color: ${accentColor} !important;
     }
     
+    /* Cart badge */
     .cart-count {
       background: ${accentColor} !important;
+    }
+    
+    /* Cards de producto */
+    .product-card {
+      background: #ffffff !important;
+    }
+    
+    /* Footer */
+    .site-footer {
+      background: ${secondaryColor} !important;
+    }
+    
+    /* Hero section */
+    .hero {
+      background: ${bgTinted} !important;
+    }
+    
+    /* Contact section */
+    .contact {
+      background: ${secondaryColor} !important;
+    }
+    
+    /* Loader */
+    .loader {
+      background: ${bgLighter} !important;
+    }
+    
+    .loader-mark {
+      color: ${primaryColor} !important;
+    }
+    
+    /* Search bar */
+    .search-bar {
+      background: ${bgSoft} !important;
+    }
+    
+    /* Tabs y filtros activos */
+    .filter-chip.active {
+      background: ${secondaryColor} !important;
+      color: #ffffff !important;
     }
   `;
   
