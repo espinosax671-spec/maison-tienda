@@ -1,5 +1,5 @@
 /* ===================================================================
-   MAISON — Lógica de la tienda
+   MAISON - Lógica de la tienda
    Edita NUMERO_WHATSAPP con tu número (código de país + número, sin +)
    
    ACTUALIZADO: 
@@ -9,13 +9,9 @@
    - Aplicación de tema personalizado (colores + fuente) por tienda
 =================================================================== */
 
-// EDITA ESTE NÚMERO (número de WhatsApp por defecto para tiendas sin whatsapp propio)
 const NUMERO_WHATSAPP = "573001234567";
-
-// Clave para guardar el carrito en localStorage
 const CART_STORAGE_KEY = "maison_cart_v1";
 
-// Variables globales para la tienda actual
 let currentStore = null;
 let currentStoreSlug = null;
 let storeWhatsapp = NUMERO_WHATSAPP;
@@ -45,7 +41,6 @@ function detectStoreSlugFromUrl() {
 
 // ---------------------------------------------------------------
 // Cargar datos de la tienda desde Supabase
-// ⭐ ACTUALIZADO: Trae también los datos del tema
 // ---------------------------------------------------------------
 async function loadStoreBySlug(slug) {
   try {
@@ -65,18 +60,16 @@ async function loadStoreBySlug(slug) {
 }
 
 // ---------------------------------------------------------------
-// ⭐ NUEVA FUNCIÓN: Aplicar tema personalizado (colores + fuente)
+// Aplicar tema personalizado (colores + fuente)
 // ---------------------------------------------------------------
 function applyStoreTheme(store) {
   if (!store) return;
   
-  // Colores por defecto (MAISON original)
   const primaryColor = store.theme_primary_color || '#d4a869';
   const secondaryColor = store.theme_secondary_color || '#1a1410';
   const accentColor = store.theme_accent_color || '#8f6b3f';
   const font = store.theme_font || 'Cormorant Garamond';
   
-  // Crear/actualizar el <style> con las variables CSS personalizadas
   let styleEl = document.getElementById("customStoreTheme");
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -84,7 +77,6 @@ function applyStoreTheme(store) {
     document.head.appendChild(styleEl);
   }
   
-  // Convertir colores hex a RGB para usar con transparencias
   const primaryRgb = hexToRgb(primaryColor);
   const secondaryRgb = hexToRgb(secondaryColor);
   const accentRgb = hexToRgb(accentColor);
@@ -99,7 +91,6 @@ function applyStoreTheme(store) {
       --font-serif: '${font}', serif !important;
     }
     
-    /* Aplicar fuente a elementos importantes */
     .logo,
     .hero-title,
     .section-title,
@@ -110,7 +101,6 @@ function applyStoreTheme(store) {
       font-family: '${font}', serif !important;
     }
     
-    /* Botones primarios */
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
@@ -122,35 +112,29 @@ function applyStoreTheme(store) {
       box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
     }
     
-    /* Precios */
     .product-price,
     .product-price-discounted,
     .modal-price-discounted {
       color: ${primaryColor} !important;
     }
     
-    /* Header y navegación */
     .site-header {
       background: rgba(255, 255, 255, 0.98) !important;
     }
     
-    /* Logo color */
     .logo {
       color: ${secondaryColor} !important;
     }
     
-    /* Enlaces del footer y otros */
     .footer-col a:hover,
     .nav-link:hover {
       color: ${accentColor} !important;
     }
     
-    /* Categorías de sección */
     .catalog.catalog-dark {
       background: ${secondaryColor} !important;
     }
     
-    /* Botones ghost */
     .btn-ghost {
       color: ${secondaryColor} !important;
       border-color: ${secondaryColor} !important;
@@ -161,28 +145,25 @@ function applyStoreTheme(store) {
       color: #ffffff !important;
     }
     
-    /* Botón "Ver colección" en hero */
     .hero-actions .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
     }
     
-    /* Section eyebrow */
     .section-eyebrow,
     .hero-eyebrow {
       color: ${accentColor} !important;
     }
     
-    /* Cart button */
     .cart-count {
       background: ${accentColor} !important;
     }
   `;
   
-  console.log(`🎨 Tema aplicado: ${font} + ${primaryColor}`);
+  console.log(`Tema aplicado: ${font} + ${primaryColor}`);
 }
 
 // ---------------------------------------------------------------
-// ⭐ HELPER: Convertir color hex a RGB (para transparencias)
+// Convertir color hex a RGB
 // ---------------------------------------------------------------
 function hexToRgb(hex) {
   hex = hex.replace('#', '');
@@ -193,7 +174,7 @@ function hexToRgb(hex) {
 }
 
 // ---------------------------------------------------------------
-// ⭐ HELPER: Aclarar u oscurecer color hex
+// Aclarar u oscurecer color hex
 // ---------------------------------------------------------------
 function lightenColor(hex, percent) {
   hex = hex.replace('#', '');
@@ -216,7 +197,6 @@ function lightenColor(hex, percent) {
 function applyStoreToDOM(store) {
   if (!store) return;
   
-  // 1. Cambiar el nombre del logo
   const logoElements = document.querySelectorAll(".logo");
   logoElements.forEach((logo) => {
     logo.textContent = store.name;
@@ -226,22 +206,18 @@ function applyStoreToDOM(store) {
     }
   });
   
-  // 2. Título de la página
-  document.title = `${store.name} — Ropa y Calzado`;
+  document.title = `${store.name} - Ropa y Calzado`;
   
-  // 3. Meta description
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) {
     metaDesc.setAttribute("content", `${store.name} - Boutique de ropa y calzado premium.`);
   }
   
-  // 4. Meta title para redes sociales
   const metaTitle = document.querySelector('meta[property="og:title"]');
   if (metaTitle) {
     metaTitle.setAttribute("content", store.name);
   }
   
-  // 5. Footer
   const footerBrand = document.querySelector(".footer-brand .logo");
   if (footerBrand) footerBrand.textContent = store.name;
   
@@ -253,7 +229,6 @@ function applyStoreToDOM(store) {
     footerLegal.innerHTML = `© 2026 ${store.name}. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a>`;
   }
   
-  // 6. WhatsApp de la tienda
   if (store.whatsapp) {
     storeWhatsapp = store.whatsapp.replace(/\D/g, "");
     if (!storeWhatsapp.startsWith("57")) {
@@ -261,10 +236,9 @@ function applyStoreToDOM(store) {
     }
   }
   
-  // 7. ⭐ APLICAR TEMA PERSONALIZADO
   applyStoreTheme(store);
   
-  console.log(`✅ Tienda cargada: ${store.name} (${store.slug})`);
+  console.log(`Tienda cargada: ${store.name} (${store.slug})`);
 }
 
 // ---------------------------------------------------------------
@@ -292,7 +266,6 @@ function showStoreNotFound(slug) {
   
   errorDiv.innerHTML = `
     <div style="max-width: 500px;">
-      <div style="font-size: 80px; margin-bottom: 20px;">🏪</div>
       <h1 style="font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; color: #1a1410; margin-bottom: 16px; font-weight: 500;">
         Tienda no encontrada
       </h1>
@@ -501,7 +474,6 @@ async function renderCatalog() {
       if (grid) {
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #666;">
-            <div style="font-size: 60px; margin-bottom: 16px;">📦</div>
             <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; margin-bottom: 8px; color: #1a1410;">
               Sin productos en esta categoría
             </h3>
@@ -973,12 +945,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   currentStoreSlug = detectStoreSlugFromUrl();
   
   if (currentStoreSlug) {
-    console.log(`🔍 Cargando tienda: ${currentStoreSlug}`);
+    console.log(`Cargando tienda: ${currentStoreSlug}`);
     
     currentStore = await loadStoreBySlug(currentStoreSlug);
     
     if (!currentStore) {
-      console.warn(`⚠️ Tienda "${currentStoreSlug}" no encontrada`);
+      console.warn(`Tienda "${currentStoreSlug}" no encontrada`);
       showStoreNotFound(currentStoreSlug);
       return;
     }
@@ -988,7 +960,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     window.currentStore = currentStore;
     window.currentStoreSlug = currentStoreSlug;
   } else {
-    console.log("📍 Vista general (sin tienda específica)");
+    console.log("Vista general (sin tienda específica)");
   }
   
   await loadUserFavorites();
@@ -2089,7 +2061,7 @@ function createOrderHistoryCard(order) {
         <img src="${item.image || ''}" alt="${escapeHtml(item.name)}" class="order-history-item-img">
         <div class="order-history-item-info">
           <span class="order-history-item-name">${escapeHtml(item.name)}</span>
-          <span class="order-history-item-meta">Talla ${item.size} · Cantidad: ${item.qty}</span>
+          <span class="order-history-item-meta">Talla ${item.size} - Cantidad: ${item.qty}</span>
         </div>
         <span class="order-history-item-price">${formatPrice(item.subtotal)}</span>
       </div>
@@ -2161,7 +2133,7 @@ function escapeHtml(str) {
 async function handleReorder(order) {
   if (!order || !order.items || order.items.length === 0) return;
   
-  const confirmMsg = `¿Volver a pedir estos productos?\n\n${order.items.map(i => `- ${i.name} (Talla ${i.size}) x ${i.qty}`).join("\n")}\n\nTotal aproximado: ${formatPrice(order.total)}`;
+  const confirmMsg = `Volver a pedir estos productos?\n\n${order.items.map(i => `- ${i.name} (Talla ${i.size}) x ${i.qty}`).join("\n")}\n\nTotal aproximado: ${formatPrice(order.total)}`;
   
   if (!confirm(confirmMsg)) return;
   
