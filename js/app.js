@@ -4,14 +4,182 @@
    
    ACTUALIZADO: 
    - Soporte para calzado por género y unisex
-   - Los pedidos ahora guardan store_id para el sistema multi-tienda
+   - Los pedidos guardan store_id para el sistema multi-tienda
+   - Sistema multi-tienda con URLs personalizadas por slug
 =================================================================== */
 
-// EDITA ESTE NÚMERO
+// EDITA ESTE NÚMERO (número de WhatsApp por defecto para tiendas sin whatsapp propio)
 const NUMERO_WHATSAPP = "573001234567";
 
 // Clave para guardar el carrito en localStorage
 const CART_STORAGE_KEY = "maison_cart_v1";
+
+// ⭐ NUEVO: Variables globales para la tienda actual
+let currentStore = null;        // Datos completos de la tienda
+let currentStoreSlug = null;    // Slug de la tienda actual
+let storeWhatsapp = NUMERO_WHATSAPP; // WhatsApp de la tienda actual
+
+// ---------------------------------------------------------------
+// ⭐ NUEVA FUNCIÓN: Detectar la tienda desde la URL
+// Soporta: ?tienda=slug  Y  /slug (con vercel.json)
+// ---------------------------------------------------------------
+function detectStoreSlugFromUrl() {
+  // Intentar primero desde query param (?tienda=xxx)
+  const urlParams = new URLSearchParams(window.location.search);
+  let slug = urlParams.get("tienda");
+  
+  // Si no hay query param, intentar desde el path (/xxx)
+  if (!slug) {
+    const pathname = window.location.pathname;
+    // Quitar el / inicial y verificar que no sea una ruta reservada
+    const pathClean = pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+    
+    // Rutas que NO son slugs de tienda
+    const rutasReservadas = ['', 'admin', 'admin.html', 'index.html', 
+                             'estadisticas', 'estadisticas.html',
+                             'reset-password', 'reset-password.html'];
+    
+    if (pathClean && !rutasReservadas.includes(pathClean.toLowerCase())) {
+      slug = pathClean;
+    }
+  }
+  
+  return slug;
+}
+
+// ---------------------------------------------------------------
+// ⭐ NUEVA FUNCIÓN: Cargar datos de la tienda desde Supabase
+// ---------------------------------------------------------------
+async function loadStoreBySlug(slug) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("stores")
+      .select("*")
+      .eq("slug", slug)
+      .eq("active", true)
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error("Error cargando tienda:", err);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------
+// ⭐ NUEVA FUNCIÓN: Aplicar información de la tienda al DOM
+// ---------------------------------------------------------------
+function applyStoreToDOM(store) {
+  if (!store) return;
+  
+  // 1. Cambiar el nombre del logo (arriba a la izquierda)
+  const logoElements = document.querySelectorAll(".logo");
+  logoElements.forEach((logo) => {
+    logo.textContent = store.name;
+    // Si el nombre es muy largo, ajustar tamaño
+    if (store.name.length > 12) {
+      logo.style.fontSize = "clamp(1rem, 3vw, 1.5rem)";
+      logo.style.letterSpacing = "0.15em";
+    }
+  });
+  
+  // 2. Cambiar el título de la página
+  document.title = `${store.name} — Ropa y Calzado`;
+  
+  // 3. Actualizar meta description
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) {
+    metaDesc.setAttribute("content", `${store.name} - Boutique de ropa y calzado premium.`);
+  }
+  
+  // 4. Actualizar meta title para redes sociales
+  const metaTitle = document.querySelector('meta[property="og:title"]');
+  if (metaTitle) {
+    metaTitle.setAttribute("content", store.name);
+  }
+  
+  // 5. Actualizar footer con el nombre
+  const footerBrand = document.querySelector(".footer-brand .logo");
+  if (footerBrand) footerBrand.textContent = store.name;
+  
+  const footerText = document.querySelector(".footer-brand p");
+  if (footerText) footerText.textContent = `Ropa y calzado premium.`;
+  
+  const footerLegal = document.querySelector(".footer-legal");
+  if (footerLegal) {
+    footerLegal.innerHTML = `© 2026 ${store.name}. Hecho con cuidado en Colombia. <a href="admin.html" class="admin-link">Panel</a>`;
+  }
+  
+  // 6. Guardar WhatsApp de la tienda (si tiene)
+  if (store.whatsapp) {
+    storeWhatsapp = store.whatsapp.replace(/\D/g, "");
+    if (!storeWhatsapp.startsWith("57")) {
+      storeWhatsapp = "57" + storeWhatsapp;
+    }
+  }
+  
+  console.log(`✅ Tienda cargada: ${store.name} (${store.slug})`);
+}
+
+// ---------------------------------------------------------------
+// ⭐ NUEVA FUNCIÓN: Mostrar mensaje cuando la tienda no existe
+// ---------------------------------------------------------------
+function showStoreNotFound(slug) {
+  const main = document.querySelector("main") || document.body;
+  
+  // Ocultar todas las secciones normales
+  document.querySelectorAll(".catalog, .hero, .about, .contact").forEach(el => {
+    el.style.display = "none";
+  });
+  
+  // Ocultar el loader
+  const loader = document.getElementById("loader");
+  if (loader) loader.classList.add("hidden");
+  
+  // Crear mensaje de tienda no encontrada
+  const errorDiv = document.createElement("div");
+  errorDiv.id = "storeNotFound";
+  errorDiv.style.cssText = `
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #f5efe3 0%, #ede4d3 100%);
+  `;
+  
+  errorDiv.innerHTML = `
+    <div style="max-width: 500px;">
+      <div style="font-size: 80px; margin-bottom: 20px;">🏪</div>
+      <h1 style="font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; color: #1a1410; margin-bottom: 16px; font-weight: 500;">
+        Tienda no encontrada
+      </h1>
+      <p style="font-family: 'Jost', sans-serif; color: #666; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
+        La tienda <strong>"${slug}"</strong> no existe o ya no está disponible.
+      </p>
+      <a href="/" style="
+        display: inline-block;
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #c9a96e, #8f6b3f);
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-weight: 600;
+        box-shadow: 0 6px 20px rgba(143, 107, 63, 0.3);
+      ">
+        Ir al inicio
+      </a>
+    </div>
+  `;
+  
+  document.body.appendChild(errorDiv);
+}
 
 // ---------------------------------------------------------------
 // Formato de precio en pesos colombianos
@@ -119,19 +287,32 @@ function cartCount() {
 
 // ---------------------------------------------------------------
 // Catálogo desde Supabase
+// ⭐ ACTUALIZADO: Filtra por store_id si hay tienda seleccionada
 // ---------------------------------------------------------------
 let STORE_PRODUCTS = [];
 
 async function fetchProductsFromSupabase() {
   try {
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from("products")
       .select("*")
       .eq("active", true)
       .order("created_at", { ascending: false });
+    
+    // ⭐ Si hay una tienda seleccionada, filtrar solo sus productos
+    if (currentStore && currentStore.id) {
+      query = query.eq("store_id", currentStore.id);
+    }
+    
+    const { data, error } = await query;
 
     if (error) throw error;
-    if (!data || data.length === 0) return PRODUCTS;
+    if (!data || data.length === 0) {
+      // Si es una tienda específica sin productos, retornar array vacío
+      if (currentStore) return [];
+      // Si es la vista general sin productos, usar el fallback
+      return typeof PRODUCTS !== "undefined" ? PRODUCTS : [];
+    }
 
     return data.map((p) => ({
       id: p.id,
@@ -148,7 +329,7 @@ async function fetchProductsFromSupabase() {
     }));
   } catch (err) {
     console.error("No se pudo cargar el catálogo desde Supabase:", err);
-    return PRODUCTS;
+    return typeof PRODUCTS !== "undefined" ? PRODUCTS : [];
   }
 }
 
@@ -178,6 +359,26 @@ async function renderCatalog() {
   };
 
   STORE_PRODUCTS = await fetchProductsFromSupabase();
+  
+  // Si estamos en una tienda específica y no tiene productos, mostrar mensaje
+  if (currentStore && STORE_PRODUCTS.length === 0) {
+    Object.values(grids).forEach(grid => {
+      if (grid) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #666;">
+            <div style="font-size: 60px; margin-bottom: 16px;">📦</div>
+            <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; margin-bottom: 8px; color: #1a1410;">
+              Sin productos en esta categoría
+            </h3>
+            <p style="font-family: 'Jost', sans-serif;">
+              ${currentStore.name} aún no tiene productos en esta categoría.
+            </p>
+          </div>
+        `;
+      }
+    });
+    return;
+  }
 
   STORE_PRODUCTS.forEach((product) => {
     const targetGrids = getGridsForCategory(product.category);
@@ -545,11 +746,13 @@ document.getElementById("cartOverlay").addEventListener("click", closeCart);
 
 // ---------------------------------------------------------------
 // WhatsApp
+// ⭐ ACTUALIZADO: Usa el WhatsApp de la tienda actual
 // ---------------------------------------------------------------
 function buildOrderMessage(orderNumber = null) {
   if (cart.length === 0) return "Hola, quisiera más información sobre sus prendas.";
 
-  let msg = "Hola! Quiero hacer este pedido:\n\n";
+  const storeName = currentStore ? currentStore.name : "";
+  let msg = storeName ? `Hola ${storeName}! Quiero hacer este pedido:\n\n` : "Hola! Quiero hacer este pedido:\n\n";
   
   if (orderNumber) {
     msg += `*Pedido #${orderNumber}*\n\n`;
@@ -563,11 +766,13 @@ function buildOrderMessage(orderNumber = null) {
 }
 
 function updateWhatsappLinks() {
-  const baseUrl = `https://wa.me/${NUMERO_WHATSAPP}`;
+  const baseUrl = `https://wa.me/${storeWhatsapp}`;
+  const storeName = currentStore ? currentStore.name : "";
+  const greeting = storeName ? `Hola ${storeName}, ` : "Hola, ";
   
   const contactLink = document.getElementById("contactWhatsapp");
   if (contactLink) {
-    contactLink.href = `${baseUrl}?text=${encodeURIComponent("Hola, tengo una pregunta sobre sus productos.")}`;
+    contactLink.href = `${baseUrl}?text=${encodeURIComponent(greeting + "tengo una pregunta sobre sus productos.")}`;
   }
 }
 
@@ -577,17 +782,21 @@ function updateWhatsappLinks() {
 const menuToggle = document.getElementById("menuToggle");
 const mainNav = document.getElementById("mainNav");
 
-menuToggle.addEventListener("click", () => {
-  menuToggle.classList.toggle("active");
-  mainNav.classList.toggle("open");
-});
-
-mainNav.querySelectorAll(".nav-link").forEach((link) => {
-  link.addEventListener("click", () => {
-    menuToggle.classList.remove("active");
-    mainNav.classList.remove("open");
+if (menuToggle) {
+  menuToggle.addEventListener("click", () => {
+    menuToggle.classList.toggle("active");
+    mainNav.classList.toggle("open");
   });
-});
+}
+
+if (mainNav) {
+  mainNav.querySelectorAll(".nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      menuToggle.classList.remove("active");
+      mainNav.classList.remove("open");
+    });
+  });
+}
 
 // ---------------------------------------------------------------
 // Scroll reveal
@@ -616,17 +825,44 @@ const header = document.getElementById("siteHeader");
 window.addEventListener("scroll", () => {
   const current = window.scrollY;
   if (current > lastScroll && current > 120) {
-    header.style.transform = "translateY(-100%)";
+    if (header) header.style.transform = "translateY(-100%)";
   } else {
-    header.style.transform = "translateY(0)";
+    if (header) header.style.transform = "translateY(0)";
   }
   lastScroll = current;
 });
 
 // ---------------------------------------------------------------
-// Inicialización
+// ⭐ INICIALIZACIÓN ACTUALIZADA: Detecta tienda desde URL
 // ---------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", async () => {
+  // 1. Detectar si estamos en una tienda específica
+  currentStoreSlug = detectStoreSlugFromUrl();
+  
+  if (currentStoreSlug) {
+    console.log(`🔍 Cargando tienda: ${currentStoreSlug}`);
+    
+    // 2. Cargar datos de la tienda
+    currentStore = await loadStoreBySlug(currentStoreSlug);
+    
+    if (!currentStore) {
+      // Tienda no encontrada
+      console.warn(`⚠️ Tienda "${currentStoreSlug}" no encontrada`);
+      showStoreNotFound(currentStoreSlug);
+      return;
+    }
+    
+    // 3. Aplicar información de la tienda al DOM
+    applyStoreToDOM(currentStore);
+    
+    // Guardar globalmente para otras funciones
+    window.currentStore = currentStore;
+    window.currentStoreSlug = currentStoreSlug;
+  } else {
+    console.log("📍 Vista general (sin tienda específica)");
+  }
+  
+  // 4. Continuar con el flujo normal
   await loadUserFavorites();
   await renderCatalog();
   renderCart();
@@ -634,7 +870,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   initScrollReveal();
 
   setTimeout(() => {
-    document.getElementById("loader").classList.add("hidden");
+    const loader = document.getElementById("loader");
+    if (loader) loader.classList.add("hidden");
   }, 600);
 });
 
@@ -691,25 +928,41 @@ function showCustomToast(title, message) {
 
 // ---------------------------------------------------------------
 // SISTEMA DE PEDIDOS
-// ⭐ ACTUALIZADO: Ahora guarda store_id para el sistema multi-tienda
+// ⭐ ACTUALIZADO: Ahora usa el store_id de la tienda actual (si existe)
 // ---------------------------------------------------------------
 
 async function createOrderInDatabase() {
   if (cart.length === 0) return null;
   
   try {
-    // ⭐ Obtener store_id Y seller_id del primer producto
-    const firstProductId = cart[0].id;
-    const { data: productData, error: productError } = await supabaseClient
-      .from("products")
-      .select("created_by, store_id")
-      .eq("id", firstProductId)
-      .maybeSingle();
+    // ⭐ Si estamos en una tienda específica, usar SU store_id
+    let storeId = currentStore ? currentStore.id : null;
+    let sellerId = null;
     
-    if (productError) throw productError;
-    
-    const sellerId = productData?.created_by || null;
-    const storeId = productData?.store_id || null; // ⭐ NUEVO
+    // Si no hay tienda actual, obtener del primer producto
+    if (!storeId) {
+      const firstProductId = cart[0].id;
+      const { data: productData, error: productError } = await supabaseClient
+        .from("products")
+        .select("created_by, store_id")
+        .eq("id", firstProductId)
+        .maybeSingle();
+      
+      if (productError) throw productError;
+      
+      sellerId = productData?.created_by || null;
+      storeId = productData?.store_id || null;
+    } else {
+      // Si hay tienda, buscar el seller_id del primer producto
+      const firstProductId = cart[0].id;
+      const { data: productData } = await supabaseClient
+        .from("products")
+        .select("created_by")
+        .eq("id", firstProductId)
+        .maybeSingle();
+      
+      sellerId = productData?.created_by || null;
+    }
     
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData?.user || null;
@@ -757,7 +1010,7 @@ async function createOrderInDatabase() {
         items_count: cartCount(),
         status: 'pendiente',
         seller_id: sellerId,
-        store_id: storeId  // ⭐ NUEVO: Guardar la tienda del pedido
+        store_id: storeId
       })
       .select()
       .single();
@@ -794,7 +1047,7 @@ async function handleCheckoutClick(e) {
     const order = await createOrderInDatabase();
     
     const message = buildOrderMessage(order?.order_number);
-    const whatsappUrl = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${storeWhatsapp}?text=${encodeURIComponent(message)}`;
     
     if (whatsappWindow) {
       whatsappWindow.location.href = whatsappUrl;
@@ -807,7 +1060,6 @@ async function handleCheckoutClick(e) {
       closeCart();
       showToast("Pedido enviado", `#${order.order_number}`);
       
-      // Recargar historial de pedidos si el usuario está en el perfil
       if (typeof window.renderOrdersHistory === "function") {
         setTimeout(() => window.renderOrdersHistory(), 1000);
       }
@@ -1186,6 +1438,7 @@ function resetAllProductVisibility() {
 
 // ===================================================================
 // SISTEMA DE COMPARTIR PRODUCTOS
+// ⭐ ACTUALIZADO: Genera URLs que incluyen la tienda
 // ===================================================================
 
 const shareProductBtn = document.getElementById("shareProductBtn");
@@ -1223,13 +1476,14 @@ document.addEventListener("click", (e) => {
 function buildShareMessage(product) {
   const productUrl = generateProductUrl(product);
   const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
+  const storeName = currentStore ? currentStore.name : "MAISON";
   
   let priceText = `Precio: ${formatPrice(product.price)}`;
   if (hasDiscount) {
     priceText = `Precio: ~${formatPrice(product.original_price)}~ *${formatPrice(product.price)}* (${product.discount_percent}% OFF)`;
   }
   
-  return `Mira este producto de MAISON:
+  return `Mira este producto de ${storeName}:
 
 *${product.name}*
 Categoría: ${categoryLabel(product.category)}
@@ -1237,12 +1491,18 @@ ${priceText}
 
 Ver más aquí: ${productUrl}
 
-Ropa y calzado premium para dama y caballero.`;
+Ropa y calzado premium.`;
 }
 
 function generateProductUrl(product) {
-  const baseUrl = window.location.origin + window.location.pathname;
-  return `${baseUrl}?producto=${product.id}`;
+  const baseUrl = window.location.origin;
+  
+  // Si estamos en una tienda específica, incluir el slug en la URL
+  if (currentStoreSlug) {
+    return `${baseUrl}/${currentStoreSlug}?producto=${product.id}`;
+  }
+  
+  return `${baseUrl}/?producto=${product.id}`;
 }
 
 async function copyToClipboard(text) {
@@ -1387,7 +1647,6 @@ async function toggleFavorite(product) {
     }
     
     const isFav = userFavorites.has(product.id);
-    // Actualizar TODOS los botones del mismo producto (puede aparecer en varios grids)
     const btns = document.querySelectorAll(`[data-favorite-btn="${product.id}"]`);
     
     if (isFav) {
@@ -1720,7 +1979,7 @@ function createOrderHistoryCard(order) {
   let actionsHtml = "";
   if (order.status !== "cancelado") {
     const whatsappMsg = `Hola! Tengo una consulta sobre mi pedido *#${order.order_number}*`;
-    const whatsappUrl = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(whatsappMsg)}`;
+    const whatsappUrl = `https://wa.me/${storeWhatsapp}?text=${encodeURIComponent(whatsappMsg)}`;
     
     actionsHtml = `
       <div class="order-history-actions">
