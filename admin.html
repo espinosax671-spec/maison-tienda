@@ -94,7 +94,6 @@
     </div>
   </header>
 
-  <!-- Banner con la URL personalizada de la tienda -->
   <div class="store-url-banner" id="storeUrlBanner" style="display:none;">
     <div class="store-url-banner-inner">
       <div class="store-url-info">
@@ -156,7 +155,6 @@
         <span class="tab-label">Empleados</span>
         <span class="tab-badge" id="employeesCountBadge">0</span>
       </button>
-      <!-- ⭐ NUEVA PESTAÑA DISEÑO (solo dueño) -->
       <button type="button" class="admin-tab tab-diseno" data-tab="diseno" id="tabDiseno" style="display:none;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:middle;">
           <circle cx="13.5" cy="6.5" r=".5"/>
@@ -261,10 +259,9 @@
       </div>
     </div>
 
-    <!-- ⭐ NUEVA VISTA: DISEÑO / PERSONALIZACIÓN -->
     <div class="admin-view" id="viewDiseno">
       <div class="admin-toolbar">
-        <h1>🎨 Diseño de tu tienda</h1>
+        <h1>Diseño de tu tienda</h1>
       </div>
       
       <div class="design-info-box">
@@ -279,7 +276,6 @@
         </div>
       </div>
 
-      <!-- SECCIÓN: Plantillas rápidas -->
       <div class="design-section">
         <h2 class="design-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -290,11 +286,9 @@
         <p class="design-section-desc">Elige una plantilla para aplicar automáticamente su combinación de colores y fuentes.</p>
         
         <div class="templates-grid" id="templatesGrid">
-          <!-- Se generan dinámicamente en admin.js -->
         </div>
       </div>
 
-      <!-- SECCIÓN: Personalización manual -->
       <div class="design-section">
         <h2 class="design-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -338,7 +332,6 @@
         </div>
       </div>
 
-      <!-- SECCIÓN: Fuente -->
       <div class="design-section">
         <h2 class="design-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -374,7 +367,6 @@
         </div>
       </div>
 
-      <!-- SECCIÓN: Vista previa -->
       <div class="design-section">
         <h2 class="design-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -391,7 +383,7 @@
             <span class="preview-nav">DAMA · CABALLERO · CALZADO</span>
           </div>
           <div class="preview-card" id="previewCard">
-            <div class="preview-image">📷</div>
+            <div class="preview-image">IMG</div>
             <div class="preview-info">
               <span class="preview-category">DAMA</span>
               <h3 class="preview-name">Producto de ejemplo</h3>
@@ -402,7 +394,6 @@
         </div>
       </div>
 
-      <!-- ACCIONES -->
       <div class="design-actions">
         <button type="button" class="btn btn-ghost" id="resetDesignBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -667,15 +658,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<!-- ============================================
-     Registro del Service Worker (PWA) — AUTO-ACTUALIZACIÓN
-============================================ -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
         .then(registration => {
-          console.log('✅ Service Worker registrado:', registration.scope);
+          console.log('Service Worker registrado:', registration.scope);
 
           setInterval(() => {
             registration.update();
@@ -685,19 +673,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const newWorker = registration.installing;
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('🔄 Nueva versión disponible');
+                console.log('Nueva versión disponible');
                 showUpdateBanner(newWorker);
               }
             });
           });
         })
         .catch(err => {
-          console.error('❌ Error al registrar Service Worker:', err);
+          console.error('Error al registrar Service Worker:', err);
         });
 
       navigator.serviceWorker.addEventListener('message', event => {
         if (event.data && event.data.type === 'SW_UPDATED') {
-          console.log(`✨ Service Worker actualizado a ${event.data.version}`);
+          console.log(`Service Worker actualizado a ${event.data.version}`);
         }
       });
 
@@ -736,7 +724,6 @@ document.addEventListener("DOMContentLoaded", () => {
           max-width: 90%;
           animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         ">
-          <span style="font-size: 20px;">✨</span>
           <span style="flex: 1;">Nueva versión disponible</span>
           <button id="updateBtn" style="
             background: linear-gradient(135deg, #c9a96e, #8f6b3f);
@@ -785,7 +772,6 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="js/admin.js?v=20250122h"></script>
 
 <style>
-/* [Estilos existentes conservados - no cambian] */
 .stock-initial-hint {
   display: block;
   font-size: 11px;
@@ -1116,6 +1102,88 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 }
 
+.admin-logo {
+  transition: font-size 0.3s ease, letter-spacing 0.3s ease;
+  line-height: 1.1;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.admin-logo em {
+  font-style: italic;
+  color: var(--color-gold-dark);
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 0.7em;
+  margin-left: 6px;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+}
+
+.admin-logo[data-length="short"] {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  letter-spacing: 0.2em;
+}
+
+.admin-logo[data-length="medium"] {
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  letter-spacing: 0.12em;
+}
+
+.admin-logo[data-length="long"] {
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 1024px) {
+  .admin-logo[data-length="medium"] {
+    font-size: clamp(0.95rem, 2vw, 1.2rem);
+  }
+  
+  .admin-logo[data-length="long"] {
+    font-size: clamp(0.8rem, 1.6vw, 1rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-logo {
+    white-space: normal;
+  }
+  
+  .admin-logo em {
+    display: none;
+  }
+  
+  .admin-logo[data-length="short"] {
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+  }
+  
+  .admin-logo[data-length="medium"] {
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+  }
+  
+  .admin-logo[data-length="long"] {
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-logo[data-length="short"] {
+    font-size: 1rem;
+  }
+  
+  .admin-logo[data-length="medium"] {
+    font-size: 0.85rem;
+  }
+  
+  .admin-logo[data-length="long"] {
+    font-size: 0.75rem;
+  }
+}
+
 .tab-empleados {
   position: relative;
 }
@@ -1334,9 +1402,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 }
 
-/* ============================================
-   BANNER DE URL DE LA TIENDA
-============================================ */
 .store-url-banner {
   background: linear-gradient(135deg, rgba(212, 168, 105, 0.12), rgba(143, 107, 63, 0.06));
   border-bottom: 1px solid rgba(212, 168, 105, 0.25);
@@ -1530,9 +1595,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 }
 
-/* ============================================
-   ⭐ PESTAÑA DISEÑO / PERSONALIZACIÓN
-============================================ */
 .tab-diseno {
   background: linear-gradient(135deg, rgba(212, 168, 105, 0.12), rgba(143, 107, 63, 0.06)) !important;
   border-color: rgba(212, 168, 105, 0.3) !important;
@@ -1611,7 +1673,6 @@ document.addEventListener("DOMContentLoaded", () => {
   line-height: 1.5;
 }
 
-/* Plantillas grid */
 .templates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1642,7 +1703,7 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 .template-card.active::before {
-  content: "✓";
+  content: "\2713";
   position: absolute;
   top: 10px;
   right: 10px;
@@ -1690,7 +1751,6 @@ document.addEventListener("DOMContentLoaded", () => {
   margin: 0;
 }
 
-/* Color pickers */
 .color-pickers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -1766,7 +1826,6 @@ document.addEventListener("DOMContentLoaded", () => {
   font-style: italic;
 }
 
-/* Font picker */
 .font-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1819,7 +1878,6 @@ document.addEventListener("DOMContentLoaded", () => {
   font-style: italic;
 }
 
-/* Vista previa */
 .design-preview {
   background: #f5efe3;
   border: 1px solid var(--color-border);
@@ -1868,7 +1926,9 @@ document.addEventListener("DOMContentLoaded", () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #8f6b3f;
   flex-shrink: 0;
 }
 
@@ -1915,7 +1975,6 @@ document.addEventListener("DOMContentLoaded", () => {
   transition: all 0.3s ease;
 }
 
-/* Acciones diseño */
 .design-actions {
   display: flex;
   gap: 12px;
@@ -1948,7 +2007,6 @@ document.addEventListener("DOMContentLoaded", () => {
   color: var(--color-danger);
 }
 
-/* Responsive diseño */
 @media (max-width: 640px) {
   .preview-card {
     flex-direction: column;
