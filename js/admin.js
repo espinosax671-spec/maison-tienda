@@ -1,6 +1,5 @@
 /* ===================================================================
-   PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
-   Iconos SVG elegantes (sin emojis)
+   PANEL DE ADMINISTRACIÓN - Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
    
    ACTUALIZADO: 
    - Soporte para Calzado Unisex
@@ -32,7 +31,7 @@ let orderSubscription = null;
 let lastNotifiedOrderId = null;
 let pendingNotificationOrder = null;
 
-// ⭐ NUEVO: Variables del sistema de diseño/tema
+// Variables del sistema de diseño/tema
 let currentTheme = {
   primary_color: '#d4a869',
   secondary_color: '#1a1410',
@@ -41,7 +40,7 @@ let currentTheme = {
   template: 'elegante'
 };
 
-// ⭐ NUEVO: Plantillas predefinidas
+// Plantillas predefinidas
 const DESIGN_TEMPLATES = {
   elegante: {
     name: 'Elegante',
@@ -130,7 +129,6 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 
 // ---------------------------------------------------------------
 // PROTECCIÓN DEL PANEL (MULTI-TIENDA)
-// ⭐ ACTUALIZADO: Carga tema y muestra pestaña Diseño solo al dueño
 // ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
@@ -175,7 +173,6 @@ async function checkStaffAndEnter(user) {
   window.currentStoreId = staff.store_id;
   window.currentUserRole = staff.role;
 
-  // ⭐ ACTUALIZADO: Traer también los datos del tema
   const { data: store } = await supabaseClient
     .from("stores")
     .select("name, active, slug, theme_primary_color, theme_secondary_color, theme_accent_color, theme_font, theme_template")
@@ -190,7 +187,7 @@ async function checkStaffAndEnter(user) {
   currentStoreName = store?.name || "Mi Tienda";
   currentStoreSlug = store?.slug || null;
 
-  // ⭐ NUEVO: Cargar el tema actual
+  // Cargar el tema actual
   if (store) {
     currentTheme = {
       primary_color: store.theme_primary_color || '#d4a869',
@@ -208,7 +205,6 @@ async function checkStaffAndEnter(user) {
   document.getElementById("adminUserName").textContent =
     profile.full_name || user.user_metadata?.full_name || user.email;
 
-  // Cambiar el logo principal por el nombre de la tienda
   const adminLogo = document.querySelector(".admin-logo");
   if (adminLogo && currentStoreName) {
     const nameUpper = currentStoreName.toUpperCase();
@@ -227,9 +223,8 @@ async function checkStaffAndEnter(user) {
   const storeNameEl = document.getElementById("adminStoreName");
   if (storeNameEl) storeNameEl.style.display = "none";
 
-  document.title = `${currentStoreName} — Panel`;
+  document.title = `${currentStoreName} - Panel`;
 
-  // ⭐ Solo el DUEÑO ve empleados y diseño
   const esDueño = currentUserRole === "dueño";
   
   const tabEmpleados = document.getElementById("tabEmpleados");
@@ -237,7 +232,6 @@ async function checkStaffAndEnter(user) {
     tabEmpleados.style.display = esDueño ? "flex" : "none";
   }
   
-  // ⭐ NUEVO: Pestaña Diseño solo para el dueño
   const tabDiseno = document.getElementById("tabDiseno");
   if (tabDiseno) {
     tabDiseno.style.display = esDueño ? "flex" : "none";
@@ -248,7 +242,6 @@ async function checkStaffAndEnter(user) {
   await loadProducts();
   initNotificationSystem();
   
-  // ⭐ NUEVO: Inicializar sistema de diseño
   if (esDueño) {
     initDesignSystem();
   }
@@ -268,7 +261,7 @@ function displayStoreUrlBanner() {
   
   if (!currentStoreSlug) {
     banner.style.display = "none";
-    console.warn("⚠️ La tienda no tiene slug asignado");
+    console.warn("La tienda no tiene slug asignado");
     return;
   }
   
@@ -290,7 +283,7 @@ function displayStoreUrlBanner() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span>¡Copiado!</span>
+          <span>Copiado</span>
         `;
         copyBtn.classList.add("copied");
         setTimeout(() => {
@@ -306,14 +299,15 @@ function displayStoreUrlBanner() {
   
   if (shareBtn) {
     shareBtn.onclick = () => {
-      const message = `¡Visita mi tienda ${currentStoreName}! 🛍️\n\n${fullUrl}`;
+      const message = `Visita mi tienda ${currentStoreName}\n\n${fullUrl}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
     };
   }
   
   banner.style.display = "block";
-  console.log(`✅ URL de tienda: ${fullUrl}`);
+  
+  console.log(`URL de tienda: ${fullUrl}`);
 }
 
 async function denyAccess(mensaje) {
@@ -451,7 +445,7 @@ function renderProductTable() {
         <div class="product-row-name">${escapeHtml(p.name)}</div>
         <div class="product-row-meta">
           <span>${categoryLabel(p.category)}</span>
-          ${p.tag ? `<span>· ${escapeHtml(p.tag)}</span>` : ""}
+          ${p.tag ? `<span>- ${escapeHtml(p.tag)}</span>` : ""}
           <span class="stock-badge ${stockClass}">
             ${totalStock} en stock
           </span>
@@ -479,6 +473,9 @@ function renderProductTable() {
   });
 }
 
+// ---------------------------------------------------------------
+// Etiquetas de categoría
+// ---------------------------------------------------------------
 function categoryLabel(c) {
   return { 
     dama: "Dama", 
@@ -992,7 +989,7 @@ function getTotalStock(stock) {
 }
 
 // ===================================================================
-// SISTEMA DE TABS (Productos / Pedidos / Empleados / Diseño)
+// SISTEMA DE TABS
 // ===================================================================
 
 let currentTab = "productos";
@@ -1025,7 +1022,6 @@ function switchTab(tabName) {
   } else if (tabName === "empleados") {
     loadEmployees();
   } else if (tabName === "diseno") {
-    // ⭐ NUEVO: Cuando se abre la pestaña Diseño, refrescar UI
     refreshDesignUI();
   }
 }
@@ -1035,25 +1031,17 @@ function capitalize(str) {
 }
 
 // ===================================================================
-// ⭐ SISTEMA DE DISEÑO / PERSONALIZACIÓN
+// SISTEMA DE DISEÑO / PERSONALIZACIÓN
 // ===================================================================
 
 function initDesignSystem() {
-  console.log("🎨 Inicializando sistema de diseño");
+  console.log("Inicializando sistema de diseño");
   
-  // Renderizar plantillas
   renderTemplates();
-  
-  // Cargar valores actuales en los controles
   refreshDesignUI();
-  
-  // Configurar listeners de color pickers
   setupColorPickers();
-  
-  // Configurar listeners de fuentes
   setupFontPickers();
   
-  // Botones de acción
   const saveBtn = document.getElementById("saveDesignBtn");
   const resetBtn = document.getElementById("resetDesignBtn");
   
@@ -1066,9 +1054,6 @@ function initDesignSystem() {
   }
 }
 
-// ---------------------------------------------------------------
-// Renderizar plantillas predefinidas
-// ---------------------------------------------------------------
 function renderTemplates() {
   const grid = document.getElementById("templatesGrid");
   if (!grid) return;
@@ -1098,9 +1083,6 @@ function renderTemplates() {
   });
 }
 
-// ---------------------------------------------------------------
-// Aplicar plantilla predefinida
-// ---------------------------------------------------------------
 function applyTemplate(templateKey) {
   const template = DESIGN_TEMPLATES[templateKey];
   if (!template) return;
@@ -1113,14 +1095,10 @@ function applyTemplate(templateKey) {
   
   refreshDesignUI();
   
-  console.log(`✅ Plantilla aplicada: ${template.name}`);
+  console.log(`Plantilla aplicada: ${template.name}`);
 }
 
-// ---------------------------------------------------------------
-// Actualizar toda la UI de diseño con los valores actuales
-// ---------------------------------------------------------------
 function refreshDesignUI() {
-  // Color pickers
   const primaryColorInput = document.getElementById("themePrimaryColor");
   const secondaryColorInput = document.getElementById("themeSecondaryColor");
   const accentColorInput = document.getElementById("themeAccentColor");
@@ -1135,23 +1113,17 @@ function refreshDesignUI() {
   if (secondaryColorText) secondaryColorText.value = currentTheme.secondary_color.toUpperCase();
   if (accentColorText) accentColorText.value = currentTheme.accent_color.toUpperCase();
   
-  // Fuentes
   document.querySelectorAll(".font-option").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.font === currentTheme.font);
   });
   
-  // Plantillas
   document.querySelectorAll(".template-card").forEach((card) => {
     card.classList.toggle("active", card.dataset.template === currentTheme.template);
   });
   
-  // Vista previa
   updatePreview();
 }
 
-// ---------------------------------------------------------------
-// Configurar listeners de color pickers
-// ---------------------------------------------------------------
 function setupColorPickers() {
   const pairs = [
     { picker: "themePrimaryColor", text: "themePrimaryColorText", key: "primary_color" },
@@ -1169,7 +1141,6 @@ function setupColorPickers() {
         currentTheme.template = 'custom';
         if (textEl) textEl.value = e.target.value.toUpperCase();
         updatePreview();
-        // Deseleccionar plantillas activas
         document.querySelectorAll(".template-card").forEach(c => c.classList.remove("active"));
       });
     }
@@ -1179,7 +1150,6 @@ function setupColorPickers() {
         let val = e.target.value.trim();
         if (!val.startsWith('#')) val = '#' + val;
         
-        // Validar que sea un color hex válido
         if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
           currentTheme[key] = val;
           currentTheme.template = 'custom';
@@ -1192,9 +1162,6 @@ function setupColorPickers() {
   });
 }
 
-// ---------------------------------------------------------------
-// Configurar listeners de fuentes
-// ---------------------------------------------------------------
 function setupFontPickers() {
   document.querySelectorAll(".font-option").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1209,9 +1176,6 @@ function setupFontPickers() {
   });
 }
 
-// ---------------------------------------------------------------
-// Actualizar vista previa en vivo
-// ---------------------------------------------------------------
 function updatePreview() {
   const preview = document.getElementById("designPreview");
   const previewHeader = document.getElementById("previewHeader");
@@ -1222,33 +1186,22 @@ function updatePreview() {
   
   if (!preview) return;
   
-  // Aplicar fuente al preview
   if (previewLogo) previewLogo.style.fontFamily = `'${currentTheme.font}', serif`;
   if (previewName) previewName.style.fontFamily = `'${currentTheme.font}', serif`;
   
-  // Color del logo (secundario)
   if (previewLogo) previewLogo.style.color = currentTheme.secondary_color;
-  
-  // Nombre del producto (secundario)
   if (previewName) previewName.style.color = currentTheme.secondary_color;
-  
-  // Precio (primario)
   if (previewPrice) previewPrice.style.color = currentTheme.primary_color;
   
-  // Botón (primario)
   if (previewButton) {
     previewButton.style.background = `linear-gradient(135deg, ${currentTheme.primary_color}, ${currentTheme.accent_color})`;
   }
   
-  // Actualizar nombre en el preview
   if (previewLogo && currentStoreName) {
     previewLogo.textContent = currentStoreName.toUpperCase();
   }
 }
 
-// ---------------------------------------------------------------
-// Guardar diseño en Supabase
-// ---------------------------------------------------------------
 async function saveDesign() {
   const btn = document.getElementById("saveDesignBtn");
   const msg = document.getElementById("designSaveMsg");
@@ -1279,7 +1232,7 @@ async function saveDesign() {
     if (error) throw error;
     
     if (msg) {
-      msg.textContent = "✅ Diseño guardado correctamente. Los cambios ya se ven en tu tienda.";
+      msg.textContent = "Diseño guardado correctamente. Los cambios ya se ven en tu tienda.";
       msg.className = "design-save-msg success";
       
       setTimeout(() => {
@@ -1288,12 +1241,12 @@ async function saveDesign() {
       }, 5000);
     }
     
-    console.log("✅ Diseño guardado en Supabase");
+    console.log("Diseño guardado en Supabase");
     
   } catch (err) {
     console.error("Error al guardar diseño:", err);
     if (msg) {
-      msg.textContent = "❌ Error al guardar. Intenta de nuevo.";
+      msg.textContent = "Error al guardar. Intenta de nuevo.";
       msg.className = "design-save-msg error";
     }
   } finally {
@@ -1302,11 +1255,8 @@ async function saveDesign() {
   }
 }
 
-// ---------------------------------------------------------------
-// Restablecer al tema por defecto (MAISON)
-// ---------------------------------------------------------------
 function resetDesign() {
-  if (!confirm("¿Restablecer al diseño original de MAISON?\n\nSe perderán los cambios que no hayas guardado.")) {
+  if (!confirm("Restablecer al diseño original de MAISON?\n\nSe perderán los cambios que no hayas guardado.")) {
     return;
   }
   
@@ -1314,7 +1264,7 @@ function resetDesign() {
   
   const msg = document.getElementById("designSaveMsg");
   if (msg) {
-    msg.textContent = "🔄 Diseño restablecido. Recuerda guardar los cambios.";
+    msg.textContent = "Diseño restablecido. Recuerda guardar los cambios.";
     msg.className = "design-save-msg success";
     
     setTimeout(() => {
@@ -1773,7 +1723,7 @@ function createOrderCard(order) {
         <img src="${item.image || ''}" alt="${escapeHtml(item.name)}" class="order-item-img">
         <div class="order-item-info">
           <span class="order-item-name">${escapeHtml(item.name)}</span>
-          <span class="order-item-meta">Talla ${item.size} · Cantidad: ${item.qty}</span>
+          <span class="order-item-meta">Talla ${item.size} - Cantidad: ${item.qty}</span>
         </div>
         <span class="order-item-price">${formatPrice(item.subtotal)}</span>
       </div>
@@ -1882,7 +1832,7 @@ document.getElementById("refreshOrdersBtn").addEventListener("click", () => {
 });
 
 async function handleConfirmOrder(order) {
-  const confirmMsg = `¿Confirmar el pedido #${order.order_number}?\n\n` +
+  const confirmMsg = `Confirmar el pedido #${order.order_number}?\n\n` +
     `Se descontará el stock automáticamente:\n` +
     order.items.map(i => `- ${i.name} (Talla ${i.size}) x ${i.qty}`).join("\n") +
     `\n\nTotal: ${formatPrice(order.total)}`;
@@ -1917,7 +1867,7 @@ async function handleConfirmOrder(order) {
 }
 
 async function handleCancelOrder(order) {
-  const confirmMsg = `¿Cancelar el pedido #${order.order_number}?\n\n` +
+  const confirmMsg = `Cancelar el pedido #${order.order_number}?\n\n` +
     `No se descontará ningún stock (el pedido no había sido confirmado).`;
   
   if (!confirm(confirmMsg)) return;
@@ -1944,7 +1894,7 @@ async function handleCancelOrder(order) {
 }
 
 async function handleDeliverOrder(order) {
-  if (!confirm(`¿Marcar el pedido #${order.order_number} como ENTREGADO?`)) return;
+  if (!confirm(`Marcar el pedido #${order.order_number} como ENTREGADO?`)) return;
   
   try {
     const { error } = await supabaseClient
