@@ -1,1 +1,16 @@
-
+{
+  "rewrites": [
+    {
+      "source": "/tienda-de-juan",
+      "destination": "/index.html?tienda=tienda-de-juan"
+    },
+    {
+      "source": "/tienda-de-oscar",
+      "destination": "/index.html?tienda=tienda-de-oscar"
+    },
+    {
+      "source": "/maison-principal",
+      "destination": "/index.html?tienda=maison-principal"
+    }
+  ]
+}
