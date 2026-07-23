@@ -1,12 +1,16 @@
 /* ===================================================================
    PANEL DE ADMINISTRACIÓN — Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
    Iconos SVG elegantes (sin emojis)
-   ACTUALIZADO: Soporte para Calzado Unisex
+   
+   ACTUALIZADO: 
+   - Soporte para Calzado Unisex
+   - Banner con URL personalizada de la tienda + botón compartir
 =================================================================== */
 
 let adminUser = null;
 let currentStoreId = null;
 let currentStoreName = "";
+let currentStoreSlug = null; // ⭐ NUEVO
 let currentUserRole = null;
 let allProducts = [];
 let allEmployees = [];
@@ -63,6 +67,7 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 
 // ---------------------------------------------------------------
 // PROTECCIÓN DEL PANEL (MULTI-TIENDA)
+// ⭐ ACTUALIZADO: También carga el slug de la tienda
 // ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
@@ -107,9 +112,10 @@ async function checkStaffAndEnter(user) {
   window.currentStoreId = staff.store_id;
   window.currentUserRole = staff.role;
 
+  // ⭐ ACTUALIZADO: Traer también el slug
   const { data: store } = await supabaseClient
     .from("stores")
-    .select("name, active")
+    .select("name, active, slug")
     .eq("id", currentStoreId)
     .maybeSingle();
 
@@ -119,6 +125,7 @@ async function checkStaffAndEnter(user) {
   }
 
   currentStoreName = store?.name || "Mi Tienda";
+  currentStoreSlug = store?.slug || null; // ⭐ NUEVO
 
   gate.style.display = "none";
   noAccess.style.display = "none";
@@ -135,8 +142,80 @@ async function checkStaffAndEnter(user) {
     tabEmpleados.style.display = currentUserRole === "dueño" ? "flex" : "none";
   }
 
+  // ⭐ NUEVO: Mostrar el banner con la URL de la tienda
+  displayStoreUrlBanner();
+
   await loadProducts();
   initNotificationSystem();
+}
+
+// ---------------------------------------------------------------
+// ⭐ NUEVA FUNCIÓN: Mostrar banner con la URL personalizada
+// ---------------------------------------------------------------
+function displayStoreUrlBanner() {
+  const banner = document.getElementById("storeUrlBanner");
+  const urlValueEl = document.getElementById("storeUrlValue");
+  const viewBtn = document.getElementById("viewStoreBtn");
+  const copyBtn = document.getElementById("copyStoreUrlBtn");
+  const shareBtn = document.getElementById("shareStoreBtn");
+  
+  if (!banner) return;
+  
+  // Si no hay slug, no mostrar el banner
+  if (!currentStoreSlug) {
+    banner.style.display = "none";
+    console.warn("⚠️ La tienda no tiene slug asignado");
+    return;
+  }
+  
+  const fullUrl = `${window.location.origin}/${currentStoreSlug}`;
+  const shortUrl = fullUrl.replace(/^https?:\/\//, ''); // Sin http:// para vista más limpia
+  
+  // Mostrar la URL
+  if (urlValueEl) urlValueEl.textContent = shortUrl;
+  
+  // Configurar botón "Ver mi tienda"
+  if (viewBtn) {
+    viewBtn.href = `/${currentStoreSlug}`;
+  }
+  
+  // Configurar botón "Copiar"
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>¡Copiado!</span>
+        `;
+        copyBtn.classList.add("copied");
+        setTimeout(() => {
+          copyBtn.innerHTML = originalHTML;
+          copyBtn.classList.remove("copied");
+        }, 2000);
+      } catch (err) {
+        console.error("Error al copiar:", err);
+        alert("No se pudo copiar. Copia manualmente:\n\n" + fullUrl);
+      }
+    };
+  }
+  
+  // Configurar botón "Compartir por WhatsApp"
+  if (shareBtn) {
+    shareBtn.onclick = () => {
+      const message = `¡Visita mi tienda ${currentStoreName}! 🛍️\n\n${fullUrl}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
+    };
+  }
+  
+  // Mostrar el banner
+  banner.style.display = "block";
+  
+  console.log(`✅ URL de tienda: ${fullUrl}`);
 }
 
 async function denyAccess(mensaje) {
@@ -161,6 +240,7 @@ async function doLogout() {
   await supabaseClient.auth.signOut();
   adminUser = null;
   currentStoreId = null;
+  currentStoreSlug = null;
   currentUserRole = null;
   window.currentStoreId = null;
   window.currentUserRole = null;
@@ -217,8 +297,6 @@ async function loadProducts() {
 
 // ---------------------------------------------------------------
 // Renderizar tabla de productos
-// ACTUALIZADO: Los productos "Calzado Unisex" aparecen en filtros
-// Dama y Caballero (además de su propio filtro)
 // ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
@@ -305,7 +383,6 @@ function renderProductTable() {
 
 // ---------------------------------------------------------------
 // Etiquetas de categoría
-// ACTUALIZADO: Incluye "Calzado Unisex"
 // ---------------------------------------------------------------
 function categoryLabel(c) {
   return { 
@@ -435,7 +512,7 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
 });
 
 // ---------------------------------------------------------------
-// Guardar producto (CON store_id)
+// Guardar producto
 // ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -860,7 +937,7 @@ function capitalize(str) {
 }
 
 // ===================================================================
-// GESTIÓN DE EMPLEADOS (CON ICONOS SVG - SIN EMOJIS)
+// GESTIÓN DE EMPLEADOS
 // ===================================================================
 
 const employeeOverlay = document.getElementById("employeeOverlay");
