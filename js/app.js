@@ -6,7 +6,8 @@
    - Soporte para calzado por género y unisex
    - Los pedidos guardan store_id para el sistema multi-tienda
    - Sistema multi-tienda con URLs personalizadas por slug
-   - Aplicación de tema personalizado (colores + fuente + fondos) por tienda
+   - Aplicación de tema personalizado con contraste automático
+   - Botones flotantes coordinados con el tema
 =================================================================== */
 
 const NUMERO_WHATSAPP = "573001234567";
@@ -60,7 +61,7 @@ async function loadStoreBySlug(slug) {
 }
 
 // ---------------------------------------------------------------
-// Aplicar tema personalizado (colores + fuente + fondos completos)
+// Aplicar tema personalizado (colores + fuente + fondos + contraste)
 // ---------------------------------------------------------------
 function applyStoreTheme(store) {
   if (!store) return;
@@ -81,18 +82,23 @@ function applyStoreTheme(store) {
   const secondaryRgb = hexToRgb(secondaryColor);
   const accentRgb = hexToRgb(accentColor);
   
-  // Generar tonos suaves para fondos (basados en el color primario)
+  // Generar tonos suaves para fondos
   const bgSoft = lightenColor(primaryColor, 42);
   const bgLighter = lightenColor(primaryColor, 45);
   const bgTinted = lightenColor(primaryColor, 38);
+  
+  // Determinar contraste automático
+  const isSecondaryDark = isColorDark(secondaryColor);
+  const textColorDark = isSecondaryDark ? secondaryColor : '#1a1410';
+  const textColorLight = '#ffffff';
   
   styleEl.textContent = `
     :root {
       --color-gold: ${primaryColor} !important;
       --color-gold-light: ${lightenColor(primaryColor, 15)} !important;
       --color-gold-dark: ${accentColor} !important;
-      --color-ink: ${secondaryColor} !important;
-      --color-ink-soft: ${lightenColor(secondaryColor, 40)} !important;
+      --color-ink: ${textColorDark} !important;
+      --color-ink-soft: ${lightenColor(textColorDark, 40)} !important;
       --color-bg: ${bgLighter} !important;
       --color-panel: ${bgSoft} !important;
       --color-cream: ${bgSoft} !important;
@@ -124,6 +130,33 @@ function applyStoreTheme(store) {
       font-family: '${font}', serif !important;
     }
     
+    /* TEXTOS CON MEJOR CONTRASTE */
+    .hero-title,
+    .hero-title em {
+      color: ${textColorDark} !important;
+      text-shadow: 0 2px 20px rgba(255, 255, 255, 0.5);
+    }
+    
+    .hero-sub {
+      color: ${textColorDark} !important;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 12px 20px;
+      border-radius: 8px;
+      backdrop-filter: blur(5px);
+      display: inline-block;
+    }
+    
+    .about-title,
+    .about-title em {
+      color: ${textColorDark} !important;
+    }
+    
+    .about-text {
+      color: ${lightenColor(textColorDark, 25)} !important;
+      font-weight: 500;
+    }
+    
     /* Botones primarios */
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
@@ -140,7 +173,7 @@ function applyStoreTheme(store) {
     .product-price,
     .product-price-discounted,
     .modal-price-discounted {
-      color: ${primaryColor} !important;
+      color: ${accentColor} !important;
     }
     
     /* Header */
@@ -150,10 +183,14 @@ function applyStoreTheme(store) {
     
     /* Logo */
     .logo {
-      color: ${secondaryColor} !important;
+      color: ${textColorDark} !important;
     }
     
-    /* Links y hover */
+    /* Nav links */
+    .nav-link {
+      color: ${textColorDark} !important;
+    }
+    
     .footer-col a:hover,
     .nav-link:hover {
       color: ${accentColor} !important;
@@ -164,14 +201,20 @@ function applyStoreTheme(store) {
       background: ${secondaryColor} !important;
     }
     
+    .catalog.catalog-dark .section-title,
+    .catalog.catalog-dark .section-eyebrow {
+      color: #ffffff !important;
+    }
+    
     /* Botones ghost */
     .btn-ghost {
-      color: ${secondaryColor} !important;
-      border-color: ${secondaryColor} !important;
+      color: ${textColorDark} !important;
+      border-color: ${textColorDark} !important;
+      background: rgba(255, 255, 255, 0.5) !important;
     }
     
     .btn-ghost:hover {
-      background: ${secondaryColor} !important;
+      background: ${textColorDark} !important;
       color: #ffffff !important;
     }
     
@@ -184,6 +227,7 @@ function applyStoreTheme(store) {
     .section-eyebrow,
     .hero-eyebrow {
       color: ${accentColor} !important;
+      font-weight: 600;
     }
     
     /* Cart badge */
@@ -230,6 +274,77 @@ function applyStoreTheme(store) {
       background: ${secondaryColor} !important;
       color: #ffffff !important;
     }
+    
+    /* Categoría en las tarjetas */
+    .product-category {
+      color: ${accentColor} !important;
+    }
+    
+    /* BOTONES FLOTANTES (Instalar App y Subir arriba) */
+    #installAppBtn {
+      background: linear-gradient(135deg, ${secondaryColor}, ${lightenColor(secondaryColor, 10)}) !important;
+      color: ${primaryColor} !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(${primaryRgb}, 0.3) !important;
+    }
+    
+    #installAppBtn:hover {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+      color: #ffffff !important;
+      box-shadow: 0 12px 30px rgba(${primaryRgb}, 0.5) !important;
+    }
+    
+    #scrollTopBtnFixed {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+      color: #ffffff !important;
+      box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
+    }
+    
+    #scrollTopBtnFixed:hover {
+      background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
+      box-shadow: 0 12px 30px rgba(${primaryRgb}, 0.6) !important;
+    }
+    
+    /* Mejorar contraste en la sección "Pisada con carácter" (calzado) */
+    .catalog .section-title {
+      color: ${textColorDark} !important;
+    }
+    
+    /* Modal producto */
+    .modal-price {
+      color: ${accentColor} !important;
+    }
+    
+    /* Botón WhatsApp del carrito */
+    .cart-footer .btn-primary {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+    }
+    
+    /* Total del carrito */
+    .cart-total-row span:last-child {
+      color: ${accentColor} !important;
+    }
+    
+    /* Botón contacto WhatsApp */
+    #contactWhatsapp.btn-primary.btn-large {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+    }
+    
+    /* Hero scroll indicator */
+    .hero-scroll p,
+    .hero-scroll span {
+      color: ${textColorDark} !important;
+    }
+    
+    /* Tag de producto (Nuevo, Destacado) */
+    .product-tag {
+      background: ${secondaryColor} !important;
+      color: #ffffff !important;
+    }
+    
+    /* Botón favorito */
+    .favorite-btn.is-favorite {
+      color: #e53935 !important;
+    }
   `;
   
   console.log(`Tema aplicado: ${font} + ${primaryColor}`);
@@ -262,6 +377,18 @@ function lightenColor(hex, percent) {
     (G < 255 ? (G < 0 ? 0 : G) : 255) * 0x100 +
     (B < 255 ? (B < 0 ? 0 : B) : 255)
   ).toString(16).slice(1);
+}
+
+// ---------------------------------------------------------------
+// Determinar si un color es oscuro (para decidir contraste)
+// ---------------------------------------------------------------
+function isColorDark(hex) {
+  hex = hex.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance < 0.5;
 }
 
 // ---------------------------------------------------------------
