@@ -6,6 +6,7 @@
    - Soporte para Calzado Unisex
    - Banner con URL personalizada de la tienda + botón compartir
    - Logo dinámico con el nombre de la tienda del dueño
+   - Sistema de personalización de tema (colores + fuente)
 =================================================================== */
 
 let adminUser = null;
@@ -30,6 +31,67 @@ let notificationSound = null;
 let orderSubscription = null;
 let lastNotifiedOrderId = null;
 let pendingNotificationOrder = null;
+
+// ⭐ NUEVO: Variables del sistema de diseño/tema
+let currentTheme = {
+  primary_color: '#d4a869',
+  secondary_color: '#1a1410',
+  accent_color: '#8f6b3f',
+  font: 'Cormorant Garamond',
+  template: 'elegante'
+};
+
+// ⭐ NUEVO: Plantillas predefinidas
+const DESIGN_TEMPLATES = {
+  elegante: {
+    name: 'Elegante',
+    desc: 'Sofisticado y clásico',
+    primary_color: '#d4a869',
+    secondary_color: '#1a1410',
+    accent_color: '#8f6b3f',
+    font: 'Cormorant Garamond'
+  },
+  femenina: {
+    name: 'Femenina',
+    desc: 'Delicado y suave',
+    primary_color: '#e8b4c8',
+    secondary_color: '#2c1a20',
+    accent_color: '#c17b95',
+    font: 'Playfair Display'
+  },
+  moderna: {
+    name: 'Moderna',
+    desc: 'Limpio y minimalista',
+    primary_color: '#2c3e50',
+    secondary_color: '#1a252f',
+    accent_color: '#5d7a94',
+    font: 'Poppins'
+  },
+  deportiva: {
+    name: 'Deportiva',
+    desc: 'Energético y dinámico',
+    primary_color: '#00c853',
+    secondary_color: '#0a0a0a',
+    accent_color: '#00875a',
+    font: 'Montserrat'
+  },
+  naturaleza: {
+    name: 'Naturaleza',
+    desc: 'Cálido y orgánico',
+    primary_color: '#6b7f3f',
+    secondary_color: '#2c2818',
+    accent_color: '#a08650',
+    font: 'Cormorant Garamond'
+  },
+  nocturno: {
+    name: 'Nocturno',
+    desc: 'Misterioso y elegante',
+    primary_color: '#6c5ce7',
+    secondary_color: '#1e1e2e',
+    accent_color: '#a29bfe',
+    font: 'Playfair Display'
+  }
+};
 
 // ---------------------------------------------------------------
 // Elementos
@@ -68,7 +130,7 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 
 // ---------------------------------------------------------------
 // PROTECCIÓN DEL PANEL (MULTI-TIENDA)
-// ⭐ ACTUALIZADO: Logo dinámico con nombre de tienda
+// ⭐ ACTUALIZADO: Carga tema y muestra pestaña Diseño solo al dueño
 // ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
@@ -113,9 +175,10 @@ async function checkStaffAndEnter(user) {
   window.currentStoreId = staff.store_id;
   window.currentUserRole = staff.role;
 
+  // ⭐ ACTUALIZADO: Traer también los datos del tema
   const { data: store } = await supabaseClient
     .from("stores")
-    .select("name, active, slug")
+    .select("name, active, slug, theme_primary_color, theme_secondary_color, theme_accent_color, theme_font, theme_template")
     .eq("id", currentStoreId)
     .maybeSingle();
 
@@ -127,6 +190,17 @@ async function checkStaffAndEnter(user) {
   currentStoreName = store?.name || "Mi Tienda";
   currentStoreSlug = store?.slug || null;
 
+  // ⭐ NUEVO: Cargar el tema actual
+  if (store) {
+    currentTheme = {
+      primary_color: store.theme_primary_color || '#d4a869',
+      secondary_color: store.theme_secondary_color || '#1a1410',
+      accent_color: store.theme_accent_color || '#8f6b3f',
+      font: store.theme_font || 'Cormorant Garamond',
+      template: store.theme_template || 'elegante'
+    };
+  }
+
   gate.style.display = "none";
   noAccess.style.display = "none";
   adminApp.style.display = "block";
@@ -134,13 +208,12 @@ async function checkStaffAndEnter(user) {
   document.getElementById("adminUserName").textContent =
     profile.full_name || user.user_metadata?.full_name || user.email;
 
-  // ⭐ NUEVO: Cambiar el logo principal por el nombre de la tienda
+  // Cambiar el logo principal por el nombre de la tienda
   const adminLogo = document.querySelector(".admin-logo");
   if (adminLogo && currentStoreName) {
     const nameUpper = currentStoreName.toUpperCase();
     adminLogo.innerHTML = `${nameUpper} <em>panel</em>`;
     
-    // Ajustar tamaño según longitud del nombre
     const nameLength = currentStoreName.length;
     if (nameLength <= 8) {
       adminLogo.setAttribute("data-length", "short");
@@ -151,23 +224,34 @@ async function checkStaffAndEnter(user) {
     }
   }
 
-  // Ocultar el nombre pequeño de la tienda (ahora está en el logo)
   const storeNameEl = document.getElementById("adminStoreName");
   if (storeNameEl) storeNameEl.style.display = "none";
 
-  // ⭐ NUEVO: Cambiar el título de la pestaña del navegador
   document.title = `${currentStoreName} — Panel`;
 
+  // ⭐ Solo el DUEÑO ve empleados y diseño
+  const esDueño = currentUserRole === "dueño";
+  
   const tabEmpleados = document.getElementById("tabEmpleados");
   if (tabEmpleados) {
-    tabEmpleados.style.display = currentUserRole === "dueño" ? "flex" : "none";
+    tabEmpleados.style.display = esDueño ? "flex" : "none";
+  }
+  
+  // ⭐ NUEVO: Pestaña Diseño solo para el dueño
+  const tabDiseno = document.getElementById("tabDiseno");
+  if (tabDiseno) {
+    tabDiseno.style.display = esDueño ? "flex" : "none";
   }
 
-  // Mostrar el banner con la URL de la tienda
   displayStoreUrlBanner();
 
   await loadProducts();
   initNotificationSystem();
+  
+  // ⭐ NUEVO: Inicializar sistema de diseño
+  if (esDueño) {
+    initDesignSystem();
+  }
 }
 
 // ---------------------------------------------------------------
@@ -229,7 +313,6 @@ function displayStoreUrlBanner() {
   }
   
   banner.style.display = "block";
-  
   console.log(`✅ URL de tienda: ${fullUrl}`);
 }
 
@@ -396,9 +479,6 @@ function renderProductTable() {
   });
 }
 
-// ---------------------------------------------------------------
-// Etiquetas de categoría
-// ---------------------------------------------------------------
 function categoryLabel(c) {
   return { 
     dama: "Dama", 
@@ -912,7 +992,7 @@ function getTotalStock(stock) {
 }
 
 // ===================================================================
-// SISTEMA DE TABS (Productos / Pedidos / Empleados)
+// SISTEMA DE TABS (Productos / Pedidos / Empleados / Diseño)
 // ===================================================================
 
 let currentTab = "productos";
@@ -944,11 +1024,304 @@ function switchTab(tabName) {
     loadOrders();
   } else if (tabName === "empleados") {
     loadEmployees();
+  } else if (tabName === "diseno") {
+    // ⭐ NUEVO: Cuando se abre la pestaña Diseño, refrescar UI
+    refreshDesignUI();
   }
 }
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ===================================================================
+// ⭐ SISTEMA DE DISEÑO / PERSONALIZACIÓN
+// ===================================================================
+
+function initDesignSystem() {
+  console.log("🎨 Inicializando sistema de diseño");
+  
+  // Renderizar plantillas
+  renderTemplates();
+  
+  // Cargar valores actuales en los controles
+  refreshDesignUI();
+  
+  // Configurar listeners de color pickers
+  setupColorPickers();
+  
+  // Configurar listeners de fuentes
+  setupFontPickers();
+  
+  // Botones de acción
+  const saveBtn = document.getElementById("saveDesignBtn");
+  const resetBtn = document.getElementById("resetDesignBtn");
+  
+  if (saveBtn) {
+    saveBtn.addEventListener("click", saveDesign);
+  }
+  
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetDesign);
+  }
+}
+
+// ---------------------------------------------------------------
+// Renderizar plantillas predefinidas
+// ---------------------------------------------------------------
+function renderTemplates() {
+  const grid = document.getElementById("templatesGrid");
+  if (!grid) return;
+  
+  grid.innerHTML = "";
+  
+  Object.keys(DESIGN_TEMPLATES).forEach((key) => {
+    const template = DESIGN_TEMPLATES[key];
+    const isActive = currentTheme.template === key;
+    
+    const card = document.createElement("div");
+    card.className = `template-card ${isActive ? 'active' : ''}`;
+    card.dataset.template = key;
+    
+    card.innerHTML = `
+      <div class="template-colors">
+        <div class="template-color" style="background: ${template.primary_color};"></div>
+        <div class="template-color" style="background: ${template.secondary_color};"></div>
+        <div class="template-color" style="background: ${template.accent_color};"></div>
+      </div>
+      <div class="template-name" style="font-family: '${template.font}', serif;">${template.name}</div>
+      <div class="template-desc">${template.desc}</div>
+    `;
+    
+    card.addEventListener("click", () => applyTemplate(key));
+    grid.appendChild(card);
+  });
+}
+
+// ---------------------------------------------------------------
+// Aplicar plantilla predefinida
+// ---------------------------------------------------------------
+function applyTemplate(templateKey) {
+  const template = DESIGN_TEMPLATES[templateKey];
+  if (!template) return;
+  
+  currentTheme.primary_color = template.primary_color;
+  currentTheme.secondary_color = template.secondary_color;
+  currentTheme.accent_color = template.accent_color;
+  currentTheme.font = template.font;
+  currentTheme.template = templateKey;
+  
+  refreshDesignUI();
+  
+  console.log(`✅ Plantilla aplicada: ${template.name}`);
+}
+
+// ---------------------------------------------------------------
+// Actualizar toda la UI de diseño con los valores actuales
+// ---------------------------------------------------------------
+function refreshDesignUI() {
+  // Color pickers
+  const primaryColorInput = document.getElementById("themePrimaryColor");
+  const secondaryColorInput = document.getElementById("themeSecondaryColor");
+  const accentColorInput = document.getElementById("themeAccentColor");
+  const primaryColorText = document.getElementById("themePrimaryColorText");
+  const secondaryColorText = document.getElementById("themeSecondaryColorText");
+  const accentColorText = document.getElementById("themeAccentColorText");
+  
+  if (primaryColorInput) primaryColorInput.value = currentTheme.primary_color;
+  if (secondaryColorInput) secondaryColorInput.value = currentTheme.secondary_color;
+  if (accentColorInput) accentColorInput.value = currentTheme.accent_color;
+  if (primaryColorText) primaryColorText.value = currentTheme.primary_color.toUpperCase();
+  if (secondaryColorText) secondaryColorText.value = currentTheme.secondary_color.toUpperCase();
+  if (accentColorText) accentColorText.value = currentTheme.accent_color.toUpperCase();
+  
+  // Fuentes
+  document.querySelectorAll(".font-option").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.font === currentTheme.font);
+  });
+  
+  // Plantillas
+  document.querySelectorAll(".template-card").forEach((card) => {
+    card.classList.toggle("active", card.dataset.template === currentTheme.template);
+  });
+  
+  // Vista previa
+  updatePreview();
+}
+
+// ---------------------------------------------------------------
+// Configurar listeners de color pickers
+// ---------------------------------------------------------------
+function setupColorPickers() {
+  const pairs = [
+    { picker: "themePrimaryColor", text: "themePrimaryColorText", key: "primary_color" },
+    { picker: "themeSecondaryColor", text: "themeSecondaryColorText", key: "secondary_color" },
+    { picker: "themeAccentColor", text: "themeAccentColorText", key: "accent_color" }
+  ];
+  
+  pairs.forEach(({ picker, text, key }) => {
+    const pickerEl = document.getElementById(picker);
+    const textEl = document.getElementById(text);
+    
+    if (pickerEl) {
+      pickerEl.addEventListener("input", (e) => {
+        currentTheme[key] = e.target.value;
+        currentTheme.template = 'custom';
+        if (textEl) textEl.value = e.target.value.toUpperCase();
+        updatePreview();
+        // Deseleccionar plantillas activas
+        document.querySelectorAll(".template-card").forEach(c => c.classList.remove("active"));
+      });
+    }
+    
+    if (textEl) {
+      textEl.addEventListener("input", (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith('#')) val = '#' + val;
+        
+        // Validar que sea un color hex válido
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+          currentTheme[key] = val;
+          currentTheme.template = 'custom';
+          if (pickerEl) pickerEl.value = val;
+          updatePreview();
+          document.querySelectorAll(".template-card").forEach(c => c.classList.remove("active"));
+        }
+      });
+    }
+  });
+}
+
+// ---------------------------------------------------------------
+// Configurar listeners de fuentes
+// ---------------------------------------------------------------
+function setupFontPickers() {
+  document.querySelectorAll(".font-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const font = btn.dataset.font;
+      currentTheme.font = font;
+      
+      document.querySelectorAll(".font-option").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      
+      updatePreview();
+    });
+  });
+}
+
+// ---------------------------------------------------------------
+// Actualizar vista previa en vivo
+// ---------------------------------------------------------------
+function updatePreview() {
+  const preview = document.getElementById("designPreview");
+  const previewHeader = document.getElementById("previewHeader");
+  const previewLogo = document.getElementById("previewLogo");
+  const previewName = document.querySelector("#designPreview .preview-name");
+  const previewPrice = document.getElementById("previewPrice");
+  const previewButton = document.getElementById("previewButton");
+  
+  if (!preview) return;
+  
+  // Aplicar fuente al preview
+  if (previewLogo) previewLogo.style.fontFamily = `'${currentTheme.font}', serif`;
+  if (previewName) previewName.style.fontFamily = `'${currentTheme.font}', serif`;
+  
+  // Color del logo (secundario)
+  if (previewLogo) previewLogo.style.color = currentTheme.secondary_color;
+  
+  // Nombre del producto (secundario)
+  if (previewName) previewName.style.color = currentTheme.secondary_color;
+  
+  // Precio (primario)
+  if (previewPrice) previewPrice.style.color = currentTheme.primary_color;
+  
+  // Botón (primario)
+  if (previewButton) {
+    previewButton.style.background = `linear-gradient(135deg, ${currentTheme.primary_color}, ${currentTheme.accent_color})`;
+  }
+  
+  // Actualizar nombre en el preview
+  if (previewLogo && currentStoreName) {
+    previewLogo.textContent = currentStoreName.toUpperCase();
+  }
+}
+
+// ---------------------------------------------------------------
+// Guardar diseño en Supabase
+// ---------------------------------------------------------------
+async function saveDesign() {
+  const btn = document.getElementById("saveDesignBtn");
+  const msg = document.getElementById("designSaveMsg");
+  
+  if (!btn || !currentStoreId) return;
+  
+  btn.disabled = true;
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+    Guardando...
+  `;
+  
+  try {
+    const { error } = await supabaseClient
+      .from("stores")
+      .update({
+        theme_primary_color: currentTheme.primary_color,
+        theme_secondary_color: currentTheme.secondary_color,
+        theme_accent_color: currentTheme.accent_color,
+        theme_font: currentTheme.font,
+        theme_template: currentTheme.template
+      })
+      .eq("id", currentStoreId);
+    
+    if (error) throw error;
+    
+    if (msg) {
+      msg.textContent = "✅ Diseño guardado correctamente. Los cambios ya se ven en tu tienda.";
+      msg.className = "design-save-msg success";
+      
+      setTimeout(() => {
+        msg.textContent = "";
+        msg.className = "design-save-msg";
+      }, 5000);
+    }
+    
+    console.log("✅ Diseño guardado en Supabase");
+    
+  } catch (err) {
+    console.error("Error al guardar diseño:", err);
+    if (msg) {
+      msg.textContent = "❌ Error al guardar. Intenta de nuevo.";
+      msg.className = "design-save-msg error";
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHTML;
+  }
+}
+
+// ---------------------------------------------------------------
+// Restablecer al tema por defecto (MAISON)
+// ---------------------------------------------------------------
+function resetDesign() {
+  if (!confirm("¿Restablecer al diseño original de MAISON?\n\nSe perderán los cambios que no hayas guardado.")) {
+    return;
+  }
+  
+  applyTemplate('elegante');
+  
+  const msg = document.getElementById("designSaveMsg");
+  if (msg) {
+    msg.textContent = "🔄 Diseño restablecido. Recuerda guardar los cambios.";
+    msg.className = "design-save-msg success";
+    
+    setTimeout(() => {
+      msg.textContent = "";
+      msg.className = "design-save-msg";
+    }, 4000);
+  }
 }
 
 // ===================================================================
