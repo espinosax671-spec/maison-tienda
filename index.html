@@ -791,17 +791,119 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
-
 <!-- ============================================
-     Registro del Service Worker (PWA)
+     Registro del Service Worker (PWA) — AUTO-ACTUALIZACIÓN
 ============================================ -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('✅ Service Worker registrado:', reg.scope))
-        .catch(err => console.error('❌ SW error:', err));
+        .then(registration => {
+          console.log('✅ Service Worker registrado:', registration.scope);
+
+          // Verificar actualizaciones cada 60 segundos
+          setInterval(() => {
+            registration.update();
+          }, 60000);
+
+          // Detectar nueva versión disponible
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('🔄 Nueva versión disponible');
+                showUpdateBanner(newWorker);
+              }
+            });
+          });
+        })
+        .catch(err => {
+          console.error('❌ Error al registrar Service Worker:', err);
+        });
+
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data && event.data.type === 'SW_UPDATED') {
+          console.log(`✨ Service Worker actualizado a ${event.data.version}`);
+        }
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     });
+
+    function showUpdateBanner(newWorker) {
+      if (document.getElementById('updateBanner')) return;
+
+      const banner = document.createElement('div');
+      banner.id = 'updateBanner';
+      banner.innerHTML = `
+        <div style="
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #0a0a0a, #2a2010);
+          color: #c9a96e;
+          padding: 16px 24px;
+          border-radius: 50px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 2px rgba(201,169,110,0.3);
+          z-index: 9999999;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          font-family: 'Jost', sans-serif;
+          font-size: 13px;
+          letter-spacing: 0.5px;
+          max-width: 90%;
+          animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        ">
+          <span style="font-size: 20px;">✨</span>
+          <span style="flex: 1;">Nueva versión disponible</span>
+          <button id="updateBtn" style="
+            background: linear-gradient(135deg, #c9a96e, #8f6b3f);
+            color: #ffffff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+          ">Actualizar</button>
+          <button id="updateLater" style="
+            background: transparent;
+            color: #c9a96e;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 18px;
+            padding: 4px;
+          " aria-label="Cerrar">×</button>
+        </div>
+        <style>
+          @keyframes slideUp {
+            from { transform: translate(-50%, 100px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+          }
+        </style>
+      `;
+      document.body.appendChild(banner);
+
+      document.getElementById('updateBtn').addEventListener('click', () => {
+        newWorker.postMessage({ type: 'SKIP_WAITING' });
+      });
+
+      document.getElementById('updateLater').addEventListener('click', () => {
+        banner.remove();
+      });
+    }
   }
 </script>
 
