@@ -184,8 +184,76 @@ function applyStoreTheme(store) {
       box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
     }
     
-    .product-price, .product-price-discounted, .modal-price-discounted, .modal-price { 
-      color: ${accentColor} !important; 
+    /* ============================================
+       TARJETAS DE PRODUCTO - MAXIMA LEGIBILIDAD
+    ============================================ */
+    
+    /* CATALOGO CLARO - Fondo crema/beige */
+    .catalog:not(.catalog-dark) .product-card .product-name {
+      color: #1a1410 !important;
+      font-weight: 500 !important;
+      opacity: 1 !important;
+    }
+    
+    .catalog:not(.catalog-dark) .product-card .product-category {
+      color: ${accentColor} !important;
+      font-weight: 700 !important;
+      opacity: 1 !important;
+      letter-spacing: 2.5px !important;
+    }
+    
+    .catalog:not(.catalog-dark) .product-card .product-price,
+    .catalog:not(.catalog-dark) .product-card .product-price-discounted {
+      color: ${accentColor} !important;
+      font-weight: 700 !important;
+      font-size: 15px !important;
+      opacity: 1 !important;
+    }
+    
+    .catalog:not(.catalog-dark) .product-card .product-price-original {
+      color: #999 !important;
+      opacity: 0.7 !important;
+    }
+    
+    /* CATALOGO OSCURO (CABALLERO) - Fondo secundario oscuro */
+    .catalog.catalog-dark { background: ${secondaryColor} !important; }
+    .catalog.catalog-dark .section-title, 
+    .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
+    
+    .catalog.catalog-dark .product-card .product-name {
+      color: #ffffff !important;
+      font-weight: 500 !important;
+      opacity: 1 !important;
+    }
+    
+    .catalog.catalog-dark .product-card .product-category {
+      color: ${lightenColor(primaryColor, 25)} !important;
+      font-weight: 700 !important;
+      opacity: 1 !important;
+      letter-spacing: 2.5px !important;
+    }
+    
+    .catalog.catalog-dark .product-card .product-price,
+    .catalog.catalog-dark .product-card .product-price-discounted {
+      color: ${lightenColor(primaryColor, 25)} !important;
+      font-weight: 700 !important;
+      font-size: 15px !important;
+      opacity: 1 !important;
+    }
+    
+    .catalog.catalog-dark .product-card .product-price-original {
+      color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* MODAL DE PRODUCTO */
+    .modal-price, .modal-price-discounted {
+      color: ${accentColor} !important;
+      font-weight: 700 !important;
+    }
+    
+    .modal-category {
+      color: ${accentColor} !important;
+      font-weight: 700 !important;
     }
     
     .site-header { background: rgba(255, 255, 255, 0.98) !important; }
@@ -193,29 +261,6 @@ function applyStoreTheme(store) {
     .logo { color: ${textColorDark} !important; }
     .nav-link { color: ${textColorDark} !important; }
     .footer-col a:hover, .nav-link:hover { color: ${accentColor} !important; }
-    
-    /* CATALOGO OSCURO (CABALLERO) - Textos con buen contraste */
-    .catalog.catalog-dark { background: ${secondaryColor} !important; }
-    .catalog.catalog-dark .section-title, 
-    .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
-    .catalog.catalog-dark .product-name { color: #ffffff !important; }
-    .catalog.catalog-dark .product-category { 
-      color: #ffffff !important; 
-      opacity: 0.85; 
-      font-weight: 500;
-    }
-    .catalog.catalog-dark .product-price { 
-      color: ${lightenColor(primaryColor, 25)} !important; 
-      font-weight: 600;
-      opacity: 1;
-    }
-    .catalog.catalog-dark .product-price-discounted { 
-      color: ${lightenColor(primaryColor, 25)} !important; 
-      font-weight: 700;
-    }
-    .catalog.catalog-dark .product-price-original {
-      color: rgba(255, 255, 255, 0.5) !important;
-    }
     
     .btn-ghost:not(.hero-actions .btn-ghost) {
       color: ${textColorDark} !important;
@@ -240,7 +285,6 @@ function applyStoreTheme(store) {
     .loader-mark { color: ${primaryColor} !important; }
     .search-bar { background: ${bgSoft} !important; }
     .filter-chip.active { background: ${secondaryColor} !important; color: #ffffff !important; }
-    .product-category { color: ${accentColor} !important; }
     .catalog:not(.catalog-dark) .section-title { color: ${textColorDark} !important; }
     .cart-footer .btn-primary { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
     .cart-total-row span:last-child { color: ${accentColor} !important; }
