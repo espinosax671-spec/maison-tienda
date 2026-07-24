@@ -272,7 +272,7 @@
         </svg>
         <div>
           <strong>Personaliza la apariencia de tu tienda</strong>
-          <span>Elige una plantilla predefinida o personaliza los colores, fuentes e imagen de fondo para que tu tienda refleje tu marca única. Los cambios se aplican inmediatamente para tus clientes.</span>
+          <span>Elige una plantilla predefinida, una paleta armada, colores rápidos o personaliza cada color individualmente. Los cambios se aplican inmediatamente para tus clientes.</span>
         </div>
       </div>
 
@@ -292,15 +292,53 @@
       <div class="design-section">
         <h2 class="design-section-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.5 3H12H8C5.79086 3 4 4.79086 4 7V17C4 19.2091 5.79086 21 8 21H12H13.5"/>
+            <path d="M13.5 3L18 7.5L13.5 12"/>
+            <path d="M13.5 12L18 16.5L13.5 21"/>
+          </svg>
+          Paletas de colores armadas
+        </h2>
+        <p class="design-section-desc">Combinaciones profesionales listas. Haz click en una paleta y sus 3 colores se aplican automáticamente.</p>
+        
+        <div class="palettes-grid" id="palettesGrid">
+        </div>
+      </div>
+
+      <div class="design-section">
+        <h2 class="design-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="4"/>
+          </svg>
+          Colores rápidos
+        </h2>
+        <p class="design-section-desc">Selecciona qué color quieres cambiar y luego haz click en el color que te guste.</p>
+
+        <div class="color-target-wrap">
+          <label>¿Qué color quieres cambiar?</label>
+          <select id="colorTargetSelector" class="color-target-select">
+            <option value="primary_color">Color principal (botones, precios)</option>
+            <option value="secondary_color">Color secundario (fondos, texto)</option>
+            <option value="accent_color">Color de acento (detalles)</option>
+          </select>
+        </div>
+
+        <div class="quick-colors-grid" id="quickColorsGrid">
+        </div>
+      </div>
+
+      <div class="design-section">
+        <h2 class="design-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="13.5" cy="6.5" r=".5"/>
             <circle cx="17.5" cy="10.5" r=".5"/>
             <circle cx="8.5" cy="7.5" r=".5"/>
             <circle cx="6.5" cy="12.5" r=".5"/>
             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
           </svg>
-          Personaliza los colores
+          Personaliza los colores manualmente
         </h2>
-        <p class="design-section-desc">Ajusta cada color individualmente para lograr el estilo perfecto.</p>
+        <p class="design-section-desc">Ajusta cada color individualmente con el selector avanzado o escribe el código hex.</p>
 
         <div class="color-pickers-grid">
           <div class="color-picker-item">
@@ -835,7 +873,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script src="js/supabase-client.js"></script>
-<script src="js/admin.js?v=20250122i"></script>
+<script src="js/admin.js?v=20250122j"></script>
 
 <style>
 .stock-initial-hint {
@@ -1817,6 +1855,172 @@ document.addEventListener("DOMContentLoaded", () => {
   margin: 0;
 }
 
+/* ============================================
+   PALETAS DE COLORES ARMADAS
+============================================ */
+.palettes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.palette-card {
+  position: relative;
+  padding: 16px;
+  background: var(--color-white);
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.palette-card:hover {
+  border-color: var(--color-gold);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(143, 107, 63, 0.15);
+}
+
+.palette-card:active {
+  transform: translateY(-1px);
+}
+
+.palette-colors {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  height: 50px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.palette-color {
+  flex: 1;
+  transition: transform 0.3s ease;
+}
+
+.palette-card:hover .palette-color {
+  transform: scaleY(1.08);
+}
+
+.palette-name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 0 0 3px 0;
+}
+
+.palette-desc {
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ============================================
+   COLORES RAPIDOS
+============================================ */
+.color-target-wrap {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(212, 168, 105, 0.08), rgba(143, 107, 63, 0.04));
+  border: 1px solid rgba(212, 168, 105, 0.25);
+  border-radius: 8px;
+}
+
+.color-target-wrap label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-ink);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.color-target-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-white);
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.color-target-select:hover {
+  border-color: var(--color-gold);
+}
+
+.color-target-select:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(168, 130, 75, 0.15);
+}
+
+.quick-colors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+.quick-color-swatch {
+  position: relative;
+  height: 70px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  padding: 0;
+  font-family: inherit;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.quick-color-swatch:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.quick-color-swatch:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.quick-color-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-color-swatch:hover .quick-color-name {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .color-pickers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -2096,12 +2300,25 @@ document.addEventListener("DOMContentLoaded", () => {
     grid-template-columns: 1fr;
   }
   
+  .palettes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .color-pickers-grid {
     grid-template-columns: 1fr;
   }
   
   .font-picker-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .quick-colors-grid {
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 8px;
+  }
+  
+  .quick-color-swatch {
+    height: 60px;
   }
 }
 
