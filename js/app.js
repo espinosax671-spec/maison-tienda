@@ -194,11 +194,28 @@ function applyStoreTheme(store) {
     .nav-link { color: ${textColorDark} !important; }
     .footer-col a:hover, .nav-link:hover { color: ${accentColor} !important; }
     
+    /* CATALOGO OSCURO (CABALLERO) - Textos con buen contraste */
     .catalog.catalog-dark { background: ${secondaryColor} !important; }
     .catalog.catalog-dark .section-title, 
     .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
     .catalog.catalog-dark .product-name { color: #ffffff !important; }
-    .catalog.catalog-dark .product-price { color: ${lightenColor(primaryColor, 20)} !important; }
+    .catalog.catalog-dark .product-category { 
+      color: #ffffff !important; 
+      opacity: 0.85; 
+      font-weight: 500;
+    }
+    .catalog.catalog-dark .product-price { 
+      color: ${lightenColor(primaryColor, 25)} !important; 
+      font-weight: 600;
+      opacity: 1;
+    }
+    .catalog.catalog-dark .product-price-discounted { 
+      color: ${lightenColor(primaryColor, 25)} !important; 
+      font-weight: 700;
+    }
+    .catalog.catalog-dark .product-price-original {
+      color: rgba(255, 255, 255, 0.5) !important;
+    }
     
     .btn-ghost:not(.hero-actions .btn-ghost) {
       color: ${textColorDark} !important;
