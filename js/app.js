@@ -1,13 +1,5 @@
 /* ===================================================================
    MAISON - Lógica de la tienda
-   Edita NUMERO_WHATSAPP con tu número (código de país + número, sin +)
-   
-   ACTUALIZADO: 
-   - Soporte para calzado por género y unisex
-   - Los pedidos guardan store_id para el sistema multi-tienda
-   - Sistema multi-tienda con URLs personalizadas por slug
-   - Aplicación de tema personalizado con contraste automático
-   - Botones flotantes coordinados con el tema
 =================================================================== */
 
 const NUMERO_WHATSAPP = "573001234567";
@@ -61,7 +53,7 @@ async function loadStoreBySlug(slug) {
 }
 
 // ---------------------------------------------------------------
-// Aplicar tema personalizado (colores + fuente + fondos + contraste)
+// Aplicar tema personalizado (colores + fuente + imagen hero)
 // ---------------------------------------------------------------
 function applyStoreTheme(store) {
   if (!store) return;
@@ -70,6 +62,7 @@ function applyStoreTheme(store) {
   const secondaryColor = store.theme_secondary_color || '#1a1410';
   const accentColor = store.theme_accent_color || '#8f6b3f';
   const font = store.theme_font || 'Cormorant Garamond';
+  const heroImageUrl = store.hero_image_url || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1920&q=80';
   
   let styleEl = document.getElementById("customStoreTheme");
   if (!styleEl) {
@@ -80,10 +73,11 @@ function applyStoreTheme(store) {
   
   const primaryRgb = hexToRgb(primaryColor);
   const secondaryRgb = hexToRgb(secondaryColor);
-  const accentRgb = hexToRgb(accentColor);
-  const bgSoft = lightenColor(primaryColor, 42);
-  const bgLighter = lightenColor(primaryColor, 45);
-  const bgTinted = lightenColor(primaryColor, 38);
+  
+  const bgSoft = lightenColor(primaryColor, 48);
+  const bgLighter = lightenColor(primaryColor, 52);
+  const bgTinted = lightenColor(primaryColor, 45);
+  
   const isSecondaryDark = isColorDark(secondaryColor);
   const textColorDark = isSecondaryDark ? secondaryColor : '#1a1410';
   
@@ -100,27 +94,81 @@ function applyStoreTheme(store) {
       --color-beige: ${bgTinted} !important;
       --font-serif: '${font}', serif !important;
     }
+    
     body { background: ${bgLighter} !important; }
     .catalog:not(.catalog-dark) { background: ${bgSoft} !important; }
-    .about { background: ${bgTinted} !important; }
-    .logo, .hero-title, .section-title, .about-title, .product-name, .modal-name, .account-title {
+    
+    .about {
+      background:
+        linear-gradient(rgba(${primaryRgb}, 0.15), rgba(${primaryRgb}, 0.15)),
+        url('https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat !important;
+    }
+    
+    .hero {
+      background:
+        linear-gradient(
+          rgba(${secondaryRgb}, 0.55),
+          rgba(${secondaryRgb}, 0.75)
+        ),
+        url('${heroImageUrl}') center/cover no-repeat !important;
+      background-attachment: fixed !important;
+    }
+    
+    .logo, .hero-title, .section-title, .about-title, .product-name, .modal-name, .account-title,
+    .section-title-light {
       font-family: '${font}', serif !important;
     }
-    .hero-title, .hero-title em {
-      color: ${textColorDark} !important;
-      text-shadow: 0 2px 20px rgba(255, 255, 255, 0.5);
+    
+    .hero-title,
+    .hero-title em {
+      color: #ffffff !important;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    }
+    .hero-title em {
+      color: ${lightenColor(primaryColor, 20)} !important;
     }
     .hero-sub {
-      color: ${textColorDark} !important;
-      font-weight: 500;
-      background: rgba(255, 255, 255, 0.7);
-      padding: 12px 20px;
-      border-radius: 8px;
-      backdrop-filter: blur(5px);
-      display: inline-block;
+      color: #f5ebdc !important;
+      background: transparent !important;
+      backdrop-filter: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      display: block !important;
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
     }
+    .hero-eyebrow {
+      color: ${lightenColor(primaryColor, 25)} !important;
+    }
+    .hero-scroll p, .hero-scroll span { 
+      color: ${lightenColor(primaryColor, 20)} !important;
+    }
+    .hero-scroll span {
+      background: ${lightenColor(primaryColor, 20)} !important;
+    }
+    
+    .hero-actions .btn-primary {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+      color: #ffffff !important;
+      border-color: ${primaryColor} !important;
+    }
+    .hero-actions .btn-primary:hover {
+      background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
+      box-shadow: 0 15px 30px rgba(${primaryRgb}, 0.5) !important;
+    }
+    .hero-actions .btn-ghost {
+      color: #ffffff !important;
+      border-color: #ffffff !important;
+      background: transparent !important;
+    }
+    .hero-actions .btn-ghost:hover {
+      background: #ffffff !important;
+      color: ${textColorDark} !important;
+    }
+    
     .about-title, .about-title em { color: ${textColorDark} !important; }
+    .about-title em { color: ${accentColor} !important; font-style: italic; }
     .about-text { color: ${lightenColor(textColorDark, 25)} !important; font-weight: 500; }
+    
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
@@ -130,39 +178,61 @@ function applyStoreTheme(store) {
       background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
       box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
     }
-    .product-price, .product-price-discounted, .modal-price-discounted { color: ${accentColor} !important; }
+    
+    .product-price, .product-price-discounted, .modal-price-discounted, .modal-price { 
+      color: ${accentColor} !important; 
+    }
+    
     .site-header { background: rgba(255, 255, 255, 0.98) !important; }
+    .site-header.scrolled { background: rgba(255, 255, 255, 0.99) !important; }
     .logo { color: ${textColorDark} !important; }
     .nav-link { color: ${textColorDark} !important; }
     .footer-col a:hover, .nav-link:hover { color: ${accentColor} !important; }
+    
     .catalog.catalog-dark { background: ${secondaryColor} !important; }
-    .catalog.catalog-dark .section-title, .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
-    .btn-ghost {
+    .catalog.catalog-dark .section-title, 
+    .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
+    .catalog.catalog-dark .product-name { color: #ffffff !important; }
+    .catalog.catalog-dark .product-price { color: ${lightenColor(primaryColor, 20)} !important; }
+    
+    .btn-ghost:not(.hero-actions .btn-ghost) {
       color: ${textColorDark} !important;
       border-color: ${textColorDark} !important;
-      background: rgba(255, 255, 255, 0.5) !important;
+      background: transparent !important;
     }
-    .btn-ghost:hover { background: ${textColorDark} !important; color: #ffffff !important; }
-    .hero-actions .btn-primary { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
-    .section-eyebrow, .hero-eyebrow { color: ${accentColor} !important; font-weight: 600; }
+    .btn-ghost:not(.hero-actions .btn-ghost):hover { 
+      background: ${textColorDark} !important; 
+      color: #ffffff !important; 
+    }
+    
+    .section-eyebrow { color: ${accentColor} !important; font-weight: 600; }
     .cart-count { background: ${accentColor} !important; }
     .product-card { background: #ffffff !important; }
     .site-footer { background: ${secondaryColor} !important; }
-    .hero { background: ${bgTinted} !important; }
-    .contact { background: ${secondaryColor} !important; }
+    .contact { 
+      background:
+        linear-gradient(rgba(${secondaryRgb}, 0.75), rgba(${secondaryRgb}, 0.85)),
+        url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=cover&w=1920&q=80') center/cover no-repeat !important;
+    }
     .loader { background: ${bgLighter} !important; }
     .loader-mark { color: ${primaryColor} !important; }
     .search-bar { background: ${bgSoft} !important; }
     .filter-chip.active { background: ${secondaryColor} !important; color: #ffffff !important; }
     .product-category { color: ${accentColor} !important; }
-    .catalog .section-title { color: ${textColorDark} !important; }
-    .modal-price { color: ${accentColor} !important; }
+    .catalog:not(.catalog-dark) .section-title { color: ${textColorDark} !important; }
     .cart-footer .btn-primary { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
     .cart-total-row span:last-child { color: ${accentColor} !important; }
     #contactWhatsapp.btn-primary.btn-large { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
-    .hero-scroll p, .hero-scroll span { color: ${textColorDark} !important; }
     .product-tag { background: ${secondaryColor} !important; color: #ffffff !important; }
     .favorite-btn.is-favorite { color: #e53935 !important; }
+    
+    .about-stitch { background: ${primaryColor} !important; }
+    .about-stitch::before, .about-stitch::after { background: ${primaryColor} !important; }
+    
+    .hero-thread path {
+      stroke: ${lightenColor(primaryColor, 20)} !important;
+    }
+    
     html body #installAppBtn {
       background: linear-gradient(135deg, ${secondaryColor}, ${lightenColor(secondaryColor, 10)}) !important;
       color: ${primaryColor} !important;
@@ -230,7 +300,7 @@ function lightenColor(hex, percent) {
 }
 
 // ---------------------------------------------------------------
-// Determinar si un color es oscuro (para decidir contraste)
+// Determinar si un color es oscuro
 // ---------------------------------------------------------------
 function isColorDark(hex) {
   hex = hex.replace('#', '');
@@ -345,7 +415,7 @@ function showStoreNotFound(slug) {
 }
 
 // ---------------------------------------------------------------
-// Formato de precio en pesos colombianos
+// Formato de precio
 // ---------------------------------------------------------------
 function formatPrice(value) {
   return new Intl.NumberFormat("es-CO", {
@@ -556,7 +626,7 @@ async function renderCatalog() {
 }
 
 // ---------------------------------------------------------------
-// Crear la tarjeta de producto
+// Crear tarjeta de producto
 // ---------------------------------------------------------------
 function createProductCard(product) {
   const card = document.createElement("article");
@@ -568,7 +638,6 @@ function createProductCard(product) {
   card.dataset.productId = product.id;
   
   const isFav = userFavorites.has(product.id);
-  
   const hasDiscount = product.discount_percent && product.discount_percent > 0 && product.original_price;
   
   let priceHtml = "";
@@ -627,9 +696,6 @@ function createProductCard(product) {
   return card;
 }
 
-// ---------------------------------------------------------------
-// Etiquetas de categoría
-// ---------------------------------------------------------------
 function categoryLabel(category) {
   const labels = { 
     dama: "Dama", 
@@ -642,9 +708,6 @@ function categoryLabel(category) {
   return labels[category] || category;
 }
 
-// ---------------------------------------------------------------
-// Helpers de stock
-// ---------------------------------------------------------------
 function getStockForSize(product, size) {
   if (!product.stock || typeof product.stock !== "object") return null;
   const qty = product.stock[size];
@@ -1078,7 +1141,6 @@ function showCustomToast(title, message) {
 // ---------------------------------------------------------------
 // SISTEMA DE PEDIDOS
 // ---------------------------------------------------------------
-
 async function createOrderInDatabase() {
   if (cart.length === 0) return null;
   
@@ -1162,7 +1224,7 @@ async function createOrderInDatabase() {
     
     if (error) throw error;
     
-    console.log("Pedido creado:", data.order_number, "Tienda:", storeId);
+    console.log("Pedido creado:", data.order_number);
     return data;
     
   } catch (err) {
@@ -1233,7 +1295,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // ===================================================================
 // SISTEMA DE BÚSQUEDA + FILTRO DE PRECIO
 // ===================================================================
-
 function normalizeText(text) {
   if (!text) return "";
   return text
@@ -1584,7 +1645,6 @@ function resetAllProductVisibility() {
 // ===================================================================
 // SISTEMA DE COMPARTIR PRODUCTOS
 // ===================================================================
-
 const shareProductBtn = document.getElementById("shareProductBtn");
 const shareMenu = document.getElementById("shareMenu");
 
@@ -1746,7 +1806,6 @@ window.addEventListener("load", checkProductInUrl);
 // ===================================================================
 // SISTEMA DE FAVORITOS
 // ===================================================================
-
 async function loadUserFavorites() {
   try {
     const { data: authData } = await supabaseClient.auth.getUser();
@@ -1994,7 +2053,6 @@ window.updateAllFavoriteButtons = function() {
 // ===================================================================
 // SISTEMA DE HISTORIAL DE PEDIDOS
 // ===================================================================
-
 let userOrders = [];
 let currentOrdersFilter = "todos";
 
@@ -2266,7 +2324,6 @@ window.renderOrdersHistory = renderOrdersHistory;
 // ===================================================================
 // SISTEMA DE PESTAÑAS DEL PERFIL
 // ===================================================================
-
 let currentProfileTab = "perfil";
 
 document.addEventListener("DOMContentLoaded", () => {
