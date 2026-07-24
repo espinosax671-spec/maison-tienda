@@ -33,6 +33,7 @@ let currentTheme = {
 };
 
 let selectedHeroImageFile = null;
+let currentColorTarget = 'primary_color';
 
 const DESIGN_TEMPLATES = {
   elegante: {
@@ -84,6 +85,88 @@ const DESIGN_TEMPLATES = {
     font: 'Playfair Display'
   }
 };
+
+const COLOR_PALETTES = {
+  boho: {
+    name: 'Boho Chic',
+    desc: 'Terracota, crema y oliva',
+    primary: '#c17767',
+    secondary: '#3a2a1f',
+    accent: '#8b7355'
+  },
+  minimalista: {
+    name: 'Minimalista',
+    desc: 'Blanco, negro y gris',
+    primary: '#2c2c2c',
+    secondary: '#000000',
+    accent: '#8a8a8a'
+  },
+  tropical: {
+    name: 'Tropical',
+    desc: 'Turquesa y coral',
+    primary: '#00b8a9',
+    secondary: '#1a3a3a',
+    accent: '#f38181'
+  },
+  vintage: {
+    name: 'Vintage',
+    desc: 'Vino, oro y crema',
+    primary: '#a4243b',
+    secondary: '#2b1810',
+    accent: '#c9a961'
+  },
+  primavera: {
+    name: 'Primavera',
+    desc: 'Rosa, verde y crema',
+    primary: '#f4a5b5',
+    secondary: '#2d3e2f',
+    accent: '#95c99e'
+  },
+  corporativo: {
+    name: 'Corporativo',
+    desc: 'Azul marino y plata',
+    primary: '#1e3a5f',
+    secondary: '#0a1929',
+    accent: '#4a6fa5'
+  },
+  otono: {
+    name: 'Otoño',
+    desc: 'Naranja, marrón y ocre',
+    primary: '#d97706',
+    secondary: '#3a2618',
+    accent: '#a16207'
+  },
+  royal: {
+    name: 'Real',
+    desc: 'Púrpura y dorado',
+    primary: '#7c3aed',
+    secondary: '#1e1b2e',
+    accent: '#c9a961'
+  }
+};
+
+const QUICK_COLORS = [
+  { name: 'Dorado', hex: '#d4a869' },
+  { name: 'Rosa', hex: '#e8b4c8' },
+  { name: 'Negro', hex: '#1a1410' },
+  { name: 'Azul marino', hex: '#1e3a5f' },
+  { name: 'Verde bosque', hex: '#2d5016' },
+  { name: 'Rojo vino', hex: '#a4243b' },
+  { name: 'Morado', hex: '#7c3aed' },
+  { name: 'Beige', hex: '#c9b899' },
+  { name: 'Marrón', hex: '#6b4423' },
+  { name: 'Turquesa', hex: '#00b8a9' },
+  { name: 'Coral', hex: '#f38181' },
+  { name: 'Lila', hex: '#b19cd9' },
+  { name: 'Menta', hex: '#95c99e' },
+  { name: 'Naranja', hex: '#f97316' },
+  { name: 'Gris carbón', hex: '#374151' },
+  { name: 'Blanco marfil', hex: '#f5f5dc' },
+  { name: 'Terracota', hex: '#c17767' },
+  { name: 'Azul cielo', hex: '#7dd3fc' },
+  { name: 'Amarillo mostaza', hex: '#d4a017' },
+  { name: 'Verde esmeralda', hex: '#10b981' }
+];
 
 const gate = document.getElementById("gate");
 const noAccess = document.getElementById("noAccess");
@@ -979,10 +1062,13 @@ function initDesignSystem() {
   console.log("Inicializando sistema de diseño");
   
   renderTemplates();
+  renderColorPalettes();
+  renderQuickColors();
   refreshDesignUI();
   setupColorPickers();
   setupFontPickers();
   setupHeroImageManager();
+  setupColorTargetSelector();
   
   const saveBtn = document.getElementById("saveDesignBtn");
   const resetBtn = document.getElementById("resetDesignBtn");
@@ -1022,6 +1108,111 @@ function renderTemplates() {
     
     card.addEventListener("click", () => applyTemplate(key));
     grid.appendChild(card);
+  });
+}
+
+function renderColorPalettes() {
+  const grid = document.getElementById("palettesGrid");
+  if (!grid) return;
+  
+  grid.innerHTML = "";
+  
+  Object.keys(COLOR_PALETTES).forEach((key) => {
+    const palette = COLOR_PALETTES[key];
+    
+    const card = document.createElement("div");
+    card.className = "palette-card";
+    card.dataset.palette = key;
+    
+    card.innerHTML = `
+      <div class="palette-colors">
+        <div class="palette-color" style="background: ${palette.primary};"></div>
+        <div class="palette-color" style="background: ${palette.secondary};"></div>
+        <div class="palette-color" style="background: ${palette.accent};"></div>
+      </div>
+      <div class="palette-name">${palette.name}</div>
+      <div class="palette-desc">${palette.desc}</div>
+    `;
+    
+    card.addEventListener("click", () => applyColorPalette(key));
+    grid.appendChild(card);
+  });
+}
+
+function applyColorPalette(paletteKey) {
+  const palette = COLOR_PALETTES[paletteKey];
+  if (!palette) return;
+  
+  currentTheme.primary_color = palette.primary;
+  currentTheme.secondary_color = palette.secondary;
+  currentTheme.accent_color = palette.accent;
+  currentTheme.template = 'custom';
+  
+  refreshDesignUI();
+  
+  const msg = document.getElementById("designSaveMsg");
+  if (msg) {
+    msg.textContent = `Paleta "${palette.name}" aplicada. Recuerda guardar.`;
+    msg.className = "design-save-msg success";
+    setTimeout(() => {
+      msg.textContent = "";
+      msg.className = "design-save-msg";
+    }, 3000);
+  }
+  
+  console.log(`Paleta aplicada: ${palette.name}`);
+}
+
+function renderQuickColors() {
+  const grid = document.getElementById("quickColorsGrid");
+  if (!grid) return;
+  
+  grid.innerHTML = "";
+  
+  QUICK_COLORS.forEach((color) => {
+    const swatch = document.createElement("button");
+    swatch.type = "button";
+    swatch.className = "quick-color-swatch";
+    swatch.dataset.hex = color.hex;
+    swatch.title = `${color.name} (${color.hex})`;
+    swatch.style.background = color.hex;
+    
+    swatch.innerHTML = `<span class="quick-color-name">${color.name}</span>`;
+    
+    swatch.addEventListener("click", () => applyQuickColor(color.hex, color.name));
+    grid.appendChild(swatch);
+  });
+}
+
+function applyQuickColor(hex, name) {
+  currentTheme[currentColorTarget] = hex;
+  currentTheme.template = 'custom';
+  
+  refreshDesignUI();
+  
+  const targetLabels = {
+    primary_color: 'Color principal',
+    secondary_color: 'Color secundario',
+    accent_color: 'Color de acento'
+  };
+  
+  const msg = document.getElementById("designSaveMsg");
+  if (msg) {
+    msg.textContent = `${targetLabels[currentColorTarget]} cambiado a ${name}. Recuerda guardar.`;
+    msg.className = "design-save-msg success";
+    setTimeout(() => {
+      msg.textContent = "";
+      msg.className = "design-save-msg";
+    }, 3000);
+  }
+}
+
+function setupColorTargetSelector() {
+  const selector = document.getElementById("colorTargetSelector");
+  if (!selector) return;
+  
+  selector.addEventListener("change", (e) => {
+    currentColorTarget = e.target.value;
   });
 }
 
