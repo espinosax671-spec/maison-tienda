@@ -81,16 +81,11 @@ function applyStoreTheme(store) {
   const primaryRgb = hexToRgb(primaryColor);
   const secondaryRgb = hexToRgb(secondaryColor);
   const accentRgb = hexToRgb(accentColor);
-  
-  // Generar tonos suaves para fondos
   const bgSoft = lightenColor(primaryColor, 42);
   const bgLighter = lightenColor(primaryColor, 45);
   const bgTinted = lightenColor(primaryColor, 38);
-  
-  // Determinar contraste automático
   const isSecondaryDark = isColorDark(secondaryColor);
   const textColorDark = isSecondaryDark ? secondaryColor : '#1a1410';
-  const textColorLight = '#ffffff';
   
   styleEl.textContent = `
     :root {
@@ -105,38 +100,16 @@ function applyStoreTheme(store) {
       --color-beige: ${bgTinted} !important;
       --font-serif: '${font}', serif !important;
     }
-    
-    /* Fondos principales */
-    body {
-      background: ${bgLighter} !important;
-    }
-    
-    .catalog:not(.catalog-dark) {
-      background: ${bgSoft} !important;
-    }
-    
-    .about {
-      background: ${bgTinted} !important;
-    }
-    
-    /* Fuente para elementos importantes */
-    .logo,
-    .hero-title,
-    .section-title,
-    .about-title,
-    .product-name,
-    .modal-name,
-    .account-title {
+    body { background: ${bgLighter} !important; }
+    .catalog:not(.catalog-dark) { background: ${bgSoft} !important; }
+    .about { background: ${bgTinted} !important; }
+    .logo, .hero-title, .section-title, .about-title, .product-name, .modal-name, .account-title {
       font-family: '${font}', serif !important;
     }
-    
-    /* TEXTOS CON MEJOR CONTRASTE */
-    .hero-title,
-    .hero-title em {
+    .hero-title, .hero-title em {
       color: ${textColorDark} !important;
       text-shadow: 0 2px 20px rgba(255, 255, 255, 0.5);
     }
-    
     .hero-sub {
       color: ${textColorDark} !important;
       font-weight: 500;
@@ -146,206 +119,83 @@ function applyStoreTheme(store) {
       backdrop-filter: blur(5px);
       display: inline-block;
     }
-    
-    .about-title,
-    .about-title em {
-      color: ${textColorDark} !important;
-    }
-    
-    .about-text {
-      color: ${lightenColor(textColorDark, 25)} !important;
-      font-weight: 500;
-    }
-    
-    /* Botones primarios */
+    .about-title, .about-title em { color: ${textColorDark} !important; }
+    .about-text { color: ${lightenColor(textColorDark, 25)} !important; font-weight: 500; }
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
       border-color: ${primaryColor} !important;
     }
-    
     .btn-primary:hover {
       background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
       box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
     }
-    
-    /* Precios */
-    .product-price,
-    .product-price-discounted,
-    .modal-price-discounted {
-      color: ${accentColor} !important;
-    }
-    
-    /* Header */
-    .site-header {
-      background: rgba(255, 255, 255, 0.98) !important;
-    }
-    
-    /* Logo */
-    .logo {
-      color: ${textColorDark} !important;
-    }
-    
-    /* Nav links */
-    .nav-link {
-      color: ${textColorDark} !important;
-    }
-    
-    .footer-col a:hover,
-    .nav-link:hover {
-      color: ${accentColor} !important;
-    }
-    
-    /* Sección caballero (oscura) */
-    .catalog.catalog-dark {
-      background: ${secondaryColor} !important;
-    }
-    
-    .catalog.catalog-dark .section-title,
-    .catalog.catalog-dark .section-eyebrow {
-      color: #ffffff !important;
-    }
-    
-    /* Botones ghost */
+    .product-price, .product-price-discounted, .modal-price-discounted { color: ${accentColor} !important; }
+    .site-header { background: rgba(255, 255, 255, 0.98) !important; }
+    .logo { color: ${textColorDark} !important; }
+    .nav-link { color: ${textColorDark} !important; }
+    .footer-col a:hover, .nav-link:hover { color: ${accentColor} !important; }
+    .catalog.catalog-dark { background: ${secondaryColor} !important; }
+    .catalog.catalog-dark .section-title, .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
     .btn-ghost {
       color: ${textColorDark} !important;
       border-color: ${textColorDark} !important;
       background: rgba(255, 255, 255, 0.5) !important;
     }
-    
-    .btn-ghost:hover {
-      background: ${textColorDark} !important;
-      color: #ffffff !important;
-    }
-    
-    /* Botón hero */
-    .hero-actions .btn-primary {
-      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
-    }
-    
-    /* Eyebrows y texto acentuado */
-    .section-eyebrow,
-    .hero-eyebrow {
-      color: ${accentColor} !important;
-      font-weight: 600;
-    }
-    
-    /* Cart badge */
-    .cart-count {
-      background: ${accentColor} !important;
-    }
-    
-    /* Cards de producto */
-    .product-card {
-      background: #ffffff !important;
-    }
-    
-    /* Footer */
-    .site-footer {
-      background: ${secondaryColor} !important;
-    }
-    
-    /* Hero section */
-    .hero {
-      background: ${bgTinted} !important;
-    }
-    
-    /* Contact section */
-    .contact {
-      background: ${secondaryColor} !important;
-    }
-    
-    /* Loader */
-    .loader {
-      background: ${bgLighter} !important;
-    }
-    
-    .loader-mark {
-      color: ${primaryColor} !important;
-    }
-    
-    /* Search bar */
-    .search-bar {
-      background: ${bgSoft} !important;
-    }
-    
-    /* Tabs y filtros activos */
-    .filter-chip.active {
-      background: ${secondaryColor} !important;
-      color: #ffffff !important;
-    }
-    
-    /* Categoría en las tarjetas */
-    .product-category {
-      color: ${accentColor} !important;
-    }
-    
-    /* BOTONES FLOTANTES (Instalar App y Subir arriba) */
-    #installAppBtn {
+    .btn-ghost:hover { background: ${textColorDark} !important; color: #ffffff !important; }
+    .hero-actions .btn-primary { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
+    .section-eyebrow, .hero-eyebrow { color: ${accentColor} !important; font-weight: 600; }
+    .cart-count { background: ${accentColor} !important; }
+    .product-card { background: #ffffff !important; }
+    .site-footer { background: ${secondaryColor} !important; }
+    .hero { background: ${bgTinted} !important; }
+    .contact { background: ${secondaryColor} !important; }
+    .loader { background: ${bgLighter} !important; }
+    .loader-mark { color: ${primaryColor} !important; }
+    .search-bar { background: ${bgSoft} !important; }
+    .filter-chip.active { background: ${secondaryColor} !important; color: #ffffff !important; }
+    .product-category { color: ${accentColor} !important; }
+    .catalog .section-title { color: ${textColorDark} !important; }
+    .modal-price { color: ${accentColor} !important; }
+    .cart-footer .btn-primary { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
+    .cart-total-row span:last-child { color: ${accentColor} !important; }
+    #contactWhatsapp.btn-primary.btn-large { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
+    .hero-scroll p, .hero-scroll span { color: ${textColorDark} !important; }
+    .product-tag { background: ${secondaryColor} !important; color: #ffffff !important; }
+    .favorite-btn.is-favorite { color: #e53935 !important; }
+    html body #installAppBtn {
       background: linear-gradient(135deg, ${secondaryColor}, ${lightenColor(secondaryColor, 10)}) !important;
       color: ${primaryColor} !important;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(${primaryRgb}, 0.3) !important;
     }
-    
-    #installAppBtn:hover {
+    html body #installAppBtn:hover {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
       box-shadow: 0 12px 30px rgba(${primaryRgb}, 0.5) !important;
     }
-    
-    #scrollTopBtnFixed {
+    html body #scrollTopBtnFixed {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
       box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.4) !important;
     }
-    
-    #scrollTopBtnFixed:hover {
+    html body #scrollTopBtnFixed:hover {
       background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
       box-shadow: 0 12px 30px rgba(${primaryRgb}, 0.6) !important;
     }
-    
-    /* Mejorar contraste en la sección "Pisada con carácter" (calzado) */
-    .catalog .section-title {
-      color: ${textColorDark} !important;
-    }
-    
-    /* Modal producto */
-    .modal-price {
-      color: ${accentColor} !important;
-    }
-    
-    /* Botón WhatsApp del carrito */
-    .cart-footer .btn-primary {
-      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
-    }
-    
-    /* Total del carrito */
-    .cart-total-row span:last-child {
-      color: ${accentColor} !important;
-    }
-    
-    /* Botón contacto WhatsApp */
-    #contactWhatsapp.btn-primary.btn-large {
-      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
-    }
-    
-    /* Hero scroll indicator */
-    .hero-scroll p,
-    .hero-scroll span {
-      color: ${textColorDark} !important;
-    }
-    
-    /* Tag de producto (Nuevo, Destacado) */
-    .product-tag {
-      background: ${secondaryColor} !important;
-      color: #ffffff !important;
-    }
-    
-    /* Botón favorito */
-    .favorite-btn.is-favorite {
-      color: #e53935 !important;
-    }
   `;
+  
+  setTimeout(function() {
+    const installBtn = document.getElementById("installAppBtn");
+    if (installBtn) {
+      installBtn.style.setProperty("background", "linear-gradient(135deg, " + secondaryColor + ", " + lightenColor(secondaryColor, 10) + ")", "important");
+      installBtn.style.setProperty("color", primaryColor, "important");
+    }
+    const scrollBtn = document.getElementById("scrollTopBtnFixed");
+    if (scrollBtn) {
+      scrollBtn.style.setProperty("background", "linear-gradient(135deg, " + primaryColor + ", " + accentColor + ")", "important");
+      scrollBtn.style.setProperty("color", "#ffffff", "important");
+    }
+  }, 200);
   
   console.log(`Tema aplicado: ${font} + ${primaryColor}`);
 }
