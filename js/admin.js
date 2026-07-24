@@ -1,11 +1,5 @@
 /* ===================================================================
    PANEL DE ADMINISTRACIÓN - Lógica MULTI-TIENDA + GESTIÓN EMPLEADOS
-   
-   ACTUALIZADO: 
-   - Soporte para Calzado Unisex
-   - Banner con URL personalizada de la tienda + botón compartir
-   - Logo dinámico con el nombre de la tienda del dueño
-   - Sistema de personalización de tema (colores + fuente)
 =================================================================== */
 
 let adminUser = null;
@@ -20,27 +14,26 @@ let pendingDeleteId = null;
 let pendingDeleteEmployeeId = null;
 let selectedImageFile = null;
 
-// Variables del sistema de stock
 let currentStockProduct = null;
 let currentStockData = {};
 
-// Variables del sistema de notificaciones
 let notificationsMuted = false;
 let notificationSound = null;
 let orderSubscription = null;
 let lastNotifiedOrderId = null;
 let pendingNotificationOrder = null;
 
-// Variables del sistema de diseño/tema
 let currentTheme = {
   primary_color: '#d4a869',
   secondary_color: '#1a1410',
   accent_color: '#8f6b3f',
   font: 'Cormorant Garamond',
-  template: 'elegante'
+  template: 'elegante',
+  hero_image_url: null
 };
 
-// Plantillas predefinidas
+let selectedHeroImageFile = null;
+
 const DESIGN_TEMPLATES = {
   elegante: {
     name: 'Elegante',
@@ -92,16 +85,10 @@ const DESIGN_TEMPLATES = {
   }
 };
 
-// ---------------------------------------------------------------
-// Elementos
-// ---------------------------------------------------------------
 const gate = document.getElementById("gate");
 const noAccess = document.getElementById("noAccess");
 const adminApp = document.getElementById("adminApp");
 
-// ---------------------------------------------------------------
-// LOGIN
-// ---------------------------------------------------------------
 document.getElementById("gateForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const errorEl = document.getElementById("gateError");
@@ -127,9 +114,6 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
   await checkStaffAndEnter(data.user);
 });
 
-// ---------------------------------------------------------------
-// PROTECCIÓN DEL PANEL (MULTI-TIENDA)
-// ---------------------------------------------------------------
 async function checkStaffAndEnter(user) {
   adminUser = user;
 
@@ -175,7 +159,7 @@ async function checkStaffAndEnter(user) {
 
   const { data: store } = await supabaseClient
     .from("stores")
-    .select("name, active, slug, theme_primary_color, theme_secondary_color, theme_accent_color, theme_font, theme_template")
+    .select("name, active, slug, theme_primary_color, theme_secondary_color, theme_accent_color, theme_font, theme_template, hero_image_url")
     .eq("id", currentStoreId)
     .maybeSingle();
 
@@ -187,14 +171,14 @@ async function checkStaffAndEnter(user) {
   currentStoreName = store?.name || "Mi Tienda";
   currentStoreSlug = store?.slug || null;
 
-  // Cargar el tema actual
   if (store) {
     currentTheme = {
       primary_color: store.theme_primary_color || '#d4a869',
       secondary_color: store.theme_secondary_color || '#1a1410',
       accent_color: store.theme_accent_color || '#8f6b3f',
       font: store.theme_font || 'Cormorant Garamond',
-      template: store.theme_template || 'elegante'
+      template: store.theme_template || 'elegante',
+      hero_image_url: store.hero_image_url || null
     };
   }
 
@@ -247,9 +231,6 @@ async function checkStaffAndEnter(user) {
   }
 }
 
-// ---------------------------------------------------------------
-// Mostrar banner con la URL personalizada
-// ---------------------------------------------------------------
 function displayStoreUrlBanner() {
   const banner = document.getElementById("storeUrlBanner");
   const urlValueEl = document.getElementById("storeUrlValue");
@@ -317,9 +298,6 @@ async function denyAccess(mensaje) {
   window.location.href = "index.html";
 }
 
-// ---------------------------------------------------------------
-// LOGOUT
-// ---------------------------------------------------------------
 document.getElementById("logoutBtn").addEventListener("click", doLogout);
 document.getElementById("noAccessLogout").addEventListener("click", doLogout);
 
@@ -342,9 +320,6 @@ async function doLogout() {
   window.location.href = "index.html";
 }
 
-// ---------------------------------------------------------------
-// Revisar sesión existente al cargar
-// ---------------------------------------------------------------
 async function initAdmin() {
   const { data } = await supabaseClient.auth.getSession();
   
@@ -359,9 +334,6 @@ async function initAdmin() {
 
 window.addEventListener("DOMContentLoaded", initAdmin);
 
-// ---------------------------------------------------------------
-// Cargar productos (POR TIENDA)
-// ---------------------------------------------------------------
 async function loadProducts() {
   const table = document.getElementById("productTable");
   table.innerHTML = `<p class="loading-msg">Cargando productos...</p>`;
@@ -387,9 +359,6 @@ async function loadProducts() {
   renderProductTable();
 }
 
-// ---------------------------------------------------------------
-// Renderizar tabla de productos
-// ---------------------------------------------------------------
 function renderProductTable() {
   const table = document.getElementById("productTable");
   
@@ -473,9 +442,6 @@ function renderProductTable() {
   });
 }
 
-// ---------------------------------------------------------------
-// Etiquetas de categoría
-// ---------------------------------------------------------------
 function categoryLabel(c) {
   return { 
     dama: "Dama", 
@@ -501,9 +467,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---------------------------------------------------------------
-// Filtros de PRODUCTOS
-// ---------------------------------------------------------------
 document.querySelectorAll("[data-filter]").forEach((chip) => {
   chip.addEventListener("click", () => {
     document.querySelectorAll("[data-filter]").forEach((c) => c.classList.remove("active"));
@@ -513,9 +476,6 @@ document.querySelectorAll("[data-filter]").forEach((chip) => {
   });
 });
 
-// ---------------------------------------------------------------
-// Modal: crear o editar producto
-// ---------------------------------------------------------------
 const formModal = document.getElementById("productFormModal");
 const formOverlay = document.getElementById("modalOverlay");
 
@@ -603,9 +563,6 @@ document.getElementById("productImageFile").addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-// ---------------------------------------------------------------
-// Guardar producto
-// ---------------------------------------------------------------
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const errorEl = document.getElementById("formError");
@@ -688,9 +645,6 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
   }
 });
 
-// ---------------------------------------------------------------
-// Subir imagen
-// ---------------------------------------------------------------
 async function uploadProductImage(file) {
   try {
     if (file.size > 5 * 1024 * 1024) {
@@ -728,9 +682,6 @@ async function uploadProductImage(file) {
   }
 }
 
-// ---------------------------------------------------------------
-// Eliminar producto
-// ---------------------------------------------------------------
 const deleteOverlay = document.getElementById("deleteOverlay");
 const deleteModal = document.getElementById("deleteConfirmModal");
 
@@ -760,9 +711,6 @@ document.getElementById("confirmDeleteBtn").addEventListener("click", async () =
   await loadProducts();
 });
 
-// ---------------------------------------------------------------
-// Cierre con Escape
-// ---------------------------------------------------------------
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeProductForm();
@@ -774,9 +722,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// ---------------------------------------------------------------
-// RECUPERAR CONTRASEÑA
-// ---------------------------------------------------------------
 document.getElementById("forgotPasswordLink").addEventListener("click", function(e) {
   e.preventDefault();
   document.getElementById("resetOverlay").classList.add("active");
@@ -827,9 +772,6 @@ document.getElementById("resetForm").addEventListener("submit", async function(e
   }
 });
 
-// ---------------------------------------------------------------
-// GESTIÓN DE INVENTARIO / STOCK
-// ---------------------------------------------------------------
 const stockOverlay = document.getElementById("stockOverlay");
 const stockModal = document.getElementById("stockModal");
 
@@ -991,7 +933,6 @@ function getTotalStock(stock) {
 // ===================================================================
 // SISTEMA DE TABS
 // ===================================================================
-
 let currentTab = "productos";
 let allOrders = [];
 let currentOrderFilter = "pendiente";
@@ -1041,6 +982,7 @@ function initDesignSystem() {
   refreshDesignUI();
   setupColorPickers();
   setupFontPickers();
+  setupHeroImageManager();
   
   const saveBtn = document.getElementById("saveDesignBtn");
   const resetBtn = document.getElementById("resetDesignBtn");
@@ -1122,6 +1064,7 @@ function refreshDesignUI() {
   });
   
   updatePreview();
+  updateHeroImagePreview();
 }
 
 function setupColorPickers() {
@@ -1202,9 +1145,139 @@ function updatePreview() {
   }
 }
 
+// ---------------------------------------------------------------
+// GESTIÓN DE IMAGEN DEL HERO
+// ---------------------------------------------------------------
+function setupHeroImageManager() {
+  const fileInput = document.getElementById("heroImageFileInput");
+  const removeBtn = document.getElementById("heroImageRemoveBtn");
+  
+  if (fileInput) {
+    fileInput.addEventListener("change", handleHeroImageSelected);
+  }
+  
+  if (removeBtn) {
+    removeBtn.addEventListener("click", handleHeroImageRemove);
+  }
+  
+  updateHeroImagePreview();
+}
+
+function updateHeroImagePreview() {
+  const previewImg = document.getElementById("heroImagePreviewImg");
+  const placeholder = document.getElementById("heroImagePlaceholder");
+  const removeBtn = document.getElementById("heroImageRemoveBtn");
+  
+  if (!previewImg || !placeholder) return;
+  
+  if (currentTheme.hero_image_url) {
+    previewImg.src = currentTheme.hero_image_url;
+    previewImg.style.display = "block";
+    placeholder.style.display = "none";
+    if (removeBtn) removeBtn.style.display = "inline-flex";
+  } else {
+    previewImg.style.display = "none";
+    placeholder.style.display = "flex";
+    if (removeBtn) removeBtn.style.display = "none";
+  }
+}
+
+function handleHeroImageSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const status = document.getElementById("heroImageStatus");
+  
+  if (!file.type.startsWith("image/")) {
+    if (status) {
+      status.textContent = "El archivo debe ser una imagen (JPG, PNG, WEBP).";
+      status.className = "hero-image-status error";
+    }
+    return;
+  }
+  
+  if (file.size > 3 * 1024 * 1024) {
+    if (status) {
+      status.textContent = "La imagen no debe pesar más de 3 MB.";
+      status.className = "hero-image-status error";
+    }
+    return;
+  }
+  
+  selectedHeroImageFile = file;
+  
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const previewImg = document.getElementById("heroImagePreviewImg");
+    const placeholder = document.getElementById("heroImagePlaceholder");
+    const removeBtn = document.getElementById("heroImageRemoveBtn");
+    
+    if (previewImg) {
+      previewImg.src = ev.target.result;
+      previewImg.style.display = "block";
+    }
+    if (placeholder) placeholder.style.display = "none";
+    if (removeBtn) removeBtn.style.display = "inline-flex";
+  };
+  reader.readAsDataURL(file);
+  
+  if (status) {
+    status.textContent = "Imagen lista. Haz clic en 'Guardar cambios' para aplicarla.";
+    status.className = "hero-image-status success";
+  }
+}
+
+function handleHeroImageRemove() {
+  if (!confirm("Quitar la imagen personalizada y volver a usar la imagen por defecto?")) {
+    return;
+  }
+  
+  currentTheme.hero_image_url = null;
+  selectedHeroImageFile = null;
+  
+  const fileInput = document.getElementById("heroImageFileInput");
+  if (fileInput) fileInput.value = "";
+  
+  updateHeroImagePreview();
+  
+  const status = document.getElementById("heroImageStatus");
+  if (status) {
+    status.textContent = "Imagen quitada. Haz clic en 'Guardar cambios' para confirmar.";
+    status.className = "hero-image-status success";
+  }
+}
+
+async function uploadHeroImage(file) {
+  const ext = file.name.split(".").pop().toLowerCase();
+  const fileName = `hero-${currentStoreId}-${Date.now()}.${ext}`;
+  
+  const { data: uploadData, error: uploadError } = await supabaseClient.storage
+    .from("hero_images")
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
+  
+  if (uploadError) {
+    throw new Error(`Error al subir imagen: ${uploadError.message}`);
+  }
+  
+  const { data: urlData } = supabaseClient.storage
+    .from("hero_images")
+    .getPublicUrl(fileName);
+  
+  if (!urlData || !urlData.publicUrl) {
+    throw new Error("No se pudo obtener la URL de la imagen.");
+  }
+  
+  return urlData.publicUrl;
+}
+
 async function saveDesign() {
   const btn = document.getElementById("saveDesignBtn");
   const msg = document.getElementById("designSaveMsg");
+  const heroStatus = document.getElementById("heroImageStatus");
   
   if (!btn || !currentStoreId) return;
   
@@ -1218,6 +1291,22 @@ async function saveDesign() {
   `;
   
   try {
+    let heroImageUrl = currentTheme.hero_image_url;
+    
+    if (selectedHeroImageFile) {
+      if (heroStatus) {
+        heroStatus.textContent = "Subiendo imagen...";
+        heroStatus.className = "hero-image-status loading";
+      }
+      
+      heroImageUrl = await uploadHeroImage(selectedHeroImageFile);
+      currentTheme.hero_image_url = heroImageUrl;
+      selectedHeroImageFile = null;
+      
+      const fileInput = document.getElementById("heroImageFileInput");
+      if (fileInput) fileInput.value = "";
+    }
+    
     const { error } = await supabaseClient
       .from("stores")
       .update({
@@ -1225,7 +1314,8 @@ async function saveDesign() {
         theme_secondary_color: currentTheme.secondary_color,
         theme_accent_color: currentTheme.accent_color,
         theme_font: currentTheme.font,
-        theme_template: currentTheme.template
+        theme_template: currentTheme.template,
+        hero_image_url: heroImageUrl
       })
       .eq("id", currentStoreId);
     
@@ -1241,13 +1331,22 @@ async function saveDesign() {
       }, 5000);
     }
     
-    console.log("Diseño guardado en Supabase");
+    if (heroStatus) {
+      heroStatus.textContent = "";
+      heroStatus.className = "hero-image-status";
+    }
+    
+    console.log("Diseño guardado en Supabase (incluyendo hero image)");
     
   } catch (err) {
     console.error("Error al guardar diseño:", err);
     if (msg) {
-      msg.textContent = "Error al guardar. Intenta de nuevo.";
+      msg.textContent = err.message || "Error al guardar. Intenta de nuevo.";
       msg.className = "design-save-msg error";
+    }
+    if (heroStatus) {
+      heroStatus.textContent = "Error al subir la imagen.";
+      heroStatus.className = "hero-image-status error";
     }
   } finally {
     btn.disabled = false;
@@ -1256,9 +1355,15 @@ async function saveDesign() {
 }
 
 function resetDesign() {
-  if (!confirm("Restablecer al diseño original de MAISON?\n\nSe perderán los cambios que no hayas guardado.")) {
+  if (!confirm("Restablecer al diseño original de MAISON?\n\nSe perderán los cambios que no hayas guardado. La imagen del hero también volverá a la imagen por defecto.")) {
     return;
   }
+  
+  currentTheme.hero_image_url = null;
+  selectedHeroImageFile = null;
+  
+  const fileInput = document.getElementById("heroImageFileInput");
+  if (fileInput) fileInput.value = "";
   
   applyTemplate('elegante');
   
