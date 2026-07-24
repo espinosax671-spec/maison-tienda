@@ -216,9 +216,72 @@ function applyStoreTheme(store) {
     
     /* ============================================
        TARJETAS DE PRODUCTO - TODO EN NEGRO UNIFORME
+       (Fuerza máxima con selectores por ID)
     ============================================ */
     
-    /* CATALOGO CLARO - Fondo crema/beige */
+    /* SECCIÓN DAMA - Fondo claro, textos oscuros */
+    #dama .product-card .product-name,
+    #dama .product-card .product-category,
+    #dama .product-card .product-price,
+    #dama .product-card .product-price-discounted {
+      color: #1a1410 !important;
+      opacity: 1 !important;
+    }
+    
+    #dama .product-card .product-name {
+      font-weight: 500 !important;
+    }
+    
+    #dama .product-card .product-category {
+      font-weight: 600 !important;
+      opacity: 0.7 !important;
+      letter-spacing: 2.5px !important;
+    }
+    
+    #dama .product-card .product-price,
+    #dama .product-card .product-price-discounted {
+      font-weight: 700 !important;
+      font-size: 16px !important;
+    }
+    
+    #dama .product-card .product-price-original {
+      color: #999 !important;
+      opacity: 0.7 !important;
+      text-decoration: line-through !important;
+    }
+    
+    /* SECCIÓN CALZADO - Fondo claro, textos oscuros */
+    #calzado .product-card .product-name,
+    #calzado .product-card .product-category,
+    #calzado .product-card .product-price,
+    #calzado .product-card .product-price-discounted {
+      color: #1a1410 !important;
+      opacity: 1 !important;
+    }
+    
+    #calzado .product-card .product-name {
+      font-weight: 500 !important;
+    }
+    
+    #calzado .product-card .product-category {
+      font-weight: 600 !important;
+      opacity: 0.7 !important;
+      letter-spacing: 2.5px !important;
+    }
+    
+    #calzado .product-card .product-price,
+    #calzado .product-card .product-price-discounted {
+      font-weight: 700 !important;
+      font-size: 16px !important;
+    }
+    
+    #calzado .product-card .product-price-original {
+      color: #999 !important;
+      opacity: 0.7 !important;
+      text-decoration: line-through !important;
+    }
+    
+    /* CATALOGO CLARO GENERICO (respaldo) */
     .catalog:not(.catalog-dark) .product-card .product-name {
       color: #1a1410 !important;
       font-weight: 500 !important;
@@ -245,34 +308,46 @@ function applyStoreTheme(store) {
       opacity: 0.7 !important;
     }
     
-    /* CATALOGO OSCURO (CABALLERO) - Fondo oscuro */
+    /* CATALOGO OSCURO (CABALLERO) - Fondo oscuro, tarjetas blancas con textos NEGROS */
     .catalog.catalog-dark { background: ${secondaryColor} !important; }
     .catalog.catalog-dark .section-title, 
     .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
     
+    #caballero .product-card,
+    .catalog.catalog-dark .product-card {
+      background: #ffffff !important;
+    }
+    
+    #caballero .product-card .product-name,
     .catalog.catalog-dark .product-card .product-name {
-      color: #ffffff !important;
+      color: #1a1410 !important;
       font-weight: 500 !important;
       opacity: 1 !important;
     }
     
+    #caballero .product-card .product-category,
     .catalog.catalog-dark .product-card .product-category {
-      color: #ffffff !important;
+      color: #1a1410 !important;
       font-weight: 600 !important;
-      opacity: 0.75 !important;
+      opacity: 0.7 !important;
       letter-spacing: 2.5px !important;
     }
     
+    #caballero .product-card .product-price,
+    #caballero .product-card .product-price-discounted,
     .catalog.catalog-dark .product-card .product-price,
     .catalog.catalog-dark .product-card .product-price-discounted {
-      color: #ffffff !important;
+      color: #1a1410 !important;
       font-weight: 700 !important;
       font-size: 16px !important;
       opacity: 1 !important;
     }
     
+    #caballero .product-card .product-price-original,
     .catalog.catalog-dark .product-card .product-price-original {
-      color: rgba(255, 255, 255, 0.5) !important;
+      color: #999 !important;
+      opacity: 0.7 !important;
+      text-decoration: line-through !important;
     }
     
     /* MODAL DE PRODUCTO */
