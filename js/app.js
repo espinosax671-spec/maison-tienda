@@ -98,12 +98,45 @@ function applyStoreTheme(store) {
     body { background: ${bgLighter} !important; }
     .catalog:not(.catalog-dark) { background: ${bgSoft} !important; }
     
+    /* SECCION ABOUT / LA MAISON - Textos blancos sobre imagen */
     .about {
       background:
-        linear-gradient(rgba(${primaryRgb}, 0.15), rgba(${primaryRgb}, 0.15)),
+        linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)),
         url('https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat !important;
     }
     
+    .about .section-eyebrow {
+      color: #ffffff !important;
+      opacity: 0.9;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      font-weight: 600;
+    }
+    
+    .about-title, .about-title em {
+      color: #ffffff !important;
+      text-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
+    }
+    
+    .about-title em {
+      color: #ffffff !important;
+      font-style: italic;
+    }
+    
+    .about-text {
+      color: #ffffff !important;
+      opacity: 0.95;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+      font-weight: 400;
+    }
+    
+    .about-stitch {
+      background: #ffffff !important;
+    }
+    .about-stitch::before, .about-stitch::after {
+      background: #ffffff !important;
+    }
+    
+    /* HERO */
     .hero {
       background:
         linear-gradient(
@@ -119,13 +152,13 @@ function applyStoreTheme(store) {
       font-family: '${font}', serif !important;
     }
     
-    /* HERO: TODO EN BLANCO PARA MAXIMO CONTRASTE */
+    /* HERO: TODO EN BLANCO */
     .hero-title {
       color: #ffffff !important;
       text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
     }
     .hero-title em {
-      color: #fff8ec !important;
+      color: #ffffff !important;
       font-style: italic;
       text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
     }
@@ -170,10 +203,7 @@ function applyStoreTheme(store) {
       color: ${textColorDark} !important;
     }
     
-    .about-title, .about-title em { color: ${textColorDark} !important; }
-    .about-title em { color: ${accentColor} !important; font-style: italic; }
-    .about-text { color: ${lightenColor(textColorDark, 25)} !important; font-weight: 500; }
-    
+    /* BOTONES */
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
@@ -185,7 +215,7 @@ function applyStoreTheme(store) {
     }
     
     /* ============================================
-       TARJETAS DE PRODUCTO - MAXIMA LEGIBILIDAD
+       TARJETAS DE PRODUCTO - TODO EN NEGRO UNIFORME
     ============================================ */
     
     /* CATALOGO CLARO - Fondo crema/beige */
@@ -196,17 +226,17 @@ function applyStoreTheme(store) {
     }
     
     .catalog:not(.catalog-dark) .product-card .product-category {
-      color: ${accentColor} !important;
-      font-weight: 700 !important;
-      opacity: 1 !important;
+      color: #1a1410 !important;
+      font-weight: 600 !important;
+      opacity: 0.7 !important;
       letter-spacing: 2.5px !important;
     }
     
     .catalog:not(.catalog-dark) .product-card .product-price,
     .catalog:not(.catalog-dark) .product-card .product-price-discounted {
-      color: ${accentColor} !important;
+      color: #1a1410 !important;
       font-weight: 700 !important;
-      font-size: 15px !important;
+      font-size: 16px !important;
       opacity: 1 !important;
     }
     
@@ -215,7 +245,7 @@ function applyStoreTheme(store) {
       opacity: 0.7 !important;
     }
     
-    /* CATALOGO OSCURO (CABALLERO) - Fondo secundario oscuro */
+    /* CATALOGO OSCURO (CABALLERO) - Fondo oscuro */
     .catalog.catalog-dark { background: ${secondaryColor} !important; }
     .catalog.catalog-dark .section-title, 
     .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
@@ -227,17 +257,17 @@ function applyStoreTheme(store) {
     }
     
     .catalog.catalog-dark .product-card .product-category {
-      color: ${lightenColor(primaryColor, 25)} !important;
-      font-weight: 700 !important;
-      opacity: 1 !important;
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      opacity: 0.75 !important;
       letter-spacing: 2.5px !important;
     }
     
     .catalog.catalog-dark .product-card .product-price,
     .catalog.catalog-dark .product-card .product-price-discounted {
-      color: ${lightenColor(primaryColor, 25)} !important;
+      color: #ffffff !important;
       font-weight: 700 !important;
-      font-size: 15px !important;
+      font-size: 16px !important;
       opacity: 1 !important;
     }
     
@@ -247,15 +277,17 @@ function applyStoreTheme(store) {
     
     /* MODAL DE PRODUCTO */
     .modal-price, .modal-price-discounted {
-      color: ${accentColor} !important;
+      color: #1a1410 !important;
       font-weight: 700 !important;
     }
     
     .modal-category {
-      color: ${accentColor} !important;
+      color: #1a1410 !important;
       font-weight: 700 !important;
+      opacity: 0.7 !important;
     }
     
+    /* HEADER */
     .site-header { background: rgba(255, 255, 255, 0.98) !important; }
     .site-header.scrolled { background: rgba(255, 255, 255, 0.99) !important; }
     .logo { color: ${textColorDark} !important; }
@@ -276,11 +308,25 @@ function applyStoreTheme(store) {
     .cart-count { background: ${accentColor} !important; }
     .product-card { background: #ffffff !important; }
     .site-footer { background: ${secondaryColor} !important; }
+    
+    /* SECCION CONTACTO */
     .contact { 
       background:
         linear-gradient(rgba(${secondaryRgb}, 0.75), rgba(${secondaryRgb}, 0.85)),
         url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=cover&w=1920&q=80') center/cover no-repeat !important;
     }
+    .contact .section-eyebrow {
+      color: #ffffff !important;
+      opacity: 0.9;
+    }
+    .contact .section-title-light {
+      color: #ffffff !important;
+    }
+    .contact .contact-text {
+      color: #ffffff !important;
+      opacity: 0.9;
+    }
+    
     .loader { background: ${bgLighter} !important; }
     .loader-mark { color: ${primaryColor} !important; }
     .search-bar { background: ${bgSoft} !important; }
@@ -292,13 +338,11 @@ function applyStoreTheme(store) {
     .product-tag { background: ${secondaryColor} !important; color: #ffffff !important; }
     .favorite-btn.is-favorite { color: #e53935 !important; }
     
-    .about-stitch { background: ${primaryColor} !important; }
-    .about-stitch::before, .about-stitch::after { background: ${primaryColor} !important; }
-    
     .hero-thread path {
       stroke: rgba(255, 255, 255, 0.6) !important;
     }
     
+    /* BOTONES FLOTANTES */
     html body #installAppBtn {
       background: linear-gradient(135deg, ${secondaryColor}, ${lightenColor(secondaryColor, 10)}) !important;
       color: ${primaryColor} !important;
