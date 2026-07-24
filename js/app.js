@@ -119,31 +119,36 @@ function applyStoreTheme(store) {
       font-family: '${font}', serif !important;
     }
     
-    .hero-title,
-    .hero-title em {
+    /* HERO: TODO EN BLANCO PARA MAXIMO CONTRASTE */
+    .hero-title {
       color: #ffffff !important;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
     }
     .hero-title em {
-      color: ${lightenColor(primaryColor, 20)} !important;
+      color: #fff8ec !important;
+      font-style: italic;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
     }
     .hero-sub {
-      color: #f5ebdc !important;
+      color: #ffffff !important;
       background: transparent !important;
       backdrop-filter: none !important;
       padding: 0 !important;
       border-radius: 0 !important;
       display: block !important;
-      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
+      font-weight: 400;
     }
     .hero-eyebrow {
-      color: ${lightenColor(primaryColor, 25)} !important;
+      color: #ffffff !important;
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+      opacity: 0.95;
     }
     .hero-scroll p, .hero-scroll span { 
-      color: ${lightenColor(primaryColor, 20)} !important;
+      color: #ffffff !important;
     }
     .hero-scroll span {
-      background: ${lightenColor(primaryColor, 20)} !important;
+      background: #ffffff !important;
     }
     
     .hero-actions .btn-primary {
@@ -230,7 +235,7 @@ function applyStoreTheme(store) {
     .about-stitch::before, .about-stitch::after { background: ${primaryColor} !important; }
     
     .hero-thread path {
-      stroke: ${lightenColor(primaryColor, 20)} !important;
+      stroke: rgba(255, 255, 255, 0.6) !important;
     }
     
     html body #installAppBtn {
