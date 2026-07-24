@@ -636,7 +636,7 @@ body.search-open .catalog:first-of-type {
 }
 
 /* ============================================
-   HERO
+   HERO (ACTUALIZADO)
    ============================================ */
 .hero {
   min-height: 100vh;
@@ -648,7 +648,7 @@ body.search-open .catalog:first-of-type {
   padding: calc(var(--header-h) + 40px) 20px 80px;
   color: var(--color-white);
   background:
-    linear-gradient(rgba(20,15,10,0.45), rgba(20,15,10,0.7)),
+    linear-gradient(rgba(20,15,10,0.55), rgba(20,15,10,0.75)),
     url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
   background-attachment: fixed;
 }
@@ -1638,7 +1638,7 @@ body.search-open .catalog:first-of-type {
 }
 
 /* ============================================
-   PERFIL CON PESTAÑAS (NUEVO DISEÑO)
+   PERFIL CON PESTAÑAS
    ============================================ */
 
 .profile-header {
@@ -1653,7 +1653,6 @@ body.search-open .catalog:first-of-type {
   margin: 0 0 5px 0;
 }
 
-/* ---- Pestañas de navegación ---- */
 .profile-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1731,7 +1730,6 @@ body.search-open .catalog:first-of-type {
   display: none;
 }
 
-/* ---- Contenido de cada pestaña ---- */
 .profile-tab-content {
   display: none;
   animation: profileFadeIn .3s ease;
@@ -1747,7 +1745,6 @@ body.search-open .catalog:first-of-type {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ---- Vista de datos guardados (perfil sin editar) ---- */
 .profile-info-view {
   animation: profileFadeIn .4s ease;
 }
@@ -1811,7 +1808,6 @@ body.search-open .catalog:first-of-type {
   word-break: break-word;
 }
 
-/* ---- Vista de formulario (editar/nuevo) ---- */
 .profile-form-view {
   animation: profileFadeIn .3s ease;
 }
@@ -1827,7 +1823,6 @@ body.search-open .catalog:first-of-type {
   padding: 16px 24px;
 }
 
-/* ---- Filtros de pedidos (ajustados) ---- */
 .orders-history-filters {
   display: flex;
   gap: 6px;
@@ -1867,14 +1862,12 @@ body.search-open .catalog:first-of-type {
   font-weight: 600;
 }
 
-/* Lista de pedidos */
 .orders-history-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* Tarjeta de pedido individual */
 .order-history-card {
   background: var(--color-white);
   border: 1px solid var(--color-border);
@@ -2145,7 +2138,6 @@ body.search-open .catalog:first-of-type {
   font-style: italic;
 }
 
-/* Grid de favoritos dentro del perfil */
 .favorites-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -3061,7 +3053,6 @@ body.search-open .catalog:first-of-type {
   .modal-price-discounted { font-size: 24px; }
   .modal-price-original { font-size: 16px; }
   
-  /* Perfil responsive */
   .profile-tab {
     padding: 10px 6px;
   }
@@ -3102,7 +3093,6 @@ body.search-open .catalog:first-of-type {
     gap: 10px;
   }
   
-  /* Pestañas más compactas en móvil */
   .profile-tabs {
     padding: 4px;
     gap: 3px;
