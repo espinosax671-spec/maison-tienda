@@ -98,6 +98,15 @@ function applyStoreTheme(store) {
     body { background: ${bgLighter} !important; }
     .catalog:not(.catalog-dark) { background: ${bgSoft} !important; }
     
+    /* LOGO CIRCULAR PERSONALIZADO POR TIENDA */
+    .logo-mark {
+      background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
+      box-shadow: 0 4px 14px rgba(${primaryRgb}, 0.4), inset 0 -2px 4px rgba(0,0,0,0.15) !important;
+    }
+    .logo-wrap:hover .logo-mark {
+      box-shadow: 0 6px 20px rgba(${primaryRgb}, 0.55), inset 0 -2px 4px rgba(0,0,0,0.15) !important;
+    }
+    
     /* SECCION ABOUT / LA MAISON - Textos blancos sobre imagen */
     .about {
       background:
@@ -136,14 +145,19 @@ function applyStoreTheme(store) {
       background: #ffffff !important;
     }
     
-    /* HERO */
-    .hero {
-      background:
+    /* HERO PREMIUM - Nuevo diseño */
+    .hero-bg {
+      background-image:
         linear-gradient(
-          rgba(${secondaryRgb}, 0.55),
-          rgba(${secondaryRgb}, 0.75)
+          135deg,
+          rgba(${secondaryRgb}, 0.72) 0%,
+          rgba(${secondaryRgb}, 0.68) 45%,
+          rgba(${secondaryRgb}, 0.78) 100%
         ),
-        url('${heroImageUrl}') center/cover no-repeat !important;
+        url('${heroImageUrl}') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
       background-attachment: fixed !important;
     }
     
@@ -152,58 +166,82 @@ function applyStoreTheme(store) {
       font-family: '${font}', serif !important;
     }
     
-    /* HERO: TODO EN BLANCO */
+    /* HERO: Título con gradiente dorado personalizado */
     .hero-title {
       color: #ffffff !important;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     }
     .hero-title em {
-      color: #ffffff !important;
-      font-style: italic;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+      background: linear-gradient(
+        135deg,
+        ${lightenColor(primaryColor, 20)} 0%,
+        ${primaryColor} 40%,
+        ${accentColor} 100%
+      ) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: transparent !important;
+      filter: drop-shadow(0 4px 20px rgba(${primaryRgb}, 0.35)) !important;
+      font-style: italic !important;
     }
     .hero-sub {
-      color: #ffffff !important;
-      background: transparent !important;
-      backdrop-filter: none !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-      display: block !important;
-      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
-      font-weight: 400;
+      color: rgba(255, 255, 255, 0.92) !important;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      font-weight: 300;
     }
     .hero-eyebrow {
-      color: #ffffff !important;
-      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+      color: ${lightenColor(primaryColor, 15)} !important;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
       opacity: 0.95;
     }
-    .hero-scroll p, .hero-scroll span { 
-      color: #ffffff !important;
+    
+    /* Ornamento decorativo */
+    .hero-ornament-line {
+      background: ${lightenColor(primaryColor, 15)} !important;
     }
-    .hero-scroll span {
-      background: #ffffff !important;
+    .hero-ornament-dot {
+      background: ${lightenColor(primaryColor, 15)} !important;
+      box-shadow: 0 0 12px rgba(${primaryRgb}, 0.6) !important;
     }
     
-    .hero-actions .btn-primary {
+    /* Scroll indicator */
+    .hero-scroll p {
+      color: ${lightenColor(primaryColor, 15)} !important;
+    }
+    .hero-scroll-line {
+      background: linear-gradient(
+        to bottom,
+        transparent,
+        ${lightenColor(primaryColor, 15)} 30%,
+        ${lightenColor(primaryColor, 15)} 70%,
+        transparent
+      ) !important;
+    }
+    
+    /* Botones Hero */
+    .btn-hero-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
-      border-color: ${primaryColor} !important;
+      box-shadow: 0 8px 24px rgba(${primaryRgb}, 0.35) !important;
     }
-    .hero-actions .btn-primary:hover {
+    .btn-hero-primary:hover {
       background: linear-gradient(135deg, ${accentColor}, ${primaryColor}) !important;
       box-shadow: 0 15px 30px rgba(${primaryRgb}, 0.5) !important;
     }
-    .hero-actions .btn-ghost {
+    .btn-hero-ghost {
       color: #ffffff !important;
-      border-color: #ffffff !important;
-      background: transparent !important;
+      border-color: rgba(255, 255, 255, 0.4) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      backdrop-filter: blur(8px) !important;
     }
-    .hero-actions .btn-ghost:hover {
+    .btn-hero-ghost:hover {
       background: #ffffff !important;
       color: ${textColorDark} !important;
+      border-color: #ffffff !important;
     }
     
-    /* BOTONES */
+    /* BOTONES generales */
     .btn-primary {
       background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important;
       color: #ffffff !important;
@@ -216,7 +254,6 @@ function applyStoreTheme(store) {
     
     /* ============================================
        TARJETAS DE PRODUCTO - TODO EN NEGRO UNIFORME
-       (Fuerza máxima con selectores por ID)
     ============================================ */
     
     /* SECCIÓN DAMA - Fondo claro, textos oscuros */
@@ -227,30 +264,12 @@ function applyStoreTheme(store) {
       color: #1a1410 !important;
       opacity: 1 !important;
     }
+    #dama .product-card .product-name { font-weight: 500 !important; }
+    #dama .product-card .product-category { font-weight: 600 !important; opacity: 0.7 !important; letter-spacing: 2.5px !important; }
+    #dama .product-card .product-price, #dama .product-card .product-price-discounted { font-weight: 700 !important; font-size: 16px !important; }
+    #dama .product-card .product-price-original { color: #999 !important; opacity: 0.7 !important; text-decoration: line-through !important; }
     
-    #dama .product-card .product-name {
-      font-weight: 500 !important;
-    }
-    
-    #dama .product-card .product-category {
-      font-weight: 600 !important;
-      opacity: 0.7 !important;
-      letter-spacing: 2.5px !important;
-    }
-    
-    #dama .product-card .product-price,
-    #dama .product-card .product-price-discounted {
-      font-weight: 700 !important;
-      font-size: 16px !important;
-    }
-    
-    #dama .product-card .product-price-original {
-      color: #999 !important;
-      opacity: 0.7 !important;
-      text-decoration: line-through !important;
-    }
-    
-    /* SECCIÓN CALZADO - Fondo claro, textos oscuros */
+    /* SECCIÓN CALZADO */
     #calzado .product-card .product-name,
     #calzado .product-card .product-category,
     #calzado .product-card .product-price,
@@ -258,123 +277,57 @@ function applyStoreTheme(store) {
       color: #1a1410 !important;
       opacity: 1 !important;
     }
+    #calzado .product-card .product-name { font-weight: 500 !important; }
+    #calzado .product-card .product-category { font-weight: 600 !important; opacity: 0.7 !important; letter-spacing: 2.5px !important; }
+    #calzado .product-card .product-price, #calzado .product-card .product-price-discounted { font-weight: 700 !important; font-size: 16px !important; }
+    #calzado .product-card .product-price-original { color: #999 !important; opacity: 0.7 !important; text-decoration: line-through !important; }
     
-    #calzado .product-card .product-name {
-      font-weight: 500 !important;
-    }
-    
-    #calzado .product-card .product-category {
-      font-weight: 600 !important;
-      opacity: 0.7 !important;
-      letter-spacing: 2.5px !important;
-    }
-    
-    #calzado .product-card .product-price,
-    #calzado .product-card .product-price-discounted {
-      font-weight: 700 !important;
-      font-size: 16px !important;
-    }
-    
-    #calzado .product-card .product-price-original {
-      color: #999 !important;
-      opacity: 0.7 !important;
-      text-decoration: line-through !important;
-    }
-    
-    /* CATALOGO CLARO GENERICO (respaldo) */
-    .catalog:not(.catalog-dark) .product-card .product-name {
-      color: #1a1410 !important;
-      font-weight: 500 !important;
-      opacity: 1 !important;
-    }
-    
-    .catalog:not(.catalog-dark) .product-card .product-category {
-      color: #1a1410 !important;
-      font-weight: 600 !important;
-      opacity: 0.7 !important;
-      letter-spacing: 2.5px !important;
-    }
-    
+    /* CATALOGO CLARO GENERICO */
+    .catalog:not(.catalog-dark) .product-card .product-name { color: #1a1410 !important; font-weight: 500 !important; opacity: 1 !important; }
+    .catalog:not(.catalog-dark) .product-card .product-category { color: #1a1410 !important; font-weight: 600 !important; opacity: 0.7 !important; letter-spacing: 2.5px !important; }
     .catalog:not(.catalog-dark) .product-card .product-price,
-    .catalog:not(.catalog-dark) .product-card .product-price-discounted {
-      color: #1a1410 !important;
-      font-weight: 700 !important;
-      font-size: 16px !important;
-      opacity: 1 !important;
-    }
+    .catalog:not(.catalog-dark) .product-card .product-price-discounted { color: #1a1410 !important; font-weight: 700 !important; font-size: 16px !important; opacity: 1 !important; }
+    .catalog:not(.catalog-dark) .product-card .product-price-original { color: #999 !important; opacity: 0.7 !important; }
     
-    .catalog:not(.catalog-dark) .product-card .product-price-original {
-      color: #999 !important;
-      opacity: 0.7 !important;
-    }
-    
-    /* CATALOGO OSCURO (CABALLERO) - Fondo oscuro, tarjetas blancas con textos NEGROS */
+    /* CATALOGO OSCURO (CABALLERO) */
     .catalog.catalog-dark { background: ${secondaryColor} !important; }
     .catalog.catalog-dark .section-title, 
     .catalog.catalog-dark .section-eyebrow { color: #ffffff !important; }
     
     #caballero .product-card,
-    .catalog.catalog-dark .product-card {
-      background: #ffffff !important;
-    }
+    .catalog.catalog-dark .product-card { background: #ffffff !important; }
     
     #caballero .product-card .product-name,
-    .catalog.catalog-dark .product-card .product-name {
-      color: #1a1410 !important;
-      font-weight: 500 !important;
-      opacity: 1 !important;
-    }
+    .catalog.catalog-dark .product-card .product-name { color: #1a1410 !important; font-weight: 500 !important; opacity: 1 !important; }
     
     #caballero .product-card .product-category,
-    .catalog.catalog-dark .product-card .product-category {
-      color: #1a1410 !important;
-      font-weight: 600 !important;
-      opacity: 0.7 !important;
-      letter-spacing: 2.5px !important;
-    }
+    .catalog.catalog-dark .product-card .product-category { color: #1a1410 !important; font-weight: 600 !important; opacity: 0.7 !important; letter-spacing: 2.5px !important; }
     
     #caballero .product-card .product-price,
     #caballero .product-card .product-price-discounted,
     .catalog.catalog-dark .product-card .product-price,
-    .catalog.catalog-dark .product-card .product-price-discounted {
-      color: #1a1410 !important;
-      font-weight: 700 !important;
-      font-size: 16px !important;
-      opacity: 1 !important;
-    }
+    .catalog.catalog-dark .product-card .product-price-discounted { color: #1a1410 !important; font-weight: 700 !important; font-size: 16px !important; opacity: 1 !important; }
     
     #caballero .product-card .product-price-original,
-    .catalog.catalog-dark .product-card .product-price-original {
-      color: #999 !important;
-      opacity: 0.7 !important;
-      text-decoration: line-through !important;
-    }
+    .catalog.catalog-dark .product-card .product-price-original { color: #999 !important; opacity: 0.7 !important; text-decoration: line-through !important; }
     
     /* MODAL DE PRODUCTO */
-    .modal-price, .modal-price-discounted {
-      color: #1a1410 !important;
-      font-weight: 700 !important;
-    }
-    
-    .modal-category {
-      color: #1a1410 !important;
-      font-weight: 700 !important;
-      opacity: 0.7 !important;
-    }
+    .modal-price, .modal-price-discounted { color: #1a1410 !important; font-weight: 700 !important; }
+    .modal-category { color: #1a1410 !important; font-weight: 700 !important; opacity: 0.7 !important; }
     
     /* HEADER */
     .site-header { background: rgba(255, 255, 255, 0.98) !important; }
     .site-header.scrolled { background: rgba(255, 255, 255, 0.99) !important; }
-    .logo { color: ${textColorDark} !important; }
+    .logo, .logo-wrap .logo { color: ${textColorDark} !important; }
     .nav-link { color: ${textColorDark} !important; }
     .footer-col a:hover, .nav-link:hover { color: ${accentColor} !important; }
     
-    .btn-ghost:not(.hero-actions .btn-ghost) {
+    .btn-ghost:not(.btn-hero-ghost) {
       color: ${textColorDark} !important;
       border-color: ${textColorDark} !important;
       background: transparent !important;
     }
-    .btn-ghost:not(.hero-actions .btn-ghost):hover { 
+    .btn-ghost:not(.btn-hero-ghost):hover { 
       background: ${textColorDark} !important; 
       color: #ffffff !important; 
     }
@@ -390,17 +343,9 @@ function applyStoreTheme(store) {
         linear-gradient(rgba(${secondaryRgb}, 0.75), rgba(${secondaryRgb}, 0.85)),
         url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=cover&w=1920&q=80') center/cover no-repeat !important;
     }
-    .contact .section-eyebrow {
-      color: #ffffff !important;
-      opacity: 0.9;
-    }
-    .contact .section-title-light {
-      color: #ffffff !important;
-    }
-    .contact .contact-text {
-      color: #ffffff !important;
-      opacity: 0.9;
-    }
+    .contact .section-eyebrow { color: #ffffff !important; opacity: 0.9; }
+    .contact .section-title-light { color: #ffffff !important; }
+    .contact .contact-text { color: #ffffff !important; opacity: 0.9; }
     
     .loader { background: ${bgLighter} !important; }
     .loader-mark { color: ${primaryColor} !important; }
@@ -412,10 +357,6 @@ function applyStoreTheme(store) {
     #contactWhatsapp.btn-primary.btn-large { background: linear-gradient(135deg, ${primaryColor}, ${accentColor}) !important; }
     .product-tag { background: ${secondaryColor} !important; color: #ffffff !important; }
     .favorite-btn.is-favorite { color: #e53935 !important; }
-    
-    .hero-thread path {
-      stroke: rgba(255, 255, 255, 0.6) !important;
-    }
     
     /* BOTONES FLOTANTES */
     html body #installAppBtn {
@@ -501,6 +442,12 @@ function isColorDark(hex) {
 // ---------------------------------------------------------------
 function applyStoreToDOM(store) {
   if (!store) return;
+  
+  // Actualizar logo circular con la inicial
+  const logoMark = document.querySelector(".logo-mark");
+  if (logoMark && store.name) {
+    logoMark.textContent = store.name.charAt(0).toUpperCase();
+  }
   
   const logoElements = document.querySelectorAll(".logo");
   logoElements.forEach((logo) => {
@@ -1233,6 +1180,16 @@ window.addEventListener("scroll", () => {
   } else {
     if (header) header.style.transform = "translateY(0)";
   }
+  
+  // Agregar clase 'scrolled' cuando bajamos
+  if (header) {
+    if (current > 20) {
+      header.classList.add("scrolled");
+    } else {
+      header.classList.remove("scrolled");
+    }
+  }
+  
   lastScroll = current;
 });
 
