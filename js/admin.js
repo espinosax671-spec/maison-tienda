@@ -212,7 +212,7 @@ async function checkStaffAndEnter(user) {
     return;
   }
 
-  const rolesPermitidos = ["vendedor", "administrador"];
+  const rolesPermitidos = ["vendedor", "administrador", "empleado"];
   if (!rolesPermitidos.includes(profile.role)) {
     await denyAccess("Esta cuenta no tiene permisos para acceder al panel.");
     return;

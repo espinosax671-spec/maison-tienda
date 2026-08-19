@@ -1383,6 +1383,17 @@ async function handleCheckoutClick(e) {
     return;
   }
   
+  // Exigir sesión: los pedidos deben quedar asociados a un cliente
+  const { data: authCheck } = await supabaseClient.auth.getUser();
+  const loggedUser = authCheck?.user;
+  
+  if (!loggedUser) {
+    alert("Para hacer tu pedido necesitas iniciar sesión o crear una cuenta.");
+    const accountToggle = document.getElementById("accountToggle");
+    if (accountToggle) accountToggle.click();
+    return;
+  }
+  
   const btn = document.getElementById("checkoutWhatsapp");
   const originalText = btn.innerHTML;
   

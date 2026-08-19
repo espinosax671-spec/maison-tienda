@@ -3,6 +3,7 @@
 ============================================ */
 
 let currentUser = null;
+let currentRole = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initAuth();
@@ -22,17 +23,19 @@ async function initAuth() {
   if (data.session?.user) {
     currentUser = data.session.user;
     
-    // Verificar que sea vendedor/administrador
+    // Verificar que sea vendedor/administrador/empleado
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("role, full_name")
       .eq("id", currentUser.id)
       .maybeSingle();
     
-    if (!profile || !["vendedor", "administrador"].includes(profile.role)) {
+    if (!profile || !["vendedor", "administrador", "empleado"].includes(profile.role)) {
       showAccessDenied();
       return;
     }
+    
+    currentRole = profile.role;
     
     document.getElementById("statsPage").style.display = "flex";
     document.getElementById("pageSubtitle").textContent =
@@ -57,12 +60,27 @@ async function loadStats() {
   document.getElementById("statsContent").style.display = "none";
 
   try {
-    // Cargar TODOS los pedidos del vendedor
-    const { data: pedidos, error } = await supabaseClient
-      .from("orders")
-      .select("*")
-      .eq("seller_id", currentUser.id)
-      .order("created_at", { ascending: false });
+    // Dueños y empleados ven los pedidos de toda su tienda,
+    // los vendedores solo los suyos
+    let query = supabaseClient.from("orders").select("*");
+
+    if (currentRole === "administrador" || currentRole === "empleado") {
+      const { data: staff } = await supabaseClient
+        .from("staff_users")
+        .select("store_id")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if (staff?.store_id) {
+        query = query.eq("store_id", staff.store_id);
+      } else {
+        query = query.eq("seller_id", currentUser.id);
+      }
+    } else {
+      query = query.eq("seller_id", currentUser.id);
+    }
+
+    const { data: pedidos, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -92,11 +110,12 @@ function calcularYRenderizar(pedidos) {
 
   const totalPedidos = pedidos.length;
 
-  const ingresosTotal = pedidos
-    .filter(p => p.status !== "cancelado")
+  const pedidosValidos = pedidos.filter(p => p.status !== "cancelado");
+
+  const ingresosTotal = pedidosValidos
     .reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
 
-  const ticketPromedio = totalPedidos > 0 ? ingresosTotal / totalPedidos : 0;
+  const ticketPromedio = pedidosValidos.length > 0 ? ingresosTotal / pedidosValidos.length : 0;
 
   // Renderizar métricas
   document.getElementById("statIngresos").textContent = formatPrice(ingresosMes);
@@ -120,6 +139,13 @@ function calcularYRenderizar(pedidos) {
 /* ============================================
    GRÁFICO DE BARRAS (últimos 30 días)
 ============================================ */
+function localDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 function renderBarChart(pedidos) {
   const barChart = document.getElementById("barChart");
   const labelsEl = document.getElementById("barChartLabels");
@@ -131,14 +157,14 @@ function renderBarChart(pedidos) {
     const d = new Date(ahora);
     d.setDate(d.getDate() - i);
     dias.push({
-      fecha: d.toISOString().split("T")[0],
+      fecha: localDateKey(d),
       label: `${d.getDate()}/${d.getMonth() + 1}`,
       count: 0
     });
   }
 
   pedidos.forEach(pedido => {
-    const fechaPedido = new Date(pedido.created_at).toISOString().split("T")[0];
+    const fechaPedido = localDateKey(new Date(pedido.created_at));
     const dia = dias.find(d => d.fecha === fechaPedido);
     if (dia) dia.count++;
   });

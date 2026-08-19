@@ -1,16 +1,20 @@
 {
   "rewrites": [
     {
-      "source": "/tienda-de-juan",
-      "destination": "/index.html?tienda=tienda-de-juan"
+      "source": "/admin",
+      "destination": "/admin.html"
     },
     {
-      "source": "/tienda-de-oscar",
-      "destination": "/index.html?tienda=tienda-de-oscar"
+      "source": "/estadisticas",
+      "destination": "/estadisticas.html"
     },
     {
-      "source": "/maison-principal",
-      "destination": "/index.html?tienda=maison-principal"
+      "source": "/reset-password",
+      "destination": "/reset-password.html"
+    },
+    {
+      "source": "/:slug",
+      "destination": "/index.html"
     }
   ]
 }
