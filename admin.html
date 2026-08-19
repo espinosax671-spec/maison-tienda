@@ -1041,18 +1041,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const targetNode = document.getElementById("adminUserName");
   if (targetNode) observer.observe(targetNode, { childList: true, characterData: true, subtree: true });
 
-  // ============ SIDEBAR LOGO DINÁMICO ============
-  const logoObserver = new MutationObserver(() => {
-    const adminLogo = document.querySelector(".admin-logo");
-    const sidebarLogo = document.getElementById("sidebarLogoName");
-    if (adminLogo && sidebarLogo) {
-      // Sincronizar nombre
-      const text = adminLogo.textContent.replace("panel", "").trim();
-      sidebarLogo.textContent = text || "MAISON";
-    }
-  });
-  const adminLogo = document.querySelector(".admin-logo");
-  if (adminLogo) logoObserver.observe(adminLogo, { childList: true, characterData: true, subtree: true });
+  // (Se quitó el "SIDEBAR LOGO DINÁMICO": ahora solo existe un elemento
+  // .admin-logo — el del sidebar — así que este observer terminaba
+  // escribiéndose a sí mismo en cada mutación, disparándose de nuevo
+  // sin parar y congelando el navegador por completo.)
 
   // ============ SIDEBAR BADGES SYNC ============
   const pendingObserver = new MutationObserver(() => {
