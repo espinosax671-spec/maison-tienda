@@ -162,6 +162,24 @@ body {
 
 .forgot-password a:hover { color: var(--color-gold); }
 
+.gate-box-checking {
+  text-align: center;
+}
+
+.gate-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 10px auto 0;
+  border: 3px solid rgba(168, 130, 75, 0.25);
+  border-top-color: var(--color-gold);
+  border-radius: 50%;
+  animation: gateSpin 0.8s linear infinite;
+}
+
+@keyframes gateSpin {
+  to { transform: rotate(360deg); }
+}
+
 .gate-note {
   margin-top: 25px;
   font-size: 11px;
