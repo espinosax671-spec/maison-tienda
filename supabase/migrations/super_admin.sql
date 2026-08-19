@@ -92,7 +92,7 @@ GRANT EXECUTE ON FUNCTION public.cambiar_estado_tienda(uuid, boolean) TO authent
 -- Luego reemplaza el UUID de abajo por el tuyo.
 -- ============================================================
 INSERT INTO public.admins (auth_user_id)
-VALUES ('REEMPLAZA_CON_TU_UUID')
+VALUES ('ecc29443-4eac-4171-a70d-eb91fbe07076')
 ON CONFLICT (auth_user_id) DO NOTHING;
 
 -- 6) Verificación ---------------------------------------------
