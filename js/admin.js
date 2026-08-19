@@ -1992,10 +1992,11 @@ function createOrderCard(order) {
   }
   if (order.customer_phone) {
     const cleanPhone = order.customer_phone.replace(/\D/g, "");
+    const waPhone = cleanPhone.startsWith("57") ? cleanPhone : "57" + cleanPhone;
     customerHtml += `
       <div class="customer-item">
         <strong>WhatsApp:</strong>
-        <a href="https://wa.me/57${cleanPhone}" target="_blank">${order.customer_phone}</a>
+        <a href="https://wa.me/${waPhone}" target="_blank">${order.customer_phone}</a>
       </div>
     `;
   }
@@ -2031,8 +2032,9 @@ function createOrderCard(order) {
   
   if (order.customer_phone) {
     const cleanPhone = order.customer_phone.replace(/\D/g, "");
+    const waPhone = cleanPhone.startsWith("57") ? cleanPhone : "57" + cleanPhone;
     actionsHtml += `
-      <a href="https://wa.me/57${cleanPhone}?text=${encodeURIComponent(`Hola! Sobre tu pedido #${order.order_number}...`)}" 
+      <a href="https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola! Sobre tu pedido #${order.order_number}...`)}" 
          target="_blank" class="btn-action btn-whatsapp" aria-label="Contactar por WhatsApp" title="Contactar por WhatsApp">
         <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
           <path d="M16.003 3C9.373 3 4 8.373 4 15.003c0 2.647.858 5.093 2.316 7.09L4 29l7.116-2.267a11.94 11.94 0 0 0 4.887 1.038h.001C22.634 27.771 28 22.399 28 15.77c0-3.187-1.241-6.183-3.495-8.437A11.925 11.925 0 0 0 16.003 3zm0 21.771h-.003a9.94 9.94 0 0 1-5.062-1.386l-.363-.216-4.222 1.346 1.36-4.114-.236-.377a9.929 9.929 0 0 1-1.523-5.291c0-5.487 4.466-9.953 9.953-9.953a9.888 9.888 0 0 1 7.036 2.914 9.884 9.884 0 0 1 2.914 7.04c0 5.488-4.466 9.953-9.855 9.953l.001.084zm5.458-7.451c-.299-.15-1.769-.873-2.043-.973-.274-.1-.474-.15-.673.15-.199.299-.772.973-.947 1.173-.174.199-.349.224-.648.075-.299-.15-1.264-.466-2.408-1.486-.89-.794-1.491-1.774-1.666-2.073-.174-.299-.019-.461.131-.61.135-.134.299-.349.449-.524.15-.174.199-.299.299-.499.1-.199.05-.374-.025-.524-.075-.15-.673-1.623-.923-2.222-.243-.583-.489-.504-.673-.513-.174-.008-.374-.01-.573-.01a1.098 1.098 0 0 0-.798.374c-.274.299-1.047 1.023-1.047 2.496 0 1.473 1.072 2.895 1.222 3.095.15.199 2.109 3.222 5.115 4.518.716.309 1.274.494 1.71.632.719.229 1.373.196 1.89.119.577-.086 1.769-.723 2.019-1.421.249-.698.249-1.297.174-1.421-.075-.125-.274-.199-.573-.349z"/>
