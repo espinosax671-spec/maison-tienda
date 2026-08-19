@@ -391,17 +391,36 @@ async function doLogout() {
   window.location.href = "index.html";
 }
 
+// Evita que una llamada a Supabase se quede esperando para siempre
+// (ej. un bloqueo interno del cliente que nunca resuelve). Si no
+// responde a tiempo, se descarta y se muestra el error.
+function withTimeout(promise, ms, mensaje) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(mensaje || "Tiempo de espera agotado")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
 async function initAdmin() {
   gate.style.display = "flex";
   adminApp.style.display = "none";
   noAccess.style.display = "none";
 
   try {
-    const { data, error } = await supabaseClient.auth.getSession();
+    const { data, error } = await withTimeout(
+      supabaseClient.auth.getSession(),
+      8000,
+      "No se pudo verificar la sesión (tiempo agotado)."
+    );
     if (error) throw error;
 
     if (data.session) {
-      await checkStaffAndEnter(data.session.user);
+      await withTimeout(
+        checkStaffAndEnter(data.session.user),
+        15000,
+        "El panel tardó demasiado en cargar."
+      );
     } else {
       // No hay sesión activa: el login solo existe en index.html.
       // Mandamos de vuelta a la tienda para que inicie sesión ahí.
