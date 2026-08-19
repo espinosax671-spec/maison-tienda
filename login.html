@@ -1,53 +1,152 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ingreso — MAISON</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
-      background:
-        linear-gradient(rgba(20,15,10,0.55), rgba(20,15,10,0.85)),
-        url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-      color: #fff;
-      padding: 24px;
-    }
-    .box { max-width: 420px; }
-    .logo { font-size: 40px; letter-spacing: 10px; color: #c9a96e; margin-bottom: 16px; font-weight: 600; }
-    p { color: #ddd; font-size: 15px; letter-spacing: 1px; margin-bottom: 28px; }
-    .spinner {
-      width: 34px; height: 34px; margin: 0 auto 22px;
-      border: 3px solid rgba(255,255,255,0.2);
-      border-top-color: #c9a96e;
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    a { color: #c9a96e; }
-  </style>
-  <script>
-    if (window.location.pathname.toLowerCase().endsWith('/login.html') ||
-        window.location.pathname.toLowerCase() === '/login.html' ||
-        window.location.pathname.toLowerCase() === '/login') {
-      window.location.replace('/admin.html');
-    }
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ingreso — MAISON</title>
+
+<meta name="theme-color" content="#c9a96e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MAISON">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="iconos/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="iconos/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="iconos/icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Playfair+Display:wght@400;500;600&family=Poppins:wght@400;500;600&family=Montserrat:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-  <div class="box">
-    <div class="logo">MAISON</div>
-    <div class="spinner"></div>
-    <p>Redirigiendo al panel de administración...</p>
-    <p style="margin-bottom:0; font-size:13px; color:#aaa;">
-      Si no redirige automáticamente, <a href="/admin.html">entra aquí</a>.
-    </p>
+
+<!-- ============ GATE DE LOGIN ============ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Ingreso al panel</p>
+
+    <form id="gateForm" class="gate-form">
+      <label>Correo electrónico
+        <input type="email" id="gateEmail" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <div class="password-wrap">
+          <input type="password" id="gatePassword" required autocomplete="current-password">
+          <button type="button" class="toggle-password" data-target="gatePassword" aria-label="Mostrar contraseña"></button>
+        </div>
+      </label>
+      <p class="gate-error" id="gateError"></p>
+      <div class="forgot-password">
+        <a href="/reset-password.html" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar</button>
+    </form>
+    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al dueño de la tienda que te agregue.</p>
   </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script>
+// ---------------------------------------------------------------
+// Toggle mostrar/ocultar contraseña
+// ---------------------------------------------------------------
+document.querySelectorAll(".toggle-password").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const input = document.getElementById(btn.dataset.target);
+    if (!input) return;
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    const icon = btn.querySelector("svg");
+    if (isHidden) {
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    } else {
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+  });
+  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+});
+
+// ---------------------------------------------------------------
+// ENTRAR AL PANEL
+// ---------------------------------------------------------------
+document.getElementById("gateForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById("gateError");
+  errorEl.textContent = "";
+
+  const email = document.getElementById("gateEmail").value.trim();
+  const password = document.getElementById("gatePassword").value;
+  const btn = document.getElementById("gateSubmitBtn");
+
+  btn.disabled = true;
+  btn.textContent = "Ingresando...";
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = "Ingresar";
+    errorEl.textContent = "Correo o contraseña incorrectos.";
+    return;
+  }
+
+  const authorized = await checkStaff(data.user);
+  if (!authorized) {
+    btn.disabled = false;
+    btn.textContent = "Ingresar";
+    errorEl.textContent = "Tu cuenta no está autorizada para acceder al panel.";
+    return;
+  }
+
+  window.location.href = "/admin.html";
+});
+
+async function checkStaff(user) {
+  try {
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      console.error("No se pudo verificar el perfil:", profileError);
+      return false;
+    }
+
+    const rolesPermitidos = ["vendedor", "administrador", "empleado"];
+    if (!rolesPermitidos.includes(profile.role)) return false;
+
+    const { data: staff, error: staffError } = await supabaseClient
+      .from("staff_users")
+      .select("id, store_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (staffError || !staff || !staff.store_id) {
+      console.error("No está autorizado en staff_users:", staffError);
+      return false;
+    }
+
+    const { data: store } = await supabaseClient
+      .from("stores")
+      .select("active")
+      .eq("id", staff.store_id)
+      .maybeSingle();
+
+    if (!store || !store.active) return false;
+
+    return true;
+  } catch (err) {
+    console.error("Error verificando acceso:", err);
+    return false;
+  }
+}
+</script>
 </body>
 </html>
