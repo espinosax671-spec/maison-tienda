@@ -1097,10 +1097,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(registration => {
           console.log('Service Worker registrado:', registration.scope);
 
-          setInterval(() => {
-            registration.update();
-          }, 60000);
-
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             newWorker.addEventListener('statechange', () => {
@@ -1121,12 +1117,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
+      // Recargar SOLO cuando el usuario confirma la actualización.
+      // Evita que el SW tome control y recargue la pestaña mientras
+      // se está escribiendo el login (bloquea los inputs).
       let refreshing = false;
+      let userConfirmedUpdate = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
+        if (refreshing) return;
+        if (!userConfirmedUpdate) return;
+        refreshing = true;
+        window.location.reload();
       });
     });
 
@@ -1190,6 +1190,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(banner);
 
       document.getElementById('updateBtn').addEventListener('click', () => {
+        userConfirmedUpdate = true;
         newWorker.postMessage({ type: 'SKIP_WAITING' });
       });
 
