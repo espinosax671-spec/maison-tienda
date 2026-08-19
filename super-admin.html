@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin — MAISON</title>
+
+<meta name="theme-color" content="#1a1410">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="iconos/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="iconos/icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/super-admin.css">
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Super administrador</p>
+
+    <form id="gateForm" class="gate-form">
+      <label>Correo electrónico
+        <input type="email" id="gateEmail" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <div class="password-wrap">
+          <input type="password" id="gatePassword" required autocomplete="current-password">
+          <button type="button" class="toggle-password" data-target="gatePassword" aria-label="Mostrar contraseña"></button>
+        </div>
+      </label>
+      <p class="gate-error" id="gateError"></p>
+      <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar</button>
+    </form>
+    <p class="gate-note">Acceso exclusivo del equipo MAISON.</p>
+  </div>
+</div>
+
+<!-- ============ SIN ACCESO ============ -->
+<div class="gate" id="noAccess" style="display:none;">
+  <div class="gate-box">
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">Sin acceso</p>
+    <p class="gate-text">Esta cuenta no está registrada como super administrador.</p>
+    <button class="btn btn-ghost btn-full" id="noAccessLogout">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ============ PANEL ============ -->
+<div class="super-admin-app" id="adminApp" style="display:none;">
+
+  <header class="admin-header">
+    <span class="admin-logo">MAISON <em>super</em></span>
+    <div class="admin-user">
+      <span id="adminUserName"></span>
+      <a href="admin.html" class="btn-text" style="margin-right:16px;">Ir al panel de tienda</a>
+      <button class="btn-text" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+
+    <div class="admin-toolbar">
+      <h1>Tiendas</h1>
+      <button class="btn btn-ghost" id="refreshBtn">🔄 Actualizar</button>
+    </div>
+
+    <div class="sa-stats" id="saStats">
+      <div class="stat-card">
+        <span class="stat-value" id="statTotal">0</span>
+        <span class="stat-label">Tiendas registradas</span>
+      </div>
+      <div class="stat-card stat-ok">
+        <span class="stat-value" id="statActivas">0</span>
+        <span class="stat-label">Activas</span>
+      </div>
+      <div class="stat-card stat-warn">
+        <span class="stat-value" id="statDesactivadas">0</span>
+        <span class="stat-label">Desactivadas</span>
+      </div>
+    </div>
+
+    <div class="product-table" id="storesTable">
+      <p class="loading-msg" id="loadingMsg">Cargando tiendas...</p>
+    </div>
+
+  </main>
+</div>
+
+<div id="toastContainer"></div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/super-admin.js"></script>
+</body>
+</html>

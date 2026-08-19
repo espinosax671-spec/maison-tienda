@@ -240,6 +240,13 @@ async function checkStaffAndEnter(user) {
   window.currentStoreId = staff.store_id;
   window.currentUserRole = staff.role;
 
+  // Mostrar acceso al panel global de super admin si corresponde
+  const { data: esAdmin } = await supabaseClient.rpc('es_admin');
+  const superAdminLink = document.getElementById("superAdminLink");
+  if (superAdminLink) {
+    superAdminLink.style.display = esAdmin === true ? "inline-flex" : "none";
+  }
+
   const { data: store } = await supabaseClient
     .from("stores")
     .select("name, active, slug, theme_primary_color, theme_secondary_color, theme_accent_color, theme_font, theme_template, hero_image_url")
