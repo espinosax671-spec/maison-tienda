@@ -25,29 +25,16 @@
 </head>
 <body>
 
-<!-- ============ GATE DE LOGIN ============ -->
+<!-- ============ VERIFICANDO SESIÓN ============ -->
+<!-- El login ahora ocurre únicamente en index.html. Este panel solo
+     verifica si ya existe una sesión activa; si no la hay, redirige
+     de vuelta a la tienda para iniciar sesión ahí. -->
 <div class="gate" id="gate">
-  <div class="gate-box">
+  <div class="gate-box gate-box-checking">
     <span class="gate-logo">MAISON</span>
-    <p class="gate-sub">Panel de administración</p>
-
-    <form id="gateForm" class="gate-form">
-      <label>Correo electrónico
-        <input type="email" id="gateEmail" required autocomplete="email">
-      </label>
-      <label>Contraseña
-        <div class="password-wrap">
-          <input type="password" id="gatePassword" required autocomplete="current-password">
-          <button type="button" class="toggle-password" data-target="gatePassword" aria-label="Mostrar contraseña"></button>
-        </div>
-      </label>
-      <p class="gate-error" id="gateError"></p>
-      <div class="forgot-password">
-        <a href="#" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a>
-      </div>
-      <button type="submit" class="btn btn-primary btn-full" id="gateSubmitBtn">Ingresar al panel</button>
-    </form>
-    <p class="gate-note">Este acceso es solo para el equipo de la tienda. Si necesitas una cuenta, pídele al dueño de la tienda que te agregue.</p>
+    <p class="gate-sub">Verificando tu sesión...</p>
+    <div class="gate-spinner" aria-hidden="true"></div>
+    <p class="gate-note">Si no tienes una sesión iniciada, te llevaremos a la tienda para que ingreses allí.</p>
   </div>
 </div>
 
