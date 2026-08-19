@@ -1058,7 +1058,11 @@ document.querySelectorAll(".admin-tab").forEach((tab) => {
 
 function switchTab(tabName) {
   currentTab = tabName;
-  
+
+  // Subir el scroll al cambiar de pestaña, para no quedar a mitad
+  // de camino si la pestaña anterior era más larga (ej. Diseño).
+  window.scrollTo({ top: 0, behavior: "auto" });
+
   document.querySelectorAll(".admin-tab").forEach((t) => {
     t.classList.toggle("active", t.dataset.tab === tabName);
   });
