@@ -172,31 +172,6 @@ const gate = document.getElementById("gate");
 const noAccess = document.getElementById("noAccess");
 const adminApp = document.getElementById("adminApp");
 
-document.getElementById("gateForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const errorEl = document.getElementById("gateError");
-  errorEl.textContent = "";
-
-  const email = document.getElementById("gateEmail").value.trim();
-  const password = document.getElementById("gatePassword").value;
-  const btn = document.getElementById("gateSubmitBtn");
-
-  btn.disabled = true;
-  btn.textContent = "Ingresando...";
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-  btn.disabled = false;
-  btn.textContent = "Ingresar al panel";
-
-  if (error) {
-    errorEl.textContent = "Correo o contraseña incorrectos.";
-    return;
-  }
-
-  await checkStaffAndEnter(data.user);
-});
-
 async function checkStaffAndEnter(user) {
   adminUser = user;
 
@@ -417,14 +392,42 @@ async function doLogout() {
 }
 
 async function initAdmin() {
-  const { data } = await supabaseClient.auth.getSession();
-  
-  if (data.session) {
-    await checkStaffAndEnter(data.session.user);
-  } else {
-    gate.style.display = "flex";
-    adminApp.style.display = "none";
-    noAccess.style.display = "none";
+  gate.style.display = "flex";
+  adminApp.style.display = "none";
+  noAccess.style.display = "none";
+
+  try {
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+
+    if (data.session) {
+      await checkStaffAndEnter(data.session.user);
+    } else {
+      // No hay sesión activa: el login solo existe en index.html.
+      // Mandamos de vuelta a la tienda para que inicie sesión ahí.
+      window.location.href = "index.html";
+    }
+  } catch (err) {
+    console.error("Error verificando la sesión:", err);
+    showGateError();
+  }
+}
+
+function showGateError() {
+  const gateBox = document.querySelector("#gate .gate-box");
+  if (!gateBox) return;
+
+  gateBox.innerHTML = `
+    <span class="gate-logo">MAISON</span>
+    <p class="gate-sub">No se pudo verificar tu sesión</p>
+    <p class="gate-note">Hubo un problema de conexión. Intenta de nuevo o vuelve a la tienda para iniciar sesión.</p>
+    <button type="button" class="btn btn-primary btn-full" id="gateRetryBtn" style="margin-top:20px;">Volver a la tienda</button>
+  `;
+  const retryBtn = document.getElementById("gateRetryBtn");
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
   }
 }
 
@@ -816,12 +819,6 @@ document.addEventListener("keydown", (e) => {
     closeEmployeeModal();
     closeDeleteEmployeeModal();
   }
-});
-
-document.getElementById("forgotPasswordLink").addEventListener("click", function(e) {
-  e.preventDefault();
-  document.getElementById("resetOverlay").classList.add("active");
-  document.getElementById("resetModal").classList.add("active");
 });
 
 document.getElementById("resetModalClose").addEventListener("click", cerrarReset);
