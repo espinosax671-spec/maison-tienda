@@ -241,10 +241,16 @@ async function checkStaffAndEnter(user) {
   window.currentUserRole = staff.role;
 
   // Mostrar acceso al panel global de super admin si corresponde
-  const { data: esAdmin } = await supabaseClient.rpc('es_admin');
+  let esAdmin = false;
+  try {
+    const res = await supabaseClient.rpc('es_admin');
+    esAdmin = res?.error ? false : res.data === true;
+  } catch (err) {
+    console.warn("No se pudo verificar es_admin:", err);
+  }
   const superAdminLink = document.getElementById("superAdminLink");
   if (superAdminLink) {
-    superAdminLink.style.display = esAdmin === true ? "inline-flex" : "none";
+    superAdminLink.style.display = esAdmin ? "inline-flex" : "none";
   }
 
   const { data: store } = await supabaseClient

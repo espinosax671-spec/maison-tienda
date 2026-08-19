@@ -46,9 +46,15 @@ document.getElementById("gateForm").addEventListener("submit", async (e) => {
 // Verificar que sea super admin
 // ---------------------------------------------------------------
 async function checkAdminAndEnter(user) {
-  const { data: esAdmin, error: adminError } = await supabaseClient.rpc('es_admin');
+  let esAdmin = false;
+  try {
+    const res = await supabaseClient.rpc('es_admin');
+    esAdmin = res?.error ? false : res.data === true;
+  } catch (err) {
+    console.warn("No se pudo verificar es_admin:", err);
+  }
 
-  if (adminError || esAdmin !== true) {
+  if (!esAdmin) {
     await denyAccess();
     return;
   }
