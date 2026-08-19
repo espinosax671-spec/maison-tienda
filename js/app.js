@@ -22,7 +22,8 @@ function detectStoreSlugFromUrl() {
     
     const rutasReservadas = ['', 'admin', 'admin.html', 'index.html', 
                              'estadisticas', 'estadisticas.html',
-                             'reset-password', 'reset-password.html'];
+                             'reset-password', 'reset-password.html',
+                             'login', 'login.html'];
     
     if (pathClean && !rutasReservadas.includes(pathClean.toLowerCase())) {
       slug = pathClean;
