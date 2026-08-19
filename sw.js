@@ -1,6 +1,6 @@
 // ============================================
 // SERVICE WORKER — MAISON PWA
-// Versión: 2.0 (Auto-actualización)
+// Versión: 2.1 (Fix: bypass en páginas de admin)
 // 
 // ESTRATEGIAS:
 // - HTML → Network First (siempre versión nueva)
@@ -8,11 +8,11 @@
 // - Imágenes → Cache First (para rendimiento)
 // - Fuentes → Cache First (rara vez cambian)
 // - Supabase → Network Only (datos en tiempo real)
+// - Admin (html/js) → Network Only, SIN intercepción (evita cuelgues de login)
 // ============================================
 
 // ⭐ VERSIÓN: Cambia este número cuando hagas cambios importantes
-// El timestamp se genera al deployar en Vercel
-const APP_VERSION = 'v20250122-1000';
+const APP_VERSION = 'v20250122-1100';
 const CACHE_NAME = `maison-${APP_VERSION}`;
 const CACHE_STATIC = `maison-static-${APP_VERSION}`;
 const CACHE_IMAGES = `maison-images-${APP_VERSION}`;
@@ -28,6 +28,15 @@ const STATIC_ASSETS = [
 const NETWORK_ONLY_DOMAINS = [
   'supabase.co',
   'supabase.in'
+];
+
+// Rutas que NUNCA deben pasar por el Service Worker (bypass total)
+// El panel de administración necesita cargar siempre limpio, sin caché
+// ni estrategias intermedias que puedan colgarse.
+const BYPASS_PATHS = [
+  '/admin.html',
+  '/admin.js',
+  '/admin.css'
 ];
 
 // Dominios de fuentes (cachear agresivamente, rara vez cambian)
@@ -65,9 +74,8 @@ self.addEventListener('activate', event => {
       return Promise.all(
         names
           .filter(name => {
-            // Borrar TODO caché que no sea de esta versión
-            return name !== CACHE_NAME && 
-                   name !== CACHE_STATIC && 
+            return name !== CACHE_NAME &&
+                   name !== CACHE_STATIC &&
                    name !== CACHE_IMAGES;
           })
           .map(name => {
@@ -79,12 +87,11 @@ self.addEventListener('activate', event => {
       console.log(`[SW ${APP_VERSION}] Activo y controlando todas las pestañas`);
       return self.clients.claim();
     }).then(() => {
-      // Notificar a todas las pestañas que hay una nueva versión
       return self.clients.matchAll({ type: 'window' }).then(clients => {
         clients.forEach(client => {
-          client.postMessage({ 
-            type: 'SW_UPDATED', 
-            version: APP_VERSION 
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: APP_VERSION
           });
         });
       });
@@ -97,31 +104,40 @@ self.addEventListener('activate', event => {
 // ============================================
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  
+
   // Solo GET requests
   if (event.request.method !== 'GET') return;
-  
+
+  // BYPASS TOTAL: rutas de admin nunca pasan por el Service Worker.
+  // Al hacer "return" sin llamar a event.respondWith(), el navegador
+  // maneja la petición de forma nativa, directo a la red, sin
+  // posibilidad de que quede "colgada" esperando al SW.
+  const isBypass = BYPASS_PATHS.some(path => url.pathname.endsWith(path));
+  if (isBypass) {
+    console.log('[SW] Bypass (sin interceptar):', url.pathname);
+    return;
+  }
+
   // NUNCA cachear Supabase (datos en tiempo real)
   const isNetworkOnly = NETWORK_ONLY_DOMAINS.some(domain =>
     url.hostname.includes(domain)
   );
   if (isNetworkOnly) return;
-  
+
   // Fuentes → Cache First (agresivo, rara vez cambian)
   const isFont = FONT_DOMAINS.some(domain => url.hostname.includes(domain));
   if (isFont) {
     event.respondWith(cacheFirst(event.request, CACHE_STATIC));
     return;
   }
-  
+
   // Imágenes → Cache First (para rendimiento)
   if (isImage(url.pathname) || url.hostname.includes('supabase.co')) {
     event.respondWith(cacheFirst(event.request, CACHE_IMAGES));
     return;
   }
-  
+
   // HTML, JS, CSS → Network First SIEMPRE
-  // Esto garantiza que los cambios se apliquen inmediatamente
   event.respondWith(networkFirst(event.request));
 });
 
@@ -142,13 +158,11 @@ function isImage(pathname) {
 
 // ============================================
 // Estrategia: CACHE FIRST
-// Usa caché si existe, sino va a la red
-// Ideal para: imágenes, fuentes (recursos estáticos)
 // ============================================
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);
   if (cached) return cached;
-  
+
   try {
     const response = await fetch(request);
     if (response.ok) {
@@ -163,42 +177,39 @@ async function cacheFirst(request, cacheName) {
 
 // ============================================
 // Estrategia: NETWORK FIRST
-// Siempre intenta red primero, cache como respaldo
-// Ideal para: HTML, JS, CSS (para actualizaciones)
+// Timeout reducido a 4s + manejo de error robusto para
+// evitar que una petición quede "colgada" indefinidamente.
 // ============================================
 async function networkFirst(request) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
   try {
-    // Intentar red primero con timeout de 5 segundos
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
     const response = await fetch(request, { signal: controller.signal });
     clearTimeout(timeoutId);
-    
+
     if (response.ok) {
-      // Guardar en caché para uso offline
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
-    
+
   } catch (err) {
-    // Si falla la red, usar caché
-    console.log('[SW] Red no disponible, usando caché:', request.url);
+    clearTimeout(timeoutId);
+    console.log('[SW] Red no disponible o timeout, usando caché:', request.url);
     const cached = await caches.match(request);
     if (cached) return cached;
-    
-    // Si es una navegación HTML, mostrar página offline
+
     if (request.mode === 'navigate' || request.destination === 'document') {
       const fallback = await caches.match('/index.html');
       if (fallback) return fallback;
-      
+
       return new Response(getOfflineHTML(), {
         status: 503,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       });
     }
-    
+
     return new Response('Sin conexión', { status: 503 });
   }
 }
@@ -236,11 +247,11 @@ function getOfflineHTML() {
           color: #c9a96e;
           margin-bottom: 12px;
         }
-        p { 
-          color: #999; 
-          font-size: 0.9rem; 
-          line-height: 1.6; 
-          margin-bottom: 28px; 
+        p {
+          color: #999;
+          font-size: 0.9rem;
+          line-height: 1.6;
+          margin-bottom: 28px;
         }
         button {
           padding: 14px 36px;
@@ -255,7 +266,7 @@ function getOfflineHTML() {
           font-weight: 600;
           transition: transform 0.2s;
         }
-        button:hover { 
+        button:hover {
           transform: translateY(-2px);
         }
       </style>
@@ -280,8 +291,7 @@ self.addEventListener('message', event => {
     console.log('[SW] Recibido SKIP_WAITING, activando nueva versión');
     self.skipWaiting();
   }
-  
-  // Limpiar todos los cachés (útil para debugging)
+
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     caches.keys().then(names => {
       names.forEach(name => caches.delete(name));
